@@ -17,8 +17,6 @@
     limitations under the License.
 -->
 
-<!-- $Rev: 1387962 $ $Date: 2012-09-20 05:53:17 -0500 (Thu, 20 Sep 2012) $ -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
@@ -44,6 +42,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
