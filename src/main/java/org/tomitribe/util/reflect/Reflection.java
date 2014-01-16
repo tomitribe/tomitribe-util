@@ -18,6 +18,8 @@ package org.tomitribe.util.reflect;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -25,6 +27,11 @@ import java.util.NoSuchElementException;
 * @version $Revision$ $Date$
 */
 public class Reflection {
+
+
+    public static Iterable<Method> methods(final Class<?> clazz) {
+        return new ArrayList<Method>(Arrays.asList(clazz.getMethods()));
+    }
 
     public static Iterable<Parameter> params(final Method method) {
         return new Iterable<Parameter>() {
