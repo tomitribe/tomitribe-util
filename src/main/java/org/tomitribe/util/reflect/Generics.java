@@ -28,6 +28,10 @@ public class Generics {
         return getTypeParameters(field.getType(), field.getGenericType())[0];
     }
 
+    public static Type getType(Parameter parameter) {
+        return getTypeParameters(parameter.getType(), parameter.getGenericType())[0];
+    }
+
     public static Type getReturnType(Method method) {
         return getTypeParameters(method.getReturnType(), method.getGenericReturnType())[0];
     }

@@ -18,6 +18,7 @@ package org.tomitribe.util.reflect;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Type;
 
 /**
 * @version $Revision$ $Date$
@@ -26,14 +27,20 @@ public class Parameter implements AnnotatedElement {
 
     private final Annotation[] annotations;
     private final Class<?> type;
+    private final Type genericType;
 
-    public Parameter(Annotation[] annotations, Class<?> type) {
+    public Parameter(Annotation[] annotations, Class<?> type, Type genericType) {
         this.annotations = annotations;
         this.type = type;
+        this.genericType = genericType;
     }
 
     public Class<?> getType() {
         return type;
+    }
+
+    public Type getGenericType() {
+        return genericType;
     }
 
     @Override

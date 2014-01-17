@@ -21,12 +21,24 @@ import junit.framework.TestCase;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 public class GenericsTest extends TestCase {
 
-    public void testGetType() throws Exception {
+    public void testGetFieldType() throws Exception {
         assertEquals(URI.class, Generics.getType(Orange.class.getField("uris")));
+    }
+
+    public void testGetMethodParameterType() throws Exception {
+        final Parameter param = Reflection.params(Orange.class.getMethod("set", List.class)).iterator().next();
+        assertEquals(Integer.class, Generics.getType(param));
+    }
+
+    public void testGetConstructorParameterType() throws Exception {
+        final Parameter param = Reflection.params(Orange.class.getConstructor(Queue.class)).iterator().next();
+        assertEquals(URI.class, Generics.getType(param));
     }
 
     public void testGetReturnType() throws Exception {
@@ -37,8 +49,15 @@ public class GenericsTest extends TestCase {
 
         public Collection<URI> uris;
 
+        public Orange(Queue<URI> uris) {
+            this.uris = uris;
+        }
+
         public Set<URL> urls() {
             return null;
+        }
+
+        public void set(List<Integer> integers) {
         }
     }
 }
