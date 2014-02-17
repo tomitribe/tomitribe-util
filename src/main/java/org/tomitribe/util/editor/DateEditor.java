@@ -84,13 +84,13 @@ public class DateEditor extends AbstractConverter {
                 int nextSpaceIndex = text.indexOf(' ', firstSpaceIndex + 1);
                 token = text.substring(firstSpaceIndex + 1, nextSpaceIndex);
                 String styleStr = token.substring(token.indexOf('=') + 1);
-                if (styleStr.equalsIgnoreCase("SHORT")) {
+                if ("SHORT".equalsIgnoreCase(styleStr)) {
                     style = DateFormat.SHORT;
-                } else if (styleStr.equalsIgnoreCase("MEDIUM")) {
+                } else if ("MEDIUM".equalsIgnoreCase(styleStr)) {
                     style = DateFormat.MEDIUM;
-                } else if (styleStr.equalsIgnoreCase("LONG")) {
+                } else if ("LONG".equalsIgnoreCase(styleStr)) {
                     style = DateFormat.LONG;
-                } else if (styleStr.equalsIgnoreCase("FULL")) {
+                } else if ("FULL".equalsIgnoreCase(styleStr)) {
                     style = DateFormat.FULL;
                 } else {
                     // unknown style name

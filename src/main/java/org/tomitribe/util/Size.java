@@ -165,6 +165,13 @@ public class Size {
         return n.a == n.b;
     }
 
+    @Override
+    public int hashCode() {
+        int result = (int) (size ^ (size >>> 32));
+        result = 31 * result + (unit != null ? unit.hashCode() : 0);
+        return result;
+    }
+
     public Size add(Size that) {
         Normalize n = new Normalize(this, that);
         return new Size(n.a + n.b, n.base);
@@ -180,7 +187,8 @@ public class Size {
     }
 
     private static void invalidFormat(String text) {
-        throw new IllegalArgumentException("Illegal size format: '" + text + "'.  Valid examples are '10kb' or '10 kilobytes'.");
+        throw new IllegalArgumentException("Illegal size format: '" + text + "'.  Valid examples are '10kb' or '10 " +
+                "kilobytes'.");
     }
 
     @Override
@@ -222,7 +230,8 @@ public class Size {
         if ("T".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
 
 
-        throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(SizeUnit.values())));
+        throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ",
+                lowercase(SizeUnit.values())));
     }
 
     private static List<String> lowercase(Enum... units) {

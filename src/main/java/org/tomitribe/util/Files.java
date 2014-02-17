@@ -28,6 +28,10 @@ import java.util.regex.Pattern;
 
 public class Files {
 
+    private Files() {
+        // no-op
+    }
+
     public static File file(String... parts) {
         File dir = null;
         for (String part : parts) {
@@ -81,15 +85,17 @@ public class Files {
         if (filter.accept(dir)) accepted.add(dir);
 
         final File[] files = dir.listFiles();
-        if (files != null) for (File file : files) {
-            accepted.addAll(collect(file, filter));
+        if (files != null) {
+            for (File file : files) {
+                accepted.addAll(collect(file, filter));
+            }
         }
 
         return accepted;
     }
 
-    public static interface Visitor {
-        public boolean visit(File file);
+    public interface Visitor {
+        boolean visit(File file);
     }
 
     public static boolean visit(File dir, FileFilter filter, Visitor visitor) {
@@ -99,9 +105,11 @@ public class Files {
             visitor.visit(dir);
         }
         final File[] files = dir.listFiles();
-        if (files != null) for (File file : files) {
-            final boolean visit = visit(file, filter, visitor);
-            if (!visit) return false;
+        if (files != null) {
+            for (File file : files) {
+                final boolean visit = visit(file, filter, visitor);
+                if (!visit) return false;
+            }
         }
 
         return true;
@@ -133,7 +141,8 @@ public class Files {
 
     public static File rename(File from, File to) {
         if (!from.renameTo(to))
-            throw new IllegalStateException("Could not rename " + from.getAbsolutePath() + " to " + to.getAbsolutePath());
+            throw new IllegalStateException("Could not rename " + from.getAbsolutePath() + " to " + to
+                    .getAbsolutePath());
         return to;
     }
 
@@ -204,6 +213,7 @@ public class Files {
         if (!path.isAbsolute()) throw new IllegalArgumentException("absolutePath is not absolute: " + path.getPath());
     }
 
+    //CHECKSTYLE:OFF
     public static String format(double size) {
         if (size < 1024) return String.format("%.0f B", size);
         if ((size /= 1024) < 1024) return String.format("%.0f KB", size);

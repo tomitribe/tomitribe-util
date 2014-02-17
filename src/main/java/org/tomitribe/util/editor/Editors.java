@@ -23,6 +23,10 @@ import java.beans.PropertyEditorManager;
 
 public class Editors {
 
+    private Editors() {
+        // no-op
+    }
+
     public static PropertyEditor get(Class<?> type) {
         final PropertyEditor editor = PropertyEditorManager.findEditor(type);
         if (editor != null) return editor;
@@ -30,7 +34,8 @@ public class Editors {
         final Class<Editors> c = Editors.class;
 
         try {
-            final Class<?> editorClass = c.getClassLoader().loadClass(c.getName().replace("Editors", type.getSimpleName() + "Editor"));
+            final Class<?> editorClass = c.getClassLoader().loadClass(c.getName().replace("Editors",
+                    type.getSimpleName() + "Editor"));
             PropertyEditorManager.registerEditor(type, editorClass);
 
             return PropertyEditorManager.findEditor(type);

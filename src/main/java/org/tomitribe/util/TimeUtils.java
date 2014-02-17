@@ -20,9 +20,12 @@ package org.tomitribe.util;
 
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.*;
 
 public class TimeUtils {
+
+    private TimeUtils() {
+        // no-op
+    }
 
     /**
      * Converts time to a human readable format within the specified range
@@ -32,7 +35,7 @@ public class TimeUtils {
      * @param max      the highest time unit of interest
      */
     public static String formatMillis(long duration, TimeUnit min, TimeUnit max) {
-        return format(duration, MILLISECONDS, min, max);
+        return format(duration, TimeUnit.MILLISECONDS, min, max);
     }
 
     /**
@@ -43,7 +46,7 @@ public class TimeUtils {
      * @param max      the highest time unit of interest
      */
     public static String formatNanos(long duration, TimeUnit min, TimeUnit max) {
-        return format(duration, NANOSECONDS, min, max);
+        return format(duration, TimeUnit.NANOSECONDS, min, max);
     }
 
     /**
@@ -53,7 +56,7 @@ public class TimeUtils {
      * @param min      the lowest time unit of interest
      */
     public static String formatNanos(long duration, TimeUnit min) {
-        return format(duration, NANOSECONDS, min, max());
+        return format(duration, TimeUnit.NANOSECONDS, min, max());
     }
 
     public static String format(long duration, final TimeUnit sourceUnit, TimeUnit min) {
@@ -136,7 +139,7 @@ public class TimeUtils {
         TimeUnit current = max;
 
         while (duration > 0) {
-            long temp = current.convert(duration, MILLISECONDS);
+            long temp = current.convert(duration, TimeUnit.MILLISECONDS);
 
             if (temp > 0) {
 
@@ -149,7 +152,7 @@ public class TimeUtils {
                 break;
             }
 
-            if (current == MILLISECONDS) break;
+            if (current == TimeUnit.MILLISECONDS) break;
 
             current = units[(current.ordinal() - 1)];
         }
@@ -173,14 +176,14 @@ public class TimeUtils {
     }
 
     public static String daysAndMinutes(long duration) {
-        return formatMillis(duration, MINUTES, DAYS);
+        return formatMillis(duration, TimeUnit.MINUTES, TimeUnit.DAYS);
     }
 
     public static String hoursAndMinutes(long duration) {
-        return formatMillis(duration, MINUTES, HOURS);
+        return formatMillis(duration, TimeUnit.MINUTES, TimeUnit.HOURS);
     }
 
     public static String hoursAndSeconds(long duration) {
-        return formatMillis(duration, SECONDS, HOURS);
+        return formatMillis(duration, TimeUnit.SECONDS, TimeUnit.HOURS);
     }
 }

@@ -27,6 +27,9 @@ import java.util.NoSuchElementException;
 
 public class Reflection {
 
+    private Reflection() {
+        // no-op
+    }
 
     public static Iterable<Method> methods(final Class<?> clazz) {
         return new ArrayList<Method>(Arrays.asList(clazz.getMethods()));
@@ -47,7 +50,8 @@ public class Reflection {
                     @Override
                     public Parameter next() {
                         if (!hasNext()) throw new NoSuchElementException();
-                        return new Parameter(method.getParameterAnnotations()[index], method.getParameterTypes()[index], method.getGenericParameterTypes()[index++]);
+                        return new Parameter(method.getParameterAnnotations()[index],
+                                method.getParameterTypes()[index], method.getGenericParameterTypes()[index++]);
                     }
 
                     @Override
@@ -74,7 +78,9 @@ public class Reflection {
                     @Override
                     public Parameter next() {
                         if (!hasNext()) throw new NoSuchElementException();
-                        return new Parameter(constructor.getParameterAnnotations()[index], constructor.getParameterTypes()[index], constructor.getGenericParameterTypes()[index++]);
+                        return new Parameter(constructor.getParameterAnnotations()[index],
+                                constructor.getParameterTypes()[index], constructor.getGenericParameterTypes()
+                                [index++]);
                     }
 
                     @Override

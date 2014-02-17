@@ -25,6 +25,10 @@ import java.net.URL;
 
 public class JarLocation {
 
+    private JarLocation() {
+        // no-op
+    }
+
     public static File get() {
         return jarLocation(JarLocation.class);
     }
@@ -97,7 +101,8 @@ public class JarLocation {
                     int d2 = Character.digit(fileName.charAt(i + 2), 16);
 
                     if (d1 == -1 || d2 == -1) {
-                        throw new IllegalArgumentException("Invalid % sequence (" + fileName.substring(i, i + 3) + ") at: " + String.valueOf(i));
+                        throw new IllegalArgumentException("Invalid % sequence (" + fileName.substring(i,
+                                i + 3) + ") at: " + String.valueOf(i));
                     }
 
                     out.write((byte) ((d1 << 4) + d2));

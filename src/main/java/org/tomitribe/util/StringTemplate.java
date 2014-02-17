@@ -53,7 +53,8 @@ public class StringTemplate {
             }
 
             if (value == null)
-                throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + template + "'. Keys: " + Join.join(", ", map.keySet()));
+                throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + template + "'. " +
+                        "Keys: " + Join.join(", ", map.keySet()));
             matcher.appendReplacement(buf, value);
         }
 

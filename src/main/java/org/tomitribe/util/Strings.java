@@ -20,6 +20,9 @@ package org.tomitribe.util;
 
 public class Strings {
 
+    private Strings() {
+        // no-op
+    }
 
     public static String lc(String string) {
         return lowercase(string);

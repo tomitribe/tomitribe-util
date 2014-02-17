@@ -113,7 +113,7 @@ public class Options {
 
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             Class<?> type = defaultValue.getClass();
@@ -130,7 +130,7 @@ public class Options {
     public int get(String property, int defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             return log(property, Integer.parseInt(value));
@@ -143,7 +143,7 @@ public class Options {
     public long get(String property, long defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             return log(property, Long.parseLong(value));
@@ -156,7 +156,7 @@ public class Options {
     public boolean get(String property, boolean defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             return log(property, Boolean.parseBoolean(value));
@@ -183,7 +183,7 @@ public class Options {
     public <T extends Enum<T>> T get(String property, T defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         if (defaultValue == null) throw new IllegalArgumentException("Must supply a default for property " + property);
 
@@ -221,7 +221,7 @@ public class Options {
     protected <T extends Enum<T>> Set<T> getAll(String property, Set<T> defaultValue, Class<T> enumType) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.getAll(property, defaultValue, enumType);
+        if (value == null || "".equals(value)) return parent.getAll(property, defaultValue, enumType);
 
         // Shorthand for specifying ALL or NONE for any option
         // that allows for multiple values of the enum
@@ -266,7 +266,7 @@ public class Options {
         T value = map.get(name.toUpperCase());
 
         // Call Enum.valueOf for the clean exception
-        if (value == null || value.equals("")) Enum.valueOf(enumType, name);
+        if (value == null || "".equals(value)) Enum.valueOf(enumType, name);
 
         return value;
     }
@@ -427,7 +427,8 @@ public class Options {
             if (getLogger().isDebugEnabled()) {
                 if (value instanceof Enum) {
                     Enum anEnum = (Enum) value;
-                    getLogger().debug("Using default \'" + property + "=" + anEnum.name().toLowerCase() + "\'.  Possible values are: " + possibleValues(anEnum));
+                    getLogger().debug("Using default \'" + property + "=" + anEnum.name().toLowerCase() + "\'.  " +
+                            "Possible values are: " + possibleValues(anEnum));
                 } else if (value instanceof Class) {
                     Class clazz = (Class) value;
                     getLogger().debug("Using default \'" + property + "=" + clazz.getName() + "\'");
@@ -439,24 +440,24 @@ public class Options {
         }
     }
 
-    public static interface Log {
-        public boolean isDebugEnabled();
+    public interface Log {
+        boolean isDebugEnabled();
 
-        public boolean isInfoEnabled();
+        boolean isInfoEnabled();
 
-        public boolean isWarningEnabled();
+        boolean isWarningEnabled();
 
-        public void warning(String message, Throwable t);
+        void warning(String message, Throwable t);
 
-        public void warning(String message);
+        void warning(String message);
 
-        public void debug(String message, Throwable t);
+        void debug(String message, Throwable t);
 
-        public void debug(String message);
+        void debug(String message);
 
-        public void info(String message, Throwable t);
+        void info(String message, Throwable t);
 
-        public void info(String message);
+        void info(String message);
     }
 
     public static class NullLog implements Log {

@@ -18,7 +18,26 @@
  */
 package org.tomitribe.util;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Flushable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,6 +50,10 @@ import java.util.zip.ZipOutputStream;
 
 @SuppressWarnings("UnusedDeclaration")
 public class IO {
+
+    private IO() {
+        // no-op
+    }
 
     public static Properties readProperties(final URL resource) throws IOException {
         return readProperties(resource, new Properties());
@@ -184,7 +207,8 @@ public class IO {
         doCopyDirectory(srcDir, destDir, exclusionList);
     }
 
-    private static void doCopyDirectory(final File srcDir, final File destDir, final List<String> exclusionList) throws IOException {
+    private static void doCopyDirectory(final File srcDir, final File destDir, final List<String> exclusionList)
+            throws IOException {
         final File[] files = srcDir.listFiles();
         if (files == null) {  // null if security restricted
             throw new IOException("Failed to list contents of " + srcDir);
@@ -374,6 +398,7 @@ public class IO {
             private String line;
 
             @Override
+            // CHECKSTYLE:OFF
             public boolean hasNext() {
                 try {
                     final boolean hasNext = (line = reader.readLine()) != null;

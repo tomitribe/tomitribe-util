@@ -26,6 +26,10 @@ import java.util.List;
 
 public class Join {
 
+    private Join() {
+        // no-op
+    }
+
     public static final MethodCallback METHOD_CALLBACK = new MethodCallback();
 
     public static final ClassCallback CLASS_CALLBACK = new ClassCallback();
@@ -85,9 +89,9 @@ public class Join {
         return list;
     }
 
-    public static interface NameCallback<T> {
+    public interface NameCallback<T> {
 
-        public String getName(T object);
+        String getName(T object);
     }
 
     public static class FileCallback implements NameCallback<File> {

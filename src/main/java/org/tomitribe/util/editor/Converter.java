@@ -31,6 +31,11 @@ import java.lang.reflect.Modifier;
  * - public static method that returns itself and takes a String
  */
 public class Converter {
+
+    private Converter() {
+        // no-op
+    }
+
     public static Object convert(Object value, Class<?> targetType, final String name) {
         if (value == null) {
             if (targetType.equals(Boolean.TYPE)) return false;
@@ -48,7 +53,8 @@ public class Converter {
         if (Number.class.isAssignableFrom(actualType) && Number.class.isAssignableFrom(targetType)) return value;
 
         if (!(value instanceof String)) {
-            final String message = String.format("Expected type '%s' for '%s'. Found '%s'", targetType.getName(), name, actualType.getName());
+            final String message = String.format("Expected type '%s' for '%s'. Found '%s'", targetType.getName(), name,
+                    actualType.getName());
             throw new IllegalArgumentException(message);
         }
 
@@ -73,7 +79,8 @@ public class Converter {
         }
 
         if (editor == null) {
-            final String message = String.format("Cannot convert to '%s' for '%s'. No PropertyEditor", targetType.getName(), name);
+            final String message = String.format("Cannot convert to '%s' for '%s'. No PropertyEditor",
+                    targetType.getName(), name);
             throw new IllegalArgumentException(message);
         }
 

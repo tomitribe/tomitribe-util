@@ -26,6 +26,10 @@ import java.lang.reflect.TypeVariable;
 
 public class Generics {
 
+    private Generics() {
+        // no-op
+    }
+
     public static Type getType(Field field) {
         return getTypeParameters(field.getType(), field.getGenericType())[0];
     }

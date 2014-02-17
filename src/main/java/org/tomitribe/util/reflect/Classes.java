@@ -26,27 +26,31 @@ import java.util.Map;
 
 public class Classes {
 
-    private static final Map<Class<?>, Class<?>> primitiveWrappers = new HashMap<Class<?>, Class<?>>();
-    private static final HashMap<String, Class> primitives = new HashMap<String, Class>();
+    private Classes() {
+        // no-op
+    }
+
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPERS = new HashMap<Class<?>, Class<?>>();
+    private static final HashMap<String, Class> PRIMITIVES = new HashMap<String, Class>();
 
     static {
-        primitives.put("boolean", boolean.class);
-        primitives.put("byte", byte.class);
-        primitives.put("char", char.class);
-        primitives.put("short", short.class);
-        primitives.put("int", int.class);
-        primitives.put("long", long.class);
-        primitives.put("float", float.class);
-        primitives.put("double", double.class);
+        PRIMITIVES.put("boolean", boolean.class);
+        PRIMITIVES.put("byte", byte.class);
+        PRIMITIVES.put("char", char.class);
+        PRIMITIVES.put("short", short.class);
+        PRIMITIVES.put("int", int.class);
+        PRIMITIVES.put("long", long.class);
+        PRIMITIVES.put("float", float.class);
+        PRIMITIVES.put("double", double.class);
 
-        primitiveWrappers.put(boolean.class, Boolean.class);
-        primitiveWrappers.put(byte.class, Byte.class);
-        primitiveWrappers.put(char.class, Character.class);
-        primitiveWrappers.put(double.class, Double.class);
-        primitiveWrappers.put(float.class, Float.class);
-        primitiveWrappers.put(int.class, Integer.class);
-        primitiveWrappers.put(long.class, Long.class);
-        primitiveWrappers.put(short.class, Short.class);
+        PRIMITIVE_WRAPPERS.put(boolean.class, Boolean.class);
+        PRIMITIVE_WRAPPERS.put(byte.class, Byte.class);
+        PRIMITIVE_WRAPPERS.put(char.class, Character.class);
+        PRIMITIVE_WRAPPERS.put(double.class, Double.class);
+        PRIMITIVE_WRAPPERS.put(float.class, Float.class);
+        PRIMITIVE_WRAPPERS.put(int.class, Integer.class);
+        PRIMITIVE_WRAPPERS.put(long.class, Long.class);
+        PRIMITIVE_WRAPPERS.put(short.class, Short.class);
     }
 
     public static Class forName(String string, ClassLoader classLoader) throws ClassNotFoundException {
@@ -56,7 +60,7 @@ public class Classes {
             arrayDimentions++;
         }
 
-        Class clazz = primitives.get(string);
+        Class clazz = PRIMITIVES.get(string);
 
         if (clazz == null) clazz = Class.forName(string, true, classLoader);
 
@@ -89,7 +93,7 @@ public class Classes {
     }
 
     public static Class<?> deprimitivize(Class<?> fieldType) {
-        return fieldType = fieldType.isPrimitive() ? primitiveWrappers.get(fieldType) : fieldType;
+        return fieldType.isPrimitive() ? PRIMITIVE_WRAPPERS.get(fieldType) : fieldType;
     }
 
     /**
