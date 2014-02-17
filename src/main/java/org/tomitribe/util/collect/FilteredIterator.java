@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -48,7 +48,6 @@ public class FilteredIterator<T> extends AbstractIterator<T> implements Iterator
     }
 
     public interface Filter<T> {
-
-        public boolean accept(T t);
+        boolean accept(T t);
     }
 }

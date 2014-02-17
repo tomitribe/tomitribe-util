@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,12 @@ import org.tomitribe.util.editor.Converter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class ObjectMap extends AbstractMap<String, Object> {
 
@@ -138,8 +143,8 @@ public class ObjectMap extends AbstractMap<String, Object> {
         }
     }
 
-    public static interface Member<K, V> extends Entry<K, V> {
-        public Class<?> getType();
+    public interface Member<K, V> extends Entry<K, V> {
+        Class<?> getType();
     }
 
     public class MethodEntry implements Member<String, Object> {

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -197,29 +197,29 @@ public class Size {
     private static SizeUnit parseUnit(String u) {
         if (u.length() == 0) return null;
 
-        if (u.equalsIgnoreCase("BYTES")) return SizeUnit.BYTES;
-        if (u.equalsIgnoreCase("BYTE")) return SizeUnit.BYTES;
-        if (u.equalsIgnoreCase("B")) return SizeUnit.BYTES;
+        if ("BYTES".equalsIgnoreCase(u)) return SizeUnit.BYTES;
+        if ("BYTE".equalsIgnoreCase(u)) return SizeUnit.BYTES;
+        if ("B".equalsIgnoreCase(u)) return SizeUnit.BYTES;
 
-        if (u.equalsIgnoreCase("KILOBYTES")) return SizeUnit.KILOBYTES;
-        if (u.equalsIgnoreCase("KILOBYTE")) return SizeUnit.KILOBYTES;
-        if (u.equalsIgnoreCase("KB")) return SizeUnit.KILOBYTES;
-        if (u.equalsIgnoreCase("K")) return SizeUnit.KILOBYTES;
+        if ("KILOBYTES".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("KILOBYTE".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("KB".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("K".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
 
-        if (u.equalsIgnoreCase("MEGABYTES")) return SizeUnit.MEGABYTES;
-        if (u.equalsIgnoreCase("MEGABYTE")) return SizeUnit.MEGABYTES;
-        if (u.equalsIgnoreCase("MB")) return SizeUnit.MEGABYTES;
-        if (u.equalsIgnoreCase("M")) return SizeUnit.MEGABYTES;
+        if ("MEGABYTES".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("MEGABYTE".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("MB".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("M".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
 
-        if (u.equalsIgnoreCase("GIGABYTES")) return SizeUnit.GIGABYTES;
-        if (u.equalsIgnoreCase("GIGABYTE")) return SizeUnit.GIGABYTES;
-        if (u.equalsIgnoreCase("GB")) return SizeUnit.GIGABYTES;
-        if (u.equalsIgnoreCase("G")) return SizeUnit.GIGABYTES;
+        if ("GIGABYTES".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("GIGABYTE".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("GB".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("G".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
 
-        if (u.equalsIgnoreCase("TERABYTES")) return SizeUnit.TERABYTES;
-        if (u.equalsIgnoreCase("TERABYTE")) return SizeUnit.TERABYTES;
-        if (u.equalsIgnoreCase("TB")) return SizeUnit.TERABYTES;
-        if (u.equalsIgnoreCase("T")) return SizeUnit.TERABYTES;
+        if ("TERABYTES".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("TERABYTE".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("TB".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("T".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
 
 
         throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(SizeUnit.values())));
