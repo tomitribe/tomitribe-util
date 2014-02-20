@@ -1,18 +1,20 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.tomitribe.util;
 
@@ -23,9 +25,6 @@ import java.beans.PropertyEditorManager;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @version $Revision$ $Date$
- */
 public class Size {
 
     private long size;
@@ -99,7 +98,8 @@ public class Size {
 
             final String size = t.toString();
             if (size.contains(".")) {
-                if (part.unit == null) throw new IllegalArgumentException("unit must be specified with floating point numbers");
+                if (part.unit == null)
+                    throw new IllegalArgumentException("unit must be specified with floating point numbers");
                 final double d = Double.parseDouble(size);
                 final long bytes = part.unit.toBytes(1);
                 part.size = (long) (bytes * d);
@@ -165,6 +165,13 @@ public class Size {
         return n.a == n.b;
     }
 
+    @Override
+    public int hashCode() {
+        int result = (int) (size ^ (size >>> 32));
+        result = 31 * result + (unit != null ? unit.hashCode() : 0);
+        return result;
+    }
+
     public Size add(Size that) {
         Normalize n = new Normalize(this, that);
         return new Size(n.a + n.b, n.base);
@@ -180,7 +187,8 @@ public class Size {
     }
 
     private static void invalidFormat(String text) {
-        throw new IllegalArgumentException("Illegal size format: '" + text + "'.  Valid examples are '10kb' or '10 kilobytes'.");
+        throw new IllegalArgumentException("Illegal size format: '" + text + "'.  Valid examples are '10kb' or '10 " +
+                "kilobytes'.");
     }
 
     @Override
@@ -197,32 +205,33 @@ public class Size {
     private static SizeUnit parseUnit(String u) {
         if (u.length() == 0) return null;
 
-        if (u.equalsIgnoreCase("BYTES")) return SizeUnit.BYTES;
-        if (u.equalsIgnoreCase("BYTE")) return SizeUnit.BYTES;
-        if (u.equalsIgnoreCase("B")) return SizeUnit.BYTES;
+        if ("BYTES".equalsIgnoreCase(u)) return SizeUnit.BYTES;
+        if ("BYTE".equalsIgnoreCase(u)) return SizeUnit.BYTES;
+        if ("B".equalsIgnoreCase(u)) return SizeUnit.BYTES;
 
-        if (u.equalsIgnoreCase("KILOBYTES")) return SizeUnit.KILOBYTES;
-        if (u.equalsIgnoreCase("KILOBYTE")) return SizeUnit.KILOBYTES;
-        if (u.equalsIgnoreCase("KB")) return SizeUnit.KILOBYTES;
-        if (u.equalsIgnoreCase("K")) return SizeUnit.KILOBYTES;
+        if ("KILOBYTES".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("KILOBYTE".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("KB".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("K".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
 
-        if (u.equalsIgnoreCase("MEGABYTES")) return SizeUnit.MEGABYTES;
-        if (u.equalsIgnoreCase("MEGABYTE")) return SizeUnit.MEGABYTES;
-        if (u.equalsIgnoreCase("MB")) return SizeUnit.MEGABYTES;
-        if (u.equalsIgnoreCase("M")) return SizeUnit.MEGABYTES;
+        if ("MEGABYTES".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("MEGABYTE".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("MB".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("M".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
 
-        if (u.equalsIgnoreCase("GIGABYTES")) return SizeUnit.GIGABYTES;
-        if (u.equalsIgnoreCase("GIGABYTE")) return SizeUnit.GIGABYTES;
-        if (u.equalsIgnoreCase("GB")) return SizeUnit.GIGABYTES;
-        if (u.equalsIgnoreCase("G")) return SizeUnit.GIGABYTES;
+        if ("GIGABYTES".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("GIGABYTE".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("GB".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("G".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
 
-        if (u.equalsIgnoreCase("TERABYTES")) return SizeUnit.TERABYTES;
-        if (u.equalsIgnoreCase("TERABYTE")) return SizeUnit.TERABYTES;
-        if (u.equalsIgnoreCase("TB")) return SizeUnit.TERABYTES;
-        if (u.equalsIgnoreCase("T")) return SizeUnit.TERABYTES;
+        if ("TERABYTES".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("TERABYTE".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("TB".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("T".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
 
 
-        throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(SizeUnit.values())));
+        throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ",
+                lowercase(SizeUnit.values())));
     }
 
     private static List<String> lowercase(Enum... units) {

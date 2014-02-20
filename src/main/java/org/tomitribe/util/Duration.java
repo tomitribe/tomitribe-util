@@ -1,18 +1,20 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.tomitribe.util;
 
@@ -45,9 +47,9 @@ public class Duration {
 
         Duration total = new Duration();
 
-        for (String s : strings) {
+        for (final String value : strings) {
             Duration part = new Duration();
-            s = s.trim();
+            String s = value.trim();
 
             StringBuilder t = new StringBuilder();
             StringBuilder u = new StringBuilder();
@@ -155,6 +157,7 @@ public class Duration {
         }
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -163,6 +166,13 @@ public class Duration {
 
         Normalize n = new Normalize(this, that);
         return n.a == n.b;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (time ^ (time >>> 32));
+        result = 31 * result + unit.hashCode();
+        return result;
     }
 
     public Duration add(Duration that) {
@@ -180,7 +190,8 @@ public class Duration {
     }
 
     private static void invalidFormat(String text) {
-        throw new IllegalArgumentException("Illegal duration format: '" + text + "'.  Valid examples are '10s' or '10 seconds'.");
+        throw new IllegalArgumentException("Illegal duration format: '" + text +
+                "'.  Valid examples are '10s' or '10 seconds'.");
     }
 
     @Override
@@ -197,44 +208,45 @@ public class Duration {
     private static TimeUnit parseUnit(String u) {
         if (u.length() == 0) return null;
 
-        if (u.equalsIgnoreCase("NANOSECONDS")) return TimeUnit.NANOSECONDS;
-        if (u.equalsIgnoreCase("NANOSECOND")) return TimeUnit.NANOSECONDS;
-        if (u.equalsIgnoreCase("NANOS")) return TimeUnit.NANOSECONDS;
-        if (u.equalsIgnoreCase("NANO")) return TimeUnit.NANOSECONDS;
-        if (u.equalsIgnoreCase("NS")) return TimeUnit.NANOSECONDS;
+        if ("NANOSECONDS".equalsIgnoreCase(u)) return TimeUnit.NANOSECONDS;
+        if ("NANOSECOND".equalsIgnoreCase(u)) return TimeUnit.NANOSECONDS;
+        if ("NANOS".equalsIgnoreCase(u)) return TimeUnit.NANOSECONDS;
+        if ("NANO".equalsIgnoreCase(u)) return TimeUnit.NANOSECONDS;
+        if ("NS".equalsIgnoreCase(u)) return TimeUnit.NANOSECONDS;
 
-        if (u.equalsIgnoreCase("MICROSECONDS")) return TimeUnit.MICROSECONDS;
-        if (u.equalsIgnoreCase("MICROSECOND")) return TimeUnit.MICROSECONDS;
-        if (u.equalsIgnoreCase("MICROS")) return TimeUnit.MICROSECONDS;
-        if (u.equalsIgnoreCase("MICRO")) return TimeUnit.MICROSECONDS;
+        if ("MICROSECONDS".equalsIgnoreCase(u)) return TimeUnit.MICROSECONDS;
+        if ("MICROSECOND".equalsIgnoreCase(u)) return TimeUnit.MICROSECONDS;
+        if ("MICROS".equalsIgnoreCase(u)) return TimeUnit.MICROSECONDS;
+        if ("MICRO".equalsIgnoreCase(u)) return TimeUnit.MICROSECONDS;
 
-        if (u.equalsIgnoreCase("MILLISECONDS")) return TimeUnit.MILLISECONDS;
-        if (u.equalsIgnoreCase("MILLISECOND")) return TimeUnit.MILLISECONDS;
-        if (u.equalsIgnoreCase("MILLIS")) return TimeUnit.MILLISECONDS;
-        if (u.equalsIgnoreCase("MILLI")) return TimeUnit.MILLISECONDS;
-        if (u.equalsIgnoreCase("MS")) return TimeUnit.MILLISECONDS;
+        if ("MILLISECONDS".equalsIgnoreCase(u)) return TimeUnit.MILLISECONDS;
+        if ("MILLISECOND".equalsIgnoreCase(u)) return TimeUnit.MILLISECONDS;
+        if ("MILLIS".equalsIgnoreCase(u)) return TimeUnit.MILLISECONDS;
+        if ("MILLI".equalsIgnoreCase(u)) return TimeUnit.MILLISECONDS;
+        if ("MS".equalsIgnoreCase(u)) return TimeUnit.MILLISECONDS;
 
-        if (u.equalsIgnoreCase("SECONDS")) return TimeUnit.SECONDS;
-        if (u.equalsIgnoreCase("SECOND")) return TimeUnit.SECONDS;
-        if (u.equalsIgnoreCase("SEC")) return TimeUnit.SECONDS;
-        if (u.equalsIgnoreCase("S")) return TimeUnit.SECONDS;
+        if ("SECONDS".equalsIgnoreCase(u)) return TimeUnit.SECONDS;
+        if ("SECOND".equalsIgnoreCase(u)) return TimeUnit.SECONDS;
+        if ("SEC".equalsIgnoreCase(u)) return TimeUnit.SECONDS;
+        if ("S".equalsIgnoreCase(u)) return TimeUnit.SECONDS;
 
-        if (u.equalsIgnoreCase("MINUTES")) return TimeUnit.MINUTES;
-        if (u.equalsIgnoreCase("MINUTE")) return TimeUnit.MINUTES;
-        if (u.equalsIgnoreCase("MIN")) return TimeUnit.MINUTES;
-        if (u.equalsIgnoreCase("M")) return TimeUnit.MINUTES;
+        if ("MINUTES".equalsIgnoreCase(u)) return TimeUnit.MINUTES;
+        if ("MINUTE".equalsIgnoreCase(u)) return TimeUnit.MINUTES;
+        if ("MIN".equalsIgnoreCase(u)) return TimeUnit.MINUTES;
+        if ("M".equalsIgnoreCase(u)) return TimeUnit.MINUTES;
 
-        if (u.equalsIgnoreCase("HOURS")) return TimeUnit.HOURS;
-        if (u.equalsIgnoreCase("HOUR")) return TimeUnit.HOURS;
-        if (u.equalsIgnoreCase("HRS")) return TimeUnit.HOURS;
-        if (u.equalsIgnoreCase("HR")) return TimeUnit.HOURS;
-        if (u.equalsIgnoreCase("H")) return TimeUnit.HOURS;
+        if ("HOURS".equalsIgnoreCase(u)) return TimeUnit.HOURS;
+        if ("HOUR".equalsIgnoreCase(u)) return TimeUnit.HOURS;
+        if ("HRS".equalsIgnoreCase(u)) return TimeUnit.HOURS;
+        if ("HR".equalsIgnoreCase(u)) return TimeUnit.HOURS;
+        if ("H".equalsIgnoreCase(u)) return TimeUnit.HOURS;
 
-        if (u.equalsIgnoreCase("DAYS")) return TimeUnit.DAYS;
-        if (u.equalsIgnoreCase("DAY")) return TimeUnit.DAYS;
-        if (u.equalsIgnoreCase("D")) return TimeUnit.DAYS;
+        if ("DAYS".equalsIgnoreCase(u)) return TimeUnit.DAYS;
+        if ("DAY".equalsIgnoreCase(u)) return TimeUnit.DAYS;
+        if ("D".equalsIgnoreCase(u)) return TimeUnit.DAYS;
 
-        throw new IllegalArgumentException("Unknown time unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(TimeUnit.values())));
+        throw new IllegalArgumentException("Unknown time unit '" + u + "'.  Supported units "
+                + Join.join(", ", lowercase(TimeUnit.values())));
     }
 
     private static List<String> lowercase(Enum... units) {

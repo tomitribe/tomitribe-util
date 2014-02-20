@@ -1,31 +1,31 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.tomitribe.util;
 
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class TimeUtils {
+
+    private TimeUtils() {
+        // no-op
+    }
 
     /**
      * Converts time to a human readable format within the specified range
@@ -35,7 +35,7 @@ public class TimeUtils {
      * @param max      the highest time unit of interest
      */
     public static String formatMillis(long duration, TimeUnit min, TimeUnit max) {
-        return format(duration, MILLISECONDS, min, max);
+        return format(duration, TimeUnit.MILLISECONDS, min, max);
     }
 
     /**
@@ -46,7 +46,7 @@ public class TimeUtils {
      * @param max      the highest time unit of interest
      */
     public static String formatNanos(long duration, TimeUnit min, TimeUnit max) {
-        return format(duration, NANOSECONDS, min, max);
+        return format(duration, TimeUnit.NANOSECONDS, min, max);
     }
 
     /**
@@ -56,7 +56,7 @@ public class TimeUtils {
      * @param min      the lowest time unit of interest
      */
     public static String formatNanos(long duration, TimeUnit min) {
-        return format(duration, NANOSECONDS, min, max());
+        return format(duration, TimeUnit.NANOSECONDS, min, max());
     }
 
     public static String format(long duration, final TimeUnit sourceUnit, TimeUnit min) {
@@ -69,7 +69,7 @@ public class TimeUtils {
 
     private static TimeUnit max() {
         final TimeUnit[] values = TimeUnit.values();
-        return values[values.length-1];
+        return values[values.length - 1];
     }
 
     private static TimeUnit min() {
@@ -79,10 +79,10 @@ public class TimeUtils {
     /**
      * Converts time to a human readable format within the specified range
      *
-     * @param duration the time to be converted
+     * @param duration   the time to be converted
      * @param sourceUnit the unit representing this time
-     * @param min      the lowest time unit of interest
-     * @param max      the highest time unit of interest
+     * @param min        the lowest time unit of interest
+     * @param max        the highest time unit of interest
      */
     public static String format(long duration, final TimeUnit sourceUnit, TimeUnit min, TimeUnit max) {
         StringBuilder res = new StringBuilder();
@@ -139,7 +139,7 @@ public class TimeUtils {
         TimeUnit current = max;
 
         while (duration > 0) {
-            long temp = current.convert(duration, MILLISECONDS);
+            long temp = current.convert(duration, TimeUnit.MILLISECONDS);
 
             if (temp > 0) {
 
@@ -152,7 +152,7 @@ public class TimeUtils {
                 break;
             }
 
-            if (current == MILLISECONDS) break;
+            if (current == TimeUnit.MILLISECONDS) break;
 
             current = units[(current.ordinal() - 1)];
         }
@@ -176,14 +176,14 @@ public class TimeUtils {
     }
 
     public static String daysAndMinutes(long duration) {
-        return formatMillis(duration, MINUTES, DAYS);
+        return formatMillis(duration, TimeUnit.MINUTES, TimeUnit.DAYS);
     }
 
     public static String hoursAndMinutes(long duration) {
-        return formatMillis(duration, MINUTES, HOURS);
+        return formatMillis(duration, TimeUnit.MINUTES, TimeUnit.HOURS);
     }
 
     public static String hoursAndSeconds(long duration) {
-        return formatMillis(duration, SECONDS, HOURS);
+        return formatMillis(duration, TimeUnit.SECONDS, TimeUnit.HOURS);
     }
 }

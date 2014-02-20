@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.tomitribe.util;
 
 import java.lang.reflect.Constructor;
@@ -26,31 +44,29 @@ import java.util.Set;
  * with all possible values (enums only). Debug level.
  * - When a property is found: the property name and value.  Info level.
  * - When a property value cannot be parsed: the property name and invalid value. Warn level.
- *
+ * <p/>
  * Logging the user supplied values onto INFO is really nice as it shows up in the standard
  * log output and allows us to easily see which values the user has changed from the default.
  * It's rather impossible to diagnose issues without this information.
- *
+ * <p/>
  * ENUM SETS:
- *
+ * <p/>
  * Properties that accept a Set of enum values automatically accept ALL and NONE in
  * addition to the explicitly created enum items.
- *
+ * <p/>
  * Using ALL. This allows users to have an easy way to imply "all" without having to
  * hardcode an the entire list of enum items and protects against the case where that
  * list may grow in the future.
- *
+ * <p/>
  * Using NONE.  This allows users an alternative to using an empty string when explicitly
  * specifying that none of the options should be used.
- *
+ * <p/>
  * In the internal code, this allows us to have these concepts in all enum options
  * without us having to add NONE or ALL enum items explicitly which leads to strange code.
- *
+ * <p/>
  * Additionally TRUE is an alias for ALL and FALSE an alias for NONE.  This allows options
  * that used to support only true/false values to be further defined in the future without
  * breaking compatibility.
- *
- * @version $Rev: 1029548 $ $Date: 2010-10-31 21:09:45 -0700 (Sun, 31 Oct 2010) $
  */
 public class Options {
 
@@ -97,7 +113,7 @@ public class Options {
 
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             Class<?> type = defaultValue.getClass();
@@ -114,7 +130,7 @@ public class Options {
     public int get(String property, int defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             return log(property, Integer.parseInt(value));
@@ -127,7 +143,7 @@ public class Options {
     public long get(String property, long defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             return log(property, Long.parseLong(value));
@@ -140,7 +156,7 @@ public class Options {
     public boolean get(String property, boolean defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         try {
             return log(property, Boolean.parseBoolean(value));
@@ -167,7 +183,7 @@ public class Options {
     public <T extends Enum<T>> T get(String property, T defaultValue) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
 
         if (defaultValue == null) throw new IllegalArgumentException("Must supply a default for property " + property);
 
@@ -205,7 +221,7 @@ public class Options {
     protected <T extends Enum<T>> Set<T> getAll(String property, Set<T> defaultValue, Class<T> enumType) {
         String value = properties.getProperty(property);
 
-        if (value == null || value.equals("")) return parent.getAll(property, defaultValue, enumType);
+        if (value == null || "".equals(value)) return parent.getAll(property, defaultValue, enumType);
 
         // Shorthand for specifying ALL or NONE for any option
         // that allows for multiple values of the enum
@@ -250,7 +266,7 @@ public class Options {
         T value = map.get(name.toUpperCase());
 
         // Call Enum.valueOf for the clean exception
-        if (value == null || value.equals("")) Enum.valueOf(enumType, name);
+        if (value == null || "".equals(value)) Enum.valueOf(enumType, name);
 
         return value;
     }
@@ -411,7 +427,8 @@ public class Options {
             if (getLogger().isDebugEnabled()) {
                 if (value instanceof Enum) {
                     Enum anEnum = (Enum) value;
-                    getLogger().debug("Using default \'" + property + "=" + anEnum.name().toLowerCase() + "\'.  Possible values are: " + possibleValues(anEnum));
+                    getLogger().debug("Using default \'" + property + "=" + anEnum.name().toLowerCase() + "\'.  " +
+                            "Possible values are: " + possibleValues(anEnum));
                 } else if (value instanceof Class) {
                     Class clazz = (Class) value;
                     getLogger().debug("Using default \'" + property + "=" + clazz.getName() + "\'");
@@ -423,24 +440,24 @@ public class Options {
         }
     }
 
-    public static interface Log {
-        public boolean isDebugEnabled();
+    public interface Log {
+        boolean isDebugEnabled();
 
-        public boolean isInfoEnabled();
+        boolean isInfoEnabled();
 
-        public boolean isWarningEnabled();
+        boolean isWarningEnabled();
 
-        public void warning(String message, Throwable t);
+        void warning(String message, Throwable t);
 
-        public void warning(String message);
+        void warning(String message);
 
-        public void debug(String message, Throwable t);
+        void debug(String message, Throwable t);
 
-        public void debug(String message);
+        void debug(String message);
 
-        public void info(String message, Throwable t);
+        void info(String message, Throwable t);
 
-        public void info(String message);
+        void info(String message);
     }
 
     public static class NullLog implements Log {

@@ -1,24 +1,23 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.tomitribe.util.editor;
 
-
-
-import org.tomitribe.util.editor.Editors;
 
 import java.beans.PropertyEditor;
 import java.lang.reflect.Constructor;
@@ -27,13 +26,16 @@ import java.lang.reflect.Modifier;
 
 /**
  * Can convert anything with a:
- *  - PropertyEditor
- *  - Constructor that accepts String
- *  - public static method that returns itself and takes a String
- *
- * @version $Revision$ $Date$
+ * - PropertyEditor
+ * - Constructor that accepts String
+ * - public static method that returns itself and takes a String
  */
 public class Converter {
+
+    private Converter() {
+        // no-op
+    }
+
     public static Object convert(Object value, Class<?> targetType, final String name) {
         if (value == null) {
             if (targetType.equals(Boolean.TYPE)) return false;
@@ -51,7 +53,8 @@ public class Converter {
         if (Number.class.isAssignableFrom(actualType) && Number.class.isAssignableFrom(targetType)) return value;
 
         if (!(value instanceof String)) {
-            final String message = String.format("Expected type '%s' for '%s'. Found '%s'", targetType.getName(), name, actualType.getName());
+            final String message = String.format("Expected type '%s' for '%s'. Found '%s'", targetType.getName(), name,
+                    actualType.getName());
             throw new IllegalArgumentException(message);
         }
 
@@ -71,12 +74,13 @@ public class Converter {
         final PropertyEditor editor = Editors.get(targetType);
 
         if (editor == null) {
-            final Object result  = create(targetType, stringValue);
+            final Object result = create(targetType, stringValue);
             if (result != null) return result;
         }
 
         if (editor == null) {
-            final String message = String.format("Cannot convert to '%s' for '%s'. No PropertyEditor", targetType.getName(), name);
+            final String message = String.format("Cannot convert to '%s' for '%s'. No PropertyEditor",
+                    targetType.getName(), name);
             throw new IllegalArgumentException(message);
         }
 
