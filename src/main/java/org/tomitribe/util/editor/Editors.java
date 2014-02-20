@@ -27,7 +27,7 @@ public class Editors {
         // no-op
     }
 
-    public static PropertyEditor get(Class<?> type) {
+    public static PropertyEditor get(final Class<?> type) {
         final PropertyEditor editor = PropertyEditorManager.findEditor(type);
         if (editor != null) return editor;
 
@@ -39,7 +39,7 @@ public class Editors {
             PropertyEditorManager.registerEditor(type, editorClass);
 
             return PropertyEditorManager.findEditor(type);
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             return null;
         }
     }

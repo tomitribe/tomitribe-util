@@ -19,13 +19,13 @@
 package org.tomitribe.util.editor;
 
 public class CharacterEditor extends AbstractConverter {
-    protected Object toObjectImpl(String text) {
+    protected Object toObjectImpl(final String text) {
         try {
             if (text.length() != 1) {
                 throw new IllegalArgumentException("wrong size: " + text);
             }
             return new Character(text.charAt(0));
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new PropertyEditorException(e);
         }
     }

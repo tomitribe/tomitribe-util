@@ -31,7 +31,7 @@ public class PropertyEditorException extends IllegalArgumentException {
      *
      * @param cause Original root cause of the PropertyEditorException.
      */
-    public PropertyEditorException(Throwable cause) {
+    public PropertyEditorException(final Throwable cause) {
         super(cause);
     }
 
@@ -40,7 +40,7 @@ public class PropertyEditorException extends IllegalArgumentException {
      *
      * @param message The text error message describing the condition.
      */
-    public PropertyEditorException(String message) {
+    public PropertyEditorException(final String message) {
         super(message);
     }
 
@@ -50,7 +50,7 @@ public class PropertyEditorException extends IllegalArgumentException {
      * @param message The test error message.
      * @param cause   The root cause for the exception.
      */
-    public PropertyEditorException(String message, Throwable cause) {
+    public PropertyEditorException(final String message, final Throwable cause) {
         super(message, cause);
     }
 

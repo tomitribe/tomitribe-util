@@ -44,7 +44,7 @@ public class FilesTest extends Assert {
         final List<File> files = new ArrayList<File>();
         Files.visit(colors, new Files.Visitor() {
             @Override
-            public boolean visit(File file) {
+            public boolean visit(final File file) {
                 files.add(file);
                 return true;
             }
@@ -56,7 +56,7 @@ public class FilesTest extends Assert {
     public void testIterate() throws Exception {
 
         final List<File> files = new ArrayList<File>();
-        for (File file : Files.iterate(colors)) {
+        for (final File file : Files.iterate(colors)) {
             files.add(file);
         }
 
@@ -77,7 +77,7 @@ public class FilesTest extends Assert {
         final List<File> files = new ArrayList<File>();
         Files.visit(colors, ".*\\.txt", new Files.Visitor() {
             @Override
-            public boolean visit(File file) {
+            public boolean visit(final File file) {
                 files.add(file);
                 return true;
             }
@@ -89,18 +89,18 @@ public class FilesTest extends Assert {
     public void testIterateFiltered() throws Exception {
 
         final List<File> files = new ArrayList<File>();
-        for (File file : Files.iterate(colors, ".*\\.txt")) {
+        for (final File file : Files.iterate(colors, ".*\\.txt")) {
             files.add(file);
         }
 
         assertTxtFiles(testClasses, files);
     }
 
-    private String[] relativize(File base, List<File> files) {
+    private String[] relativize(final File base, final List<File> files) {
 
         final List<String> list = new ArrayList<String>();
         final int parent = base.getAbsolutePath().length();
-        for (File file : files) {
+        for (final File file : files) {
             final String absolutePath = file.getAbsolutePath();
             final String relativePath = absolutePath.substring(parent).replace('\\', '/');
             list.add(relativePath);
@@ -109,7 +109,7 @@ public class FilesTest extends Assert {
     }
 
 
-    private void assertTxtFiles(File testClasses, List<File> files) {
+    private void assertTxtFiles(final File testClasses, final List<File> files) {
         final String[] actual = relativize(testClasses, files);
 
         final String[] expected = {
@@ -128,7 +128,7 @@ public class FilesTest extends Assert {
     }
 
 
-    private void assertAll(File testClasses, List<File> files) {
+    private void assertAll(final File testClasses, final List<File> files) {
         final String[] actual = relativize(testClasses, files);
 
         final String[] expected = {

@@ -18,7 +18,6 @@
  */
 package org.tomitribe.util;
 
-import org.tomitribe.util.Join;
 import junit.framework.TestCase;
 
 import java.util.Arrays;
@@ -43,7 +42,7 @@ public class JoinTest extends TestCase {
 
         final String actual = Join.join("*", new Join.NameCallback() {
             @Override
-            public String getName(Object object) {
+            public String getName(final Object object) {
                 return "(" + object + ")";
             }
         }, 123, "foo", true, new Message("bar"));
@@ -56,7 +55,7 @@ public class JoinTest extends TestCase {
 
         final String actual = Join.join("*", new Join.NameCallback() {
             @Override
-            public String getName(Object object) {
+            public String getName(final Object object) {
                 return "(" + object + ")";
             }
         }, Arrays.asList(123, "foo", true, new Message("bar")));
@@ -68,7 +67,7 @@ public class JoinTest extends TestCase {
     public static class Message {
         private final String message;
 
-        public Message(String message) {
+        public Message(final String message) {
             this.message = message;
         }
 

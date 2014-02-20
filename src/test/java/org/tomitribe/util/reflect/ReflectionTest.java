@@ -98,11 +98,11 @@ public class ReflectionTest extends Assert {
 
     public static class Color {
 
-        public Color(@Red String s, @Green int g, @Blue boolean b, @Red @Green @Blue Object o) {
+        public Color(@Red final String s, @Green final int g, @Blue final boolean b, @Red @Green @Blue final Object o) {
 
         }
 
-        public void foo(@Green String s, @Blue int g, @Red boolean b, @Red @Green @Blue Object o) {
+        public void foo(@Green final String s, @Blue final int g, @Red final boolean b, @Red @Green @Blue final Object o) {
 
         }
     }

@@ -28,7 +28,7 @@ public class Parameter implements AnnotatedElement {
     private final Class<?> type;
     private final Type genericType;
 
-    public Parameter(Annotation[] annotations, Class<?> type, Type genericType) {
+    public Parameter(final Annotation[] annotations, final Class<?> type, final Type genericType) {
         this.annotations = annotations;
         this.type = type;
         this.genericType = genericType;
@@ -43,13 +43,13 @@ public class Parameter implements AnnotatedElement {
     }
 
     @Override
-    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+    public boolean isAnnotationPresent(final Class<? extends Annotation> annotationClass) {
         return getAnnotation(annotationClass) != null;
     }
 
     @Override
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        for (Annotation annotation : annotations) {
+    public <T extends Annotation> T getAnnotation(final Class<T> annotationClass) {
+        for (final Annotation annotation : annotations) {
             if (annotationClass.equals(annotation.annotationType())) return (T) annotation;
         }
         return null;

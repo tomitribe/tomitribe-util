@@ -40,7 +40,7 @@ public class PrintString extends PrintStream {
         return baos.toByteArray();
     }
 
-    public String toString(String charsetName) throws UnsupportedEncodingException {
+    public String toString(final String charsetName) throws UnsupportedEncodingException {
         flush();
         return baos.toString(charsetName);
     }

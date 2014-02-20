@@ -51,7 +51,7 @@ public class GenericsTest extends TestCase {
 
         public Collection<URI> uris;
 
-        public Orange(Queue<URI> uris) {
+        public Orange(final Queue<URI> uris) {
             this.uris = uris;
         }
 
@@ -59,7 +59,7 @@ public class GenericsTest extends TestCase {
             return null;
         }
 
-        public void set(List<Integer> integers) {
+        public void set(final List<Integer> integers) {
         }
     }
 }

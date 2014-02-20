@@ -36,7 +36,7 @@ public class Files {
 
     public static final FileFilter ALL = new FileFilter() {
         @Override
-        public boolean accept(File file) {
+        public boolean accept(final File file) {
             return true;
         }
     };
@@ -45,9 +45,9 @@ public class Files {
         // no-op
     }
 
-    public static File file(String... parts) {
+    public static File file(final String... parts) {
         File dir = null;
-        for (String part : parts) {
+        for (final String part : parts) {
             if (dir == null) {
                 dir = new File(part);
             } else {
@@ -58,8 +58,8 @@ public class Files {
         return dir;
     }
 
-    public static File file(File dir, String... parts) {
-        for (String part : parts) {
+    public static File file(File dir, final String... parts) {
+        for (final String part : parts) {
             dir = new File(dir, part);
         }
 
@@ -78,11 +78,11 @@ public class Files {
         return collect(dir, new PatternFileFilter(pattern));
     }
 
-    public static boolean visit(final File dir, Visitor visitor) {
+    public static boolean visit(final File dir, final Visitor visitor) {
         return visit(dir, ALL, visitor);
     }
 
-    public static boolean visit(final File dir, final String regex, Visitor visitor) {
+    public static boolean visit(final File dir, final String regex, final Visitor visitor) {
         return visit(dir, Pattern.compile(regex), visitor);
     }
 
@@ -91,12 +91,12 @@ public class Files {
         return visit(dir,
                 new FileFilter() {
                     @Override
-                    public boolean accept(File file) {
+                    public boolean accept(final File file) {
                         return true;
                     }
                 }, new Visitor() {
                     @Override
-                    public boolean visit(File file) {
+                    public boolean visit(final File file) {
                         if (file.isFile() && patternFileFilter.accept(file)) {
                             visitor.visit(file);
                         }
@@ -118,12 +118,12 @@ public class Files {
         return iterate(dir, new PatternFileFilter(pattern));
     }
 
-    public static List<File> collect(File dir, FileFilter filter) {
+    public static List<File> collect(final File dir, final FileFilter filter) {
         final List<File> accepted = new ArrayList<File>();
 
         final File[] files = dir.listFiles();
         if (files != null) {
-            for (File file : files) {
+            for (final File file : files) {
                 if (filter.accept(file)) accepted.add(file);
                 accepted.addAll(collect(file, filter));
             }
@@ -138,7 +138,7 @@ public class Files {
             public Iterator<File> iterator() {
                 return new FilteredIterator<File>(new RecursiveFileIterator(dir), new FilteredIterator.Filter<File>() {
                     @Override
-                    public boolean accept(File file) {
+                    public boolean accept(final File file) {
                         return filter.accept(file);
                     }
                 });
@@ -150,11 +150,11 @@ public class Files {
         boolean visit(File file);
     }
 
-    public static boolean visit(File dir, FileFilter filter, Visitor visitor) {
+    public static boolean visit(final File dir, final FileFilter filter, final Visitor visitor) {
 
         final File[] files = dir.listFiles();
         if (files != null) {
-            for (File file : files) {
+            for (final File file : files) {
                 if (!filter.accept(file)) return false;
                 if (!visitor.visit(file)) return false;
                 if (!visit(file, filter, visitor)) return false;
@@ -164,43 +164,43 @@ public class Files {
         return true;
     }
 
-    public static void exists(File file, String s) {
+    public static void exists(final File file, final String s) {
         if (!file.exists()) throw new IllegalStateException(s + " does not exist: " + file.getAbsolutePath());
     }
 
-    public static void exists(File file) {
+    public static void exists(final File file) {
         exists(file, "File");
     }
 
-    public static void dir(File file) {
+    public static void dir(final File file) {
         if (!file.isDirectory()) throw new IllegalStateException("Not a directory: " + file.getAbsolutePath());
     }
 
-    public static void file(File file) {
+    public static void file(final File file) {
         if (!file.isFile()) throw new IllegalStateException("Not a file: " + file.getAbsolutePath());
     }
 
-    public static void writable(File file) {
+    public static void writable(final File file) {
         if (!file.canWrite()) throw new IllegalStateException("Not writable: " + file.getAbsolutePath());
     }
 
-    public static void readable(File file) {
+    public static void readable(final File file) {
         if (!file.canRead()) throw new IllegalStateException("Not readable: " + file.getAbsolutePath());
     }
 
-    public static File rename(File from, File to) {
+    public static File rename(final File from, final File to) {
         if (!from.renameTo(to))
             throw new IllegalStateException("Could not rename " + from.getAbsolutePath() + " to " + to
                     .getAbsolutePath());
         return to;
     }
 
-    public static void remove(File file) {
+    public static void remove(final File file) {
         if (file == null) return;
         if (!file.exists()) return;
 
         if (file.isDirectory()) {
-            for (File child : file.listFiles()) {
+            for (final File child : file.listFiles()) {
                 remove(child);
             }
         }
@@ -209,7 +209,7 @@ public class Files {
         }
     }
 
-    public static void mkdir(File file) {
+    public static void mkdir(final File file) {
         if (file.exists()) {
             dir(file);
             return;
@@ -223,22 +223,22 @@ public class Files {
             if (!file.delete()) throw new IllegalStateException("Cannot make temp dir.  Delete failed");
             mkdir(file);
             return file;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void mkparent(File file) {
+    public static void mkparent(final File file) {
         mkdirs(file.getParentFile());
     }
 
-    public static File mkparent(File dir, String... parts) {
+    public static File mkparent(final File dir, final String... parts) {
         final File file = file(dir, parts);
         mkparent(file);
         return file;
     }
 
-    public static File mkdirs(File file) {
+    public static File mkdirs(final File file) {
         if (!file.exists()) {
             if (!file.mkdirs()) throw new RuntimeException("Cannot mkdirs: " + file.getAbsolutePath());
         } else {
@@ -248,7 +248,7 @@ public class Files {
         return file;
     }
 
-    public static File resolve(File absolutePath, File path) {
+    public static File resolve(final File absolutePath, final File path) {
         if (path == null) throw new IllegalArgumentException("path is null");
         if (path.isAbsolute()) return path;
 
@@ -258,7 +258,7 @@ public class Files {
         return new File(absolutePath, path.getPath());
     }
 
-    public static void absolute(File path) {
+    public static void absolute(final File path) {
         if (!path.isAbsolute()) throw new IllegalArgumentException("absolutePath is not absolute: " + path.getPath());
     }
 
@@ -294,7 +294,7 @@ public class Files {
 
         private final LinkedList<FileIterator> stack = new LinkedList<FileIterator>();
 
-        public RecursiveFileIterator(File base) {
+        public RecursiveFileIterator(final File base) {
             stack.add(new FileIterator(base));
         }
 
@@ -316,7 +316,7 @@ public class Files {
                 }
 
                 return file;
-            } catch (NoSuchElementException e) {
+            } catch (final NoSuchElementException e) {
                 stack.pop();
                 return advance();
             }
@@ -326,12 +326,12 @@ public class Files {
     private static class PatternFileFilter implements FileFilter {
         private final Pattern pattern;
 
-        public PatternFileFilter(Pattern pattern) {
+        public PatternFileFilter(final Pattern pattern) {
             this.pattern = pattern;
         }
 
         @Override
-        public boolean accept(File file) {
+        public boolean accept(final File file) {
             return pattern.matcher(file.getAbsolutePath()).matches();
         }
     }

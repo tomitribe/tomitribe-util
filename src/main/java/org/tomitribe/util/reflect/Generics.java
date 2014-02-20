@@ -30,50 +30,50 @@ public class Generics {
         // no-op
     }
 
-    public static Type getType(Field field) {
+    public static Type getType(final Field field) {
         return getTypeParameters(field.getType(), field.getGenericType())[0];
     }
 
-    public static Type getType(Parameter parameter) {
+    public static Type getType(final Parameter parameter) {
         return getTypeParameters(parameter.getType(), parameter.getGenericType())[0];
     }
 
-    public static Type getReturnType(Method method) {
+    public static Type getReturnType(final Method method) {
         return getTypeParameters(method.getReturnType(), method.getGenericReturnType())[0];
     }
 
-    public static Type[] getTypeParameters(Class genericClass, Type type) {
+    public static Type[] getTypeParameters(final Class genericClass, final Type type) {
         if (type instanceof Class) {
-            Class rawClass = (Class) type;
+            final Class rawClass = (Class) type;
 
             // if this is the collection class we're done
             if (genericClass.equals(type)) {
                 return null;
             }
 
-            for (Type intf : rawClass.getGenericInterfaces()) {
-                Type[] collectionType = getTypeParameters(genericClass, intf);
+            for (final Type intf : rawClass.getGenericInterfaces()) {
+                final Type[] collectionType = getTypeParameters(genericClass, intf);
                 if (collectionType != null) {
                     return collectionType;
                 }
             }
 
-            Type[] collectionType = getTypeParameters(genericClass, rawClass.getGenericSuperclass());
+            final Type[] collectionType = getTypeParameters(genericClass, rawClass.getGenericSuperclass());
             return collectionType;
         } else if (type instanceof ParameterizedType) {
-            ParameterizedType parameterizedType = (ParameterizedType) type;
+            final ParameterizedType parameterizedType = (ParameterizedType) type;
 
-            Type rawType = parameterizedType.getRawType();
+            final Type rawType = parameterizedType.getRawType();
             if (genericClass.equals(rawType)) {
-                Type[] argument = parameterizedType.getActualTypeArguments();
+                final Type[] argument = parameterizedType.getActualTypeArguments();
                 return argument;
             }
-            Type[] collectionTypes = getTypeParameters(genericClass, rawType);
+            final Type[] collectionTypes = getTypeParameters(genericClass, rawType);
             if (collectionTypes != null) {
                 for (int i = 0; i < collectionTypes.length; i++) {
                     if (collectionTypes[i] instanceof TypeVariable) {
-                        TypeVariable typeVariable = (TypeVariable) collectionTypes[i];
-                        TypeVariable[] rawTypeParams = ((Class) rawType).getTypeParameters();
+                        final TypeVariable typeVariable = (TypeVariable) collectionTypes[i];
+                        final TypeVariable[] rawTypeParams = ((Class) rawType).getTypeParameters();
                         for (int j = 0; j < rawTypeParams.length; j++) {
                             if (typeVariable.getName().equals(rawTypeParams[j].getName())) {
                                 collectionTypes[i] = parameterizedType.getActualTypeArguments()[j];

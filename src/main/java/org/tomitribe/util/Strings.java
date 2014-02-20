@@ -24,55 +24,55 @@ public class Strings {
         // no-op
     }
 
-    public static String lc(String string) {
+    public static String lc(final String string) {
         return lowercase(string);
     }
 
-    public static String lowercase(String string) {
+    public static String lowercase(final String string) {
         if (string == null) return null;
 
-        StringBuilder sb = new StringBuilder(string);
+        final StringBuilder sb = new StringBuilder(string);
         for (int i = 0; i < sb.length(); i++) {
             sb.setCharAt(i, Character.toLowerCase(sb.charAt(i)));
         }
         return sb.toString();
     }
 
-    public static String uc(String string) {
+    public static String uc(final String string) {
         return uppercase(string);
     }
 
-    public static String uppercase(String string) {
+    public static String uppercase(final String string) {
         if (string == null) return null;
 
-        StringBuilder sb = new StringBuilder(string);
+        final StringBuilder sb = new StringBuilder(string);
         for (int i = 0; i < sb.length(); i++) {
             sb.setCharAt(i, Character.toUpperCase(sb.charAt(i)));
         }
         return sb.toString();
     }
 
-    public static String ucfirst(String string) {
+    public static String ucfirst(final String string) {
         if (string == null) return null;
 
-        StringBuilder sb = new StringBuilder(string);
+        final StringBuilder sb = new StringBuilder(string);
         if (sb.length() > 0) {
             sb.setCharAt(0, Character.toUpperCase(sb.charAt(0)));
         }
         return sb.toString();
     }
 
-    public static String lcfirst(String string) {
+    public static String lcfirst(final String string) {
         if (string == null) return null;
 
-        StringBuilder sb = new StringBuilder(string);
+        final StringBuilder sb = new StringBuilder(string);
         if (sb.length() > 0) {
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
         }
         return sb.toString();
     }
 
-    public static String camelCase(String string) {
+    public static String camelCase(final String string) {
         return camelCase(string, "-");
     }
 
@@ -80,8 +80,8 @@ public class Strings {
         final StringBuilder sb = new StringBuilder();
         final String[] strings = string.split(delimiter);
 
-        for (String s : strings) {
-            int l = sb.length();
+        for (final String s : strings) {
+            final int l = sb.length();
             sb.append(s);
             sb.setCharAt(l, Character.toUpperCase(sb.charAt(l)));
         }

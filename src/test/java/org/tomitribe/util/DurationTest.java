@@ -18,7 +18,6 @@
  */
 package org.tomitribe.util;
 
-import org.tomitribe.util.Duration;
 import junit.framework.TestCase;
 
 import java.util.concurrent.TimeUnit;
@@ -91,7 +90,7 @@ public class DurationTest extends TestCase {
         assertEquals(new Duration(15, MINUTES), new Duration("1 and 2 and 3 and 4 and 5", MINUTES));
         assertEquals(new Duration(15, HOURS), new Duration("1 and 2 and 3 and 4 and 5", HOURS));
 
-        for (TimeUnit defaultUnit : TimeUnit.values()) {
+        for (final TimeUnit defaultUnit : TimeUnit.values()) {
             final Duration expected = new Duration(0 +
                     DAYS.toNanos(1) +
                     defaultUnit.toNanos(2) +

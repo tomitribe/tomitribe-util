@@ -33,7 +33,7 @@ public class FilteredIteratorTest extends Assert {
         final List<String> strings = Arrays.asList("red", "green", "blue");
         final Iterator<String> iterator = new FilteredIterator<String>(strings.iterator(), new FilteredIterator.Filter<String>() {
             @Override
-            public boolean accept(String s) {
+            public boolean accept(final String s) {
                 return !"green".equals(s);
             }
         });
@@ -45,7 +45,7 @@ public class FilteredIteratorTest extends Assert {
             iterator.next();
 
             fail("Expected NoSuchElementException");
-        } catch (NoSuchElementException e) {
+        } catch (final NoSuchElementException e) {
             // pass
         }
 
@@ -57,7 +57,7 @@ public class FilteredIteratorTest extends Assert {
         final List<String> strings = Arrays.asList("red", "green", "blue");
         final Iterator<String> iterator = new FilteredIterator<String>(strings.iterator(), new FilteredIterator.Filter<String>() {
             @Override
-            public boolean accept(String s) {
+            public boolean accept(final String s) {
                 return !"green".equals(s);
             }
         });
@@ -76,7 +76,7 @@ public class FilteredIteratorTest extends Assert {
             iterator.next();
 
             fail("Expected NoSuchElementException");
-        } catch (NoSuchElementException e) {
+        } catch (final NoSuchElementException e) {
             // pass
         }
 

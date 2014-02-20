@@ -18,7 +18,6 @@
  */
 package org.tomitribe.util;
 
-import org.tomitribe.util.TimeUtils;
 import junit.framework.TestCase;
 
 import static java.util.concurrent.TimeUnit.DAYS;

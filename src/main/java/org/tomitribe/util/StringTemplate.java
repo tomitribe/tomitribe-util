@@ -29,16 +29,16 @@ public class StringTemplate {
     public static final Pattern PATTERN = Pattern.compile("(\\{)((\\.|\\w)+)(})");
     private final String template;
 
-    public StringTemplate(String template) {
+    public StringTemplate(final String template) {
         this.template = template;
     }
 
-    public String apply(Map<String, Object> map) {
-        Matcher matcher = PATTERN.matcher(template);
-        StringBuffer buf = new StringBuffer();
+    public String apply(final Map<String, Object> map) {
+        final Matcher matcher = PATTERN.matcher(template);
+        final StringBuffer buf = new StringBuffer();
 
         while (matcher.find()) {
-            String key = matcher.group(2);
+            final String key = matcher.group(2);
 
             if (key == null) throw new IllegalStateException("Key is null. Template '" + template + "'");
 
@@ -62,7 +62,7 @@ public class StringTemplate {
         return buf.toString();
     }
 
-    private String value(Map<String, Object> map, String key) {
+    private String value(final Map<String, Object> map, final String key) {
         final Object o = map.get(key);
         if (o == null) throw new IllegalStateException("Missing entry " + key);
         return o.toString();

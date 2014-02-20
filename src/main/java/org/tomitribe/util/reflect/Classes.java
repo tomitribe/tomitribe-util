@@ -53,7 +53,7 @@ public class Classes {
         PRIMITIVE_WRAPPERS.put(short.class, Short.class);
     }
 
-    public static Class forName(String string, ClassLoader classLoader) throws ClassNotFoundException {
+    public static Class forName(String string, final ClassLoader classLoader) throws ClassNotFoundException {
         int arrayDimentions = 0;
         while (string.endsWith("[]")) {
             string = string.substring(0, string.length() - 2);
@@ -70,12 +70,12 @@ public class Classes {
         return Array.newInstance(clazz, new int[arrayDimentions]).getClass();
     }
 
-    public static String packageName(Class clazz) {
+    public static String packageName(final Class clazz) {
         return packageName(clazz.getName());
     }
 
-    public static String packageName(String clazzName) {
-        int i = clazzName.lastIndexOf('.');
+    public static String packageName(final String clazzName) {
+        final int i = clazzName.lastIndexOf('.');
         if (i > 0) {
             return clazzName.substring(0, i);
         } else {
@@ -83,16 +83,16 @@ public class Classes {
         }
     }
 
-    public static List<String> getSimpleNames(Class... classes) {
-        List<String> list = new ArrayList<String>();
-        for (Class aClass : classes) {
+    public static List<String> getSimpleNames(final Class... classes) {
+        final List<String> list = new ArrayList<String>();
+        for (final Class aClass : classes) {
             list.add(aClass.getSimpleName());
         }
 
         return list;
     }
 
-    public static Class<?> deprimitivize(Class<?> fieldType) {
+    public static Class<?> deprimitivize(final Class<?> fieldType) {
         return fieldType.isPrimitive() ? PRIMITIVE_WRAPPERS.get(fieldType) : fieldType;
     }
 
@@ -103,7 +103,7 @@ public class Classes {
      * @return
      */
     public static List<Class<?>> ancestors(Class clazz) {
-        ArrayList<Class<?>> ancestors = new ArrayList<Class<?>>();
+        final ArrayList<Class<?>> ancestors = new ArrayList<Class<?>>();
 
         while (clazz != null && !clazz.equals(Object.class)) {
             ancestors.add(clazz);

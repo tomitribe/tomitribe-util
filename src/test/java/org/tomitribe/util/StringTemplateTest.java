@@ -18,7 +18,6 @@
  */
 package org.tomitribe.util;
 
-import org.tomitribe.util.StringTemplate;
 import junit.framework.TestCase;
 
 import java.util.HashMap;

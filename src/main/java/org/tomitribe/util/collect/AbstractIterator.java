@@ -32,7 +32,7 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
             next = advance();
 
             return next != null;
-        } catch (NoSuchElementException e) {
+        } catch (final NoSuchElementException e) {
             return false;
         }
     }

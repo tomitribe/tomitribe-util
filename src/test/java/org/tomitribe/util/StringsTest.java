@@ -18,7 +18,6 @@
  */
 package org.tomitribe.util;
 
-import org.tomitribe.util.Strings;
 import junit.framework.TestCase;
 
 public class StringsTest extends TestCase {

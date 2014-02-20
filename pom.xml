@@ -22,9 +22,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.tomitribe</groupId>
+    <groupId>com.tomitribe</groupId>
     <artifactId>oss-parent</artifactId>
-    <version>2-SNAPSHOT</version>
+    <version>1-SNAPSHOT</version>
   </parent>
 
   <artifactId>tomitribe-util</artifactId>
@@ -43,6 +43,16 @@
 
   <build>
     <defaultGoal>install</defaultGoal>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <failOnViolation>false</failOnViolation>
+          <logViolationsToConsole>true</logViolationsToConsole>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 </project>
 

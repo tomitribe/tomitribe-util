@@ -36,7 +36,7 @@ public class Converter {
         // no-op
     }
 
-    public static Object convert(Object value, Class<?> targetType, final String name) {
+    public static Object convert(final Object value, Class<?> targetType, final String name) {
         if (value == null) {
             if (targetType.equals(Boolean.TYPE)) return false;
             return value;
@@ -61,14 +61,14 @@ public class Converter {
         final String stringValue = (String) value;
 
         if (Enum.class.isAssignableFrom(targetType)) {
-            Class<? extends Enum> enumType = (Class<? extends Enum>) targetType;
+            final Class<? extends Enum> enumType = (Class<? extends Enum>) targetType;
             return Enum.valueOf(enumType, stringValue.toUpperCase());
         }
 
         try {
             // Force static initializers to run
             Class.forName(targetType.getName(), true, targetType.getClassLoader());
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
         }
 
         final PropertyEditor editor = Editors.get(targetType);
@@ -88,18 +88,18 @@ public class Converter {
         return editor.getValue();
     }
 
-    private static Object create(Class<?> type, String value) {
+    private static Object create(final Class<?> type, final String value) {
         try {
             final Constructor<?> constructor = type.getConstructor(String.class);
             return constructor.newInstance(value);
-        } catch (NoSuchMethodException e) {
+        } catch (final NoSuchMethodException e) {
             // fine
-        } catch (Exception e) {
+        } catch (final Exception e) {
             final String message = String.format("Cannot convert string '%s' to %s.", value, type);
             throw new IllegalArgumentException(message, e);
         }
 
-        for (Method method : type.getMethods()) {
+        for (final Method method : type.getMethods()) {
             if (!Modifier.isStatic(method.getModifiers())) continue;
             if (!Modifier.isPublic(method.getModifiers())) continue;
             if (!method.getReturnType().equals(type)) continue;
@@ -108,7 +108,7 @@ public class Converter {
 
             try {
                 return method.invoke(null, value);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 final String message = String.format("Cannot convert string '%s' to %s.", value, type);
                 throw new IllegalStateException(message, e);
             }
@@ -117,7 +117,7 @@ public class Converter {
         return null;
     }
 
-    private static Class<?> boxPrimitive(Class<?> targetType) {
+    private static Class<?> boxPrimitive(final Class<?> targetType) {
         if (targetType == byte.class) return Byte.class;
         if (targetType == char.class) return Character.class;
         if (targetType == short.class) return Short.class;

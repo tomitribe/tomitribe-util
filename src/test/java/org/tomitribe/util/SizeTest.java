@@ -18,7 +18,6 @@
  */
 package org.tomitribe.util;
 
-import org.tomitribe.util.Size;
 import junit.framework.TestCase;
 
 import static org.tomitribe.util.SizeUnit.BYTES;

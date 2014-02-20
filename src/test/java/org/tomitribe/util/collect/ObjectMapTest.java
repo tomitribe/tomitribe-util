@@ -93,7 +93,7 @@ public class ObjectMapTest extends TestCase {
             return myString;
         }
 
-        public void setMyString(String myString) {
+        public void setMyString(final String myString) {
             this.myString = myString;
         }
 
@@ -101,7 +101,7 @@ public class ObjectMapTest extends TestCase {
             return mybyte;
         }
 
-        public void setMybyte(byte mybyte) {
+        public void setMybyte(final byte mybyte) {
             this.mybyte = mybyte;
         }
 
@@ -109,7 +109,7 @@ public class ObjectMapTest extends TestCase {
             return mychar;
         }
 
-        public void setMychar(char mychar) {
+        public void setMychar(final char mychar) {
             this.mychar = mychar;
         }
 
@@ -117,7 +117,7 @@ public class ObjectMapTest extends TestCase {
             return myshort;
         }
 
-        public void setMyshort(short myshort) {
+        public void setMyshort(final short myshort) {
             this.myshort = myshort;
         }
 
@@ -125,7 +125,7 @@ public class ObjectMapTest extends TestCase {
             return myint;
         }
 
-        public void setMyint(int myint) {
+        public void setMyint(final int myint) {
             this.myint = myint;
         }
 
@@ -133,7 +133,7 @@ public class ObjectMapTest extends TestCase {
             return mylong;
         }
 
-        public void setMylong(long mylong) {
+        public void setMylong(final long mylong) {
             this.mylong = mylong;
         }
 
@@ -141,7 +141,7 @@ public class ObjectMapTest extends TestCase {
             return myfloat;
         }
 
-        public void setMyfloat(float myfloat) {
+        public void setMyfloat(final float myfloat) {
             this.myfloat = myfloat;
         }
 
@@ -149,7 +149,7 @@ public class ObjectMapTest extends TestCase {
             return mydouble;
         }
 
-        public void setMydouble(double mydouble) {
+        public void setMydouble(final double mydouble) {
             this.mydouble = mydouble;
         }
 
@@ -157,7 +157,7 @@ public class ObjectMapTest extends TestCase {
             return myboolean;
         }
 
-        public void setMyboolean(boolean myboolean) {
+        public void setMyboolean(final boolean myboolean) {
             this.myboolean = myboolean;
         }
     }

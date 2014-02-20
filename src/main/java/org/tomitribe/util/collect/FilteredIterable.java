@@ -25,7 +25,7 @@ public class FilteredIterable<T> implements Iterable<T> {
     private final Iterable<T> iterable;
     private final FilteredIterator.Filter<T> filter;
 
-    public FilteredIterable(Iterable<T> iterable, FilteredIterator.Filter<T> filter) {
+    public FilteredIterable(final Iterable<T> iterable, final FilteredIterator.Filter<T> filter) {
         this.iterable = iterable;
         this.filter = filter;
     }
