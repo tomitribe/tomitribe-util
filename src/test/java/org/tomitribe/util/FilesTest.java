@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.tomitribe.util.Join.join;
@@ -121,6 +122,8 @@ public class FilesTest extends Assert {
                 "/colors/red/crimson.txt"
         };
 
+        Arrays.sort(actual);
+        Arrays.sort(expected);
         assertEquals(join("\n", expected), join("\n", actual));
     }
 
@@ -151,6 +154,8 @@ public class FilesTest extends Assert {
                 "/colors/red/crimson.txt"
         };
 
+        Arrays.sort(actual);
+        Arrays.sort(expected);
         assertEquals(join("\n", expected), join("\n", actual));
     }
 }
