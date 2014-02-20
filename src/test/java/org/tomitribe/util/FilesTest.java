@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -27,46 +27,18 @@ import static org.tomitribe.util.Join.join;
 
 public class FilesTest extends Assert {
 
+    final File testClasses = JarLocation.jarLocation(FilesTest.class);
+    final File colors = new File(testClasses, "colors");
+
     @Test
     public void testCollect() throws Exception {
 
-        final File testClasses = JarLocation.jarLocation(FilesTest.class);
-        final File colors = new File(testClasses, "colors");
-
-        final String[] actual = relativize(testClasses, Files.collect(colors));
-
-        final String[] expected = {
-                "/colors",
-                "/colors/blue",
-                "/colors/blue/midnight.txt",
-                "/colors/blue/navy.csv",
-                "/colors/blue/pastel",
-                "/colors/blue/pastel/powder.txt",
-                "/colors/green",
-                "/colors/green/emerald.csv",
-                "/colors/orange.txt",
-                "/colors/other",
-                "/colors/other/cmyk",
-                "/colors/other/cmyk/cyan.csv",
-                "/colors/other/cmyk/key.sh",
-                "/colors/other/cmyk/magenta.txt",
-                "/colors/other/cmyk/yellow.txt",
-                "/colors/other/hsb",
-                "/colors/other/hsb/brightness.csv",
-                "/colors/other/hsb/hue.txt",
-                "/colors/other/hsb/saturation",
-                "/colors/red",
-                "/colors/red/crimson.txt"
-        };
-
-        assertEquals(join("\n", expected), join("\n", actual));
+        final List<File> files = Files.collect(colors);
+        assertAll(testClasses, files);
     }
 
     @Test
     public void testVisit() throws Exception {
-
-        final File testClasses = JarLocation.jarLocation(FilesTest.class);
-        final File colors = new File(testClasses, "colors");
 
         final List<File> files = new ArrayList<File>();
         Files.visit(colors, new Files.Visitor() {
@@ -76,100 +48,30 @@ public class FilesTest extends Assert {
                 return true;
             }
         });
-        final String[] actual = relativize(testClasses, files);
-
-        final String[] expected = {
-                "/colors",
-                "/colors/blue",
-                "/colors/blue/midnight.txt",
-                "/colors/blue/navy.csv",
-                "/colors/blue/pastel",
-                "/colors/blue/pastel/powder.txt",
-                "/colors/green",
-                "/colors/green/emerald.csv",
-                "/colors/orange.txt",
-                "/colors/other",
-                "/colors/other/cmyk",
-                "/colors/other/cmyk/cyan.csv",
-                "/colors/other/cmyk/key.sh",
-                "/colors/other/cmyk/magenta.txt",
-                "/colors/other/cmyk/yellow.txt",
-                "/colors/other/hsb",
-                "/colors/other/hsb/brightness.csv",
-                "/colors/other/hsb/hue.txt",
-                "/colors/other/hsb/saturation",
-                "/colors/red",
-                "/colors/red/crimson.txt"
-        };
-
-        assertEquals(join("\n", expected), join("\n", actual));
+        assertAll(testClasses, files);
     }
 
     @Test
     public void testIterate() throws Exception {
-
-        final File testClasses = JarLocation.jarLocation(FilesTest.class);
-        final File colors = new File(testClasses, "colors");
 
         final List<File> files = new ArrayList<File>();
         for (File file : Files.iterate(colors)) {
             files.add(file);
         }
 
-        final String[] actual = relativize(testClasses, files);
-
-        final String[] expected = {
-                "/colors/blue",
-                "/colors/blue/midnight.txt",
-                "/colors/blue/navy.csv",
-                "/colors/blue/pastel",
-                "/colors/blue/pastel/powder.txt",
-                "/colors/green",
-                "/colors/green/emerald.csv",
-                "/colors/orange.txt",
-                "/colors/other",
-                "/colors/other/cmyk",
-                "/colors/other/cmyk/cyan.csv",
-                "/colors/other/cmyk/key.sh",
-                "/colors/other/cmyk/magenta.txt",
-                "/colors/other/cmyk/yellow.txt",
-                "/colors/other/hsb",
-                "/colors/other/hsb/brightness.csv",
-                "/colors/other/hsb/hue.txt",
-                "/colors/other/hsb/saturation",
-                "/colors/red",
-                "/colors/red/crimson.txt"
-        };
-
-        assertEquals(join("\n", expected), join("\n", actual));
+        assertAll(testClasses, files);
     }
 
     @Test
     public void testCollectFiltered() throws Exception {
 
-        final File testClasses = JarLocation.jarLocation(FilesTest.class);
-        final File colors = new File(testClasses, "colors");
-
-        final String[] actual = relativize(testClasses, Files.collect(colors, ".*.txt"));
-
-        final String[] expected = {
-                "/colors/blue/midnight.txt",
-                "/colors/blue/pastel/powder.txt",
-                "/colors/orange.txt",
-                "/colors/other/cmyk/magenta.txt",
-                "/colors/other/cmyk/yellow.txt",
-                "/colors/other/hsb/hue.txt",
-                "/colors/red/crimson.txt"
-        };
-
-        assertEquals(join("\n", expected), join("\n", actual));
+        final List<File> files = Files.collect(colors, ".*.txt");
+        assertTxtFiles(testClasses, files);
     }
+
 
     @Test
     public void testVisitFiltered() throws Exception {
-
-        final File testClasses = JarLocation.jarLocation(FilesTest.class);
-        final File colors = new File(testClasses, "colors");
 
         final List<File> files = new ArrayList<File>();
         Files.visit(colors, ".*\\.txt", new Files.Visitor() {
@@ -179,45 +81,18 @@ public class FilesTest extends Assert {
                 return true;
             }
         });
-        final String[] actual = relativize(testClasses, files);
-
-        final String[] expected = {
-                "/colors/blue/midnight.txt",
-                "/colors/blue/pastel/powder.txt",
-                "/colors/orange.txt",
-                "/colors/other/cmyk/magenta.txt",
-                "/colors/other/cmyk/yellow.txt",
-                "/colors/other/hsb/hue.txt",
-                "/colors/red/crimson.txt"
-        };
-
-        assertEquals(join("\n", expected), join("\n", actual));
+        assertTxtFiles(testClasses, files);
     }
 
     @Test
     public void testIterateFiltered() throws Exception {
-
-        final File testClasses = JarLocation.jarLocation(FilesTest.class);
-        final File colors = new File(testClasses, "colors");
 
         final List<File> files = new ArrayList<File>();
         for (File file : Files.iterate(colors, ".*\\.txt")) {
             files.add(file);
         }
 
-        final String[] actual = relativize(testClasses, files);
-
-        final String[] expected = {
-                "/colors/blue/midnight.txt",
-                "/colors/blue/pastel/powder.txt",
-                "/colors/orange.txt",
-                "/colors/other/cmyk/magenta.txt",
-                "/colors/other/cmyk/yellow.txt",
-                "/colors/other/hsb/hue.txt",
-                "/colors/red/crimson.txt"
-        };
-
-        assertEquals(join("\n", expected), join("\n", actual));
+        assertTxtFiles(testClasses, files);
     }
 
     private String[] relativize(File base, List<File> files) {
@@ -230,5 +105,52 @@ public class FilesTest extends Assert {
             list.add(relativePath);
         }
         return list.toArray(new String[list.size()]);
+    }
+
+
+    private void assertTxtFiles(File testClasses, List<File> files) {
+        final String[] actual = relativize(testClasses, files);
+
+        final String[] expected = {
+                "/colors/blue/midnight.txt",
+                "/colors/blue/pastel/powder.txt",
+                "/colors/orange.txt",
+                "/colors/other/cmyk/magenta.txt",
+                "/colors/other/cmyk/yellow.txt",
+                "/colors/other/hsb/hue.txt",
+                "/colors/red/crimson.txt"
+        };
+
+        assertEquals(join("\n", expected), join("\n", actual));
+    }
+
+
+    private void assertAll(File testClasses, List<File> files) {
+        final String[] actual = relativize(testClasses, files);
+
+        final String[] expected = {
+                "/colors/blue",
+                "/colors/blue/midnight.txt",
+                "/colors/blue/navy.csv",
+                "/colors/blue/pastel",
+                "/colors/blue/pastel/powder.txt",
+                "/colors/green",
+                "/colors/green/emerald.csv",
+                "/colors/orange.txt",
+                "/colors/other",
+                "/colors/other/cmyk",
+                "/colors/other/cmyk/cyan.csv",
+                "/colors/other/cmyk/key.sh",
+                "/colors/other/cmyk/magenta.txt",
+                "/colors/other/cmyk/yellow.txt",
+                "/colors/other/hsb",
+                "/colors/other/hsb/brightness.csv",
+                "/colors/other/hsb/hue.txt",
+                "/colors/other/hsb/saturation",
+                "/colors/red",
+                "/colors/red/crimson.txt"
+        };
+
+        assertEquals(join("\n", expected), join("\n", actual));
     }
 }

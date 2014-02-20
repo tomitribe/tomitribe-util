@@ -120,11 +120,11 @@ public class Files {
 
     public static List<File> collect(File dir, FileFilter filter) {
         final List<File> accepted = new ArrayList<File>();
-        if (filter.accept(dir)) accepted.add(dir);
 
         final File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
+                if (filter.accept(file)) accepted.add(file);
                 accepted.addAll(collect(file, filter));
             }
         }
@@ -151,18 +151,13 @@ public class Files {
     }
 
     public static boolean visit(File dir, FileFilter filter, Visitor visitor) {
-        if (!filter.accept(dir)) return false;
-
-        {
-            final boolean visit = visitor.visit(dir);
-            if (!visit) return false;
-        }
 
         final File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
-                final boolean visit = visit(file, filter, visitor);
-                if (!visit) return false;
+                if (!filter.accept(file)) return false;
+                if (!visitor.visit(file)) return false;
+                if (!visit(file, filter, visitor)) return false;
             }
         }
 
