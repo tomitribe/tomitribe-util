@@ -19,14 +19,27 @@
 package org.tomitribe.util;
 
 
+import org.tomitribe.util.collect.AbstractIterator;
+import org.tomitribe.util.collect.FilteredIterator;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 public class Files {
+
+    public static final FileFilter ALL = new FileFilter() {
+        @Override
+        public boolean accept(File file) {
+            return true;
+        }
+    };
 
     private Files() {
         // no-op
@@ -53,32 +66,57 @@ public class Files {
         return dir;
     }
 
+    public static List<File> collect(final File dir) {
+        return collect(dir, ALL);
+    }
+
     public static List<File> collect(final File dir, final String regex) {
         return collect(dir, Pattern.compile(regex));
     }
 
     public static List<File> collect(final File dir, final Pattern pattern) {
-        return collect(dir, new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return pattern.matcher(file.getAbsolutePath()).matches();
-            }
-        });
+        return collect(dir, new PatternFileFilter(pattern));
+    }
+
+    public static boolean visit(final File dir, Visitor visitor) {
+        return visit(dir, ALL, visitor);
     }
 
     public static boolean visit(final File dir, final String regex, Visitor visitor) {
         return visit(dir, Pattern.compile(regex), visitor);
     }
 
-    public static boolean visit(final File dir, final Pattern pattern, Visitor visitor) {
-        return visit(dir, new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return pattern.matcher(file.getAbsolutePath()).matches();
-            }
-        }, visitor);
+    public static boolean visit(final File dir, final Pattern pattern, final Visitor visitor) {
+        final PatternFileFilter patternFileFilter = new PatternFileFilter(pattern);
+        return visit(dir,
+                new FileFilter() {
+                    @Override
+                    public boolean accept(File file) {
+                        return true;
+                    }
+                }, new Visitor() {
+                    @Override
+                    public boolean visit(File file) {
+                        if (file.isFile() && patternFileFilter.accept(file)) {
+                            visitor.visit(file);
+                        }
+                        return true;
+                    }
+                }
+        );
     }
 
+    public static Iterable<File> iterate(final File dir) {
+        return iterate(dir, ALL);
+    }
+
+    public static Iterable<File> iterate(final File dir, final String regex) {
+        return iterate(dir, Pattern.compile(regex));
+    }
+
+    public static Iterable<File> iterate(final File dir, final Pattern pattern) {
+        return iterate(dir, new PatternFileFilter(pattern));
+    }
 
     public static List<File> collect(File dir, FileFilter filter) {
         final List<File> accepted = new ArrayList<File>();
@@ -94,6 +132,20 @@ public class Files {
         return accepted;
     }
 
+    public static Iterable<File> iterate(final File dir, final FileFilter filter) {
+        return new Iterable<File>() {
+            @Override
+            public Iterator<File> iterator() {
+                return new FilteredIterator<File>(new RecursiveFileIterator(dir), new FilteredIterator.Filter<File>() {
+                    @Override
+                    public boolean accept(File file) {
+                        return filter.accept(file);
+                    }
+                });
+            }
+        };
+    }
+
     public interface Visitor {
         boolean visit(File file);
     }
@@ -101,9 +153,11 @@ public class Files {
     public static boolean visit(File dir, FileFilter filter, Visitor visitor) {
         if (!filter.accept(dir)) return false;
 
-        if (dir.isFile()) {
-            visitor.visit(dir);
+        {
+            final boolean visit = visitor.visit(dir);
+            if (!visit) return false;
         }
+
         final File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -223,4 +277,68 @@ public class Files {
 
         return "unknown";
     }
+
+    private static class FileIterator extends AbstractIterator<File> {
+        private final File[] files;
+        private int index;
+
+        private FileIterator(final File dir) {
+            dir(dir);
+            this.files = dir.listFiles();
+            this.index = 0;
+        }
+
+        @Override
+        protected File advance() throws NoSuchElementException {
+            if (index >= files.length) return null;
+            return files[index++];
+        }
+    }
+
+    private static class RecursiveFileIterator extends AbstractIterator<File> {
+
+        private final LinkedList<FileIterator> stack = new LinkedList<FileIterator>();
+
+        public RecursiveFileIterator(File base) {
+            stack.add(new FileIterator(base));
+        }
+
+        @Override
+        protected File advance() throws NoSuchElementException {
+
+            final FileIterator current = stack.element();
+
+            try {
+                final File file = current.advance();
+
+                if (file == null) {
+                    stack.pop();
+                    return advance();
+                }
+
+                if (file.isDirectory()) {
+                    stack.push(new FileIterator(file));
+                }
+
+                return file;
+            } catch (NoSuchElementException e) {
+                stack.pop();
+                return advance();
+            }
+        }
+    }
+
+    private static class PatternFileFilter implements FileFilter {
+        private final Pattern pattern;
+
+        public PatternFileFilter(Pattern pattern) {
+            this.pattern = pattern;
+        }
+
+        @Override
+        public boolean accept(File file) {
+            return pattern.matcher(file.getAbsolutePath()).matches();
+        }
+    }
+
 }
