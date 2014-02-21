@@ -32,6 +32,16 @@
   <version>1.0.0-SNAPSHOT</version>
   <name>Tomitribe :: Util</name>
 
+  <repositories>
+    <repository>
+      <id>snapshots</id>
+      <url>http://repository.tomitribe.com/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
