@@ -218,7 +218,9 @@ public class Options {
         return getAll(property, Collections.EMPTY_SET, enumType);
     }
 
-    protected <T extends Enum<T>> Set<T> getAll(final String property, final Set<T> defaultValue, final Class<T> enumType) {
+    protected <T extends Enum<T>> Set<T> getAll(final String property, final Set<T> defaultValue, 
+        final Class<T> enumType) {
+
         final String value = properties.getProperty(property);
 
         if (value == null || "".equals(value)) return parent.getAll(property, defaultValue, enumType);
@@ -391,7 +393,9 @@ public class Options {
         }
 
         @Override
-        protected <T extends Enum<T>> Set<T> getAll(final String property, final Set<T> defaults, final Class<T> enumType) {
+        protected <T extends Enum<T>> Set<T> getAll(final String property, final Set<T> defaults, 
+            final Class<T> enumType) {
+
             if (getLogger().isDebugEnabled()) {
                 String possibleValues = "  Possible values are: " + possibleValues(enumType);
 

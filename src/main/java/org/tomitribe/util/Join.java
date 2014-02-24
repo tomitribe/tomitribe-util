@@ -67,7 +67,8 @@ public class Join {
         return sb.substring(0, sb.length() - delimiter.length());
     }
 
-    public static <T> String join(final String delimiter, final NameCallback<T> nameCallback, final Collection<T> collection) {
+    public static <T> String join(final String delimiter, final NameCallback<T> nameCallback, 
+        final Collection<T> collection) {
         if (collection.size() == 0) {
             return "";
         }
