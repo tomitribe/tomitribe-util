@@ -268,32 +268,6 @@ public class Files {
         if (!path.isAbsolute()) throw new IllegalArgumentException("absolutePath is not absolute: " + path.getPath());
     }
 
-    public static void copy(final InputStream in, final OutputStream out) throws IOException {
-
-        final ReadableByteChannel ic = Channels.newChannel(in);
-        final WritableByteChannel oc = Channels.newChannel(out);
-
-        try {
-            copy(ic, oc);
-        } finally {
-            ic.close();
-            oc.close();
-        }
-    }
-
-    public static void copy(final ReadableByteChannel in, final WritableByteChannel out) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(8 * 1024);
-        while (in.read(buffer) != -1) {
-            buffer.flip();
-            out.write(buffer);
-            buffer.compact();
-        }
-        buffer.flip();
-        while (buffer.hasRemaining()) {
-            out.write(buffer);
-        }
-    }
-
     //CHECKSTYLE:OFF
     public static String format(double size) {
         if (size < 1024) return String.format("%.0f B", size);
