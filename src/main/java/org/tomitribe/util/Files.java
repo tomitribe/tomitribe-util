@@ -25,6 +25,12 @@ import org.tomitribe.util.collect.FilteredIterator;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -260,6 +266,32 @@ public class Files {
 
     public static void absolute(final File path) {
         if (!path.isAbsolute()) throw new IllegalArgumentException("absolutePath is not absolute: " + path.getPath());
+    }
+
+    public static void copy(final InputStream in, final OutputStream out) throws IOException {
+
+        final ReadableByteChannel ic = Channels.newChannel(in);
+        final WritableByteChannel oc = Channels.newChannel(out);
+
+        try {
+            copy(ic, oc);
+        } finally {
+            ic.close();
+            oc.close();
+        }
+    }
+
+    public static void copy(final ReadableByteChannel in, final WritableByteChannel out) throws IOException {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(8 * 1024);
+        while (in.read(buffer) != -1) {
+            buffer.flip();
+            out.write(buffer);
+            buffer.compact();
+        }
+        buffer.flip();
+        while (buffer.hasRemaining()) {
+            out.write(buffer);
+        }
     }
 
     //CHECKSTYLE:OFF
