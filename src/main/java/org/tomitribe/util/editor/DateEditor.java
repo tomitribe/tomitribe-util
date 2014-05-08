@@ -30,6 +30,10 @@ public class DateEditor extends AbstractConverter {
 
     private List<DateFormat> formats = new ArrayList<DateFormat>();
 
+    protected DateEditor(final List<DateFormat> formats) {
+        this.formats = formats;
+    }
+
     public DateEditor() {
 
         formats.add(DateFormat.getInstance());
