@@ -32,6 +32,12 @@
   <version>1.0.0-SNAPSHOT</version>
   <name>Tomitribe :: Util</name>
 
+  <scm>
+    <connection>scm:git:git@github.com:tomitribe/tomitribe-util.git</connection>
+    <url>scm:git:git@github.com:tomitribe/tomitribe-util.git</url>
+    <developerConnection>scm:git:git@github.com:tomitribe/tomitribe-util.git</developerConnection>
+  </scm>
+
   <repositories>
     <repository>
       <id>snapshots</id>
