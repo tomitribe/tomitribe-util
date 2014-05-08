@@ -50,7 +50,9 @@ public class Parameter implements AnnotatedElement {
     @Override
     public <T extends Annotation> T getAnnotation(final Class<T> annotationClass) {
         for (final Annotation annotation : annotations) {
-            if (annotationClass.equals(annotation.annotationType())) return (T) annotation;
+            if (annotationClass.equals(annotation.annotationType())) {
+                return (T) annotation;
+            }
         }
         return null;
     }

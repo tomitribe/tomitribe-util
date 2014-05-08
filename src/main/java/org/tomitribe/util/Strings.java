@@ -29,7 +29,9 @@ public class Strings {
     }
 
     public static String lowercase(final String string) {
-        if (string == null) return null;
+        if (string == null) {
+            return null;
+        }
 
         final StringBuilder sb = new StringBuilder(string);
         for (int i = 0; i < sb.length(); i++) {
@@ -43,7 +45,9 @@ public class Strings {
     }
 
     public static String uppercase(final String string) {
-        if (string == null) return null;
+        if (string == null) {
+            return null;
+        }
 
         final StringBuilder sb = new StringBuilder(string);
         for (int i = 0; i < sb.length(); i++) {
@@ -53,7 +57,9 @@ public class Strings {
     }
 
     public static String ucfirst(final String string) {
-        if (string == null) return null;
+        if (string == null) {
+            return null;
+        }
 
         final StringBuilder sb = new StringBuilder(string);
         if (sb.length() > 0) {
@@ -63,7 +69,9 @@ public class Strings {
     }
 
     public static String lcfirst(final String string) {
-        if (string == null) return null;
+        if (string == null) {
+            return null;
+        }
 
         final StringBuilder sb = new StringBuilder(string);
         if (sb.length() > 0) {

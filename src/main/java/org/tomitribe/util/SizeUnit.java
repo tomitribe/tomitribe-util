@@ -159,8 +159,12 @@ public enum SizeUnit {
 
 
     static long x(final long d, final long m, final long over) {
-        if (d > over) return MAX_VALUE;
-        if (d < -over) return Long.MIN_VALUE;
+        if (d > over) {
+            return MAX_VALUE;
+        }
+        if (d < -over) {
+            return Long.MIN_VALUE;
+        }
         return d * m;
     }
 

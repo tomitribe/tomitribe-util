@@ -109,11 +109,15 @@ public class Options {
     }
 
     public <T> T get(final String property, final T defaultValue) {
-        if (defaultValue == null) throw new NullPointerException("defaultValue");
+        if (defaultValue == null) {
+            throw new NullPointerException("defaultValue");
+        }
 
         final String value = properties.getProperty(property);
 
-        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) {
+            return parent.get(property, defaultValue);
+        }
 
         try {
             final Class<?> type = defaultValue.getClass();
@@ -130,7 +134,9 @@ public class Options {
     public int get(final String property, final int defaultValue) {
         final String value = properties.getProperty(property);
 
-        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) {
+            return parent.get(property, defaultValue);
+        }
 
         try {
             return log(property, Integer.parseInt(value));
@@ -143,7 +149,9 @@ public class Options {
     public long get(final String property, final long defaultValue) {
         final String value = properties.getProperty(property);
 
-        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) {
+            return parent.get(property, defaultValue);
+        }
 
         try {
             return log(property, Long.parseLong(value));
@@ -156,7 +164,9 @@ public class Options {
     public boolean get(final String property, final boolean defaultValue) {
         final String value = properties.getProperty(property);
 
-        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) {
+            return parent.get(property, defaultValue);
+        }
 
         try {
             return log(property, Boolean.parseBoolean(value));
@@ -169,7 +179,9 @@ public class Options {
     public Class<?> get(final String property, final Class<?> defaultValue) {
         final String className = properties.getProperty(property);
 
-        if (className == null) return parent.get(property, defaultValue);
+        if (className == null) {
+            return parent.get(property, defaultValue);
+        }
 
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
@@ -183,9 +195,13 @@ public class Options {
     public <T extends Enum<T>> T get(final String property, final T defaultValue) {
         final String value = properties.getProperty(property);
 
-        if (value == null || "".equals(value)) return parent.get(property, defaultValue);
+        if (value == null || "".equals(value)) {
+            return parent.get(property, defaultValue);
+        }
 
-        if (defaultValue == null) throw new IllegalArgumentException("Must supply a default for property " + property);
+        if (defaultValue == null) {
+            throw new IllegalArgumentException("Must supply a default for property " + property);
+        }
 
         final Class<T> enumType = (Class<T>) defaultValue.getClass();
 
@@ -223,7 +239,9 @@ public class Options {
 
         final String value = properties.getProperty(property);
 
-        if (value == null || "".equals(value)) return parent.getAll(property, defaultValue, enumType);
+        if (value == null || "".equals(value)) {
+            return parent.getAll(property, defaultValue, enumType);
+        }
 
         // Shorthand for specifying ALL or NONE for any option
         // that allows for multiple values of the enum
@@ -268,7 +286,9 @@ public class Options {
         final T value = map.get(name.toUpperCase());
 
         // Call Enum.valueOf for the clean exception
-        if (value == null || "".equals(value)) Enum.valueOf(enumType, name);
+        if (value == null || "".equals(value)) {
+            Enum.valueOf(enumType, name);
+        }
 
         return value;
     }
@@ -282,7 +302,9 @@ public class Options {
     }
 
     protected <V> V log(final String property, final V value) {
-        if (!getLogger().isInfoEnabled()) return value;
+        if (!getLogger().isInfoEnabled()) {
+            return value;
+        }
 
         if (value instanceof Class) {
             final Class clazz = (Class) value;
@@ -294,7 +316,9 @@ public class Options {
     }
 
     public <T extends Enum<T>> Set<T> logAll(final String property, final Set<T> value) {
-        if (!getLogger().isInfoEnabled()) return value;
+        if (!getLogger().isInfoEnabled()) {
+            return value;
+        }
 
         getLogger().info("Using \'" + property + "=" + join(", ", lowercase(value)) + "\'");
 
@@ -334,7 +358,9 @@ public class Options {
         for (final Object obj : collection) {
             sb.append(obj).append(delimiter);
         }
-        if (collection.length > 0) sb.delete(sb.length() - delimiter.length(), sb.length());
+        if (collection.length > 0) {
+            sb.delete(sb.length() - delimiter.length(), sb.length());
+        }
         return sb.toString();
     }
 

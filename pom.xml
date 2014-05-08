@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.tomitribe</groupId>
     <artifactId>oss-parent</artifactId>
-    <version>1-SNAPSHOT</version>
+    <version>1</version>
   </parent>
 
   <artifactId>tomitribe-util</artifactId>
@@ -40,6 +40,17 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>Sonatype-public</id>
+      <name>Sonatype snapshot and release</name>
+      <url>https://oss.sonatype.org/content/groups/public/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -52,17 +63,43 @@
   </dependencies>
 
   <build>
-    <defaultGoal>install</defaultGoal>
     <plugins>
+      <!-- exclude a bit more -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.10</version>
         <configuration>
-          <failOnViolation>false</failOnViolation>
-          <logViolationsToConsole>true</logViolationsToConsole>
+          <includes>
+            <include>src/**/*</include>
+            <include>pom.xml</include>
+          </includes>
+          <excludes>
+            <exclude>**/*/MANIFEST.MF</exclude>
+            <exclude>.git</exclude>
+            <exclude>.gitignore</exclude>
+            <exclude>derby.log</exclude>
+            <exclude>**/META-INF/services/*</exclude>
+            <exclude>**/bootstrap-*</exclude>
+            <exclude>**/js/jquery-*</exclude>
+            <exclude>**/*.json</exclude>
+            <exclude>src/test/resources/**/*.txt</exclude>
+            <exclude>src/test/resources/**/*.csv</exclude>
+            <exclude>src/test/resources/**/*.sh</exclude>
+            <exclude>src/test/resources/colors/other/hsb/saturation</exclude>
+          </excludes>
         </configuration>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
+
 </project>
 

@@ -98,18 +98,24 @@ public class TimeUtils {
 
                 res.append(temp).append(" ").append(current.name().toLowerCase());
 
-                if (temp < 2) res.deleteCharAt(res.length() - 1);
+                if (temp < 2) {
+                    res.deleteCharAt(res.length() - 1);
+                }
 
                 res.append(", ");
             }
 
-            if (current == min) break;
+            if (current == min) {
+                break;
+            }
 
             current = TimeUnit.values()[current.ordinal() - 1];
         }
 
         // we never got a hit, the time is lower than we care about
-        if (res.lastIndexOf(", ") < 0) return "0 " + min.name().toLowerCase();
+        if (res.lastIndexOf(", ") < 0) {
+            return "0 " + min.name().toLowerCase();
+        }
 
         // yank trailing  ", "
         res.deleteCharAt(res.length() - 1);
@@ -147,12 +153,16 @@ public class TimeUtils {
 
                 res.append(temp).append(" ").append(current.name().toLowerCase());
 
-                if (temp < 2) res.deleteCharAt(res.length() - 1);
+                if (temp < 2) {
+                    res.deleteCharAt(res.length() - 1);
+                }
 
                 break;
             }
 
-            if (current == TimeUnit.MILLISECONDS) break;
+            if (current == TimeUnit.MILLISECONDS) {
+                break;
+            }
 
             current = units[(current.ordinal() - 1)];
         }

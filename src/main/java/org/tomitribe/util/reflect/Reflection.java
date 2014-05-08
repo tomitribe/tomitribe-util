@@ -49,7 +49,9 @@ public class Reflection {
 
                     @Override
                     public Parameter next() {
-                        if (!hasNext()) throw new NoSuchElementException();
+                        if (!hasNext()) {
+                            throw new NoSuchElementException();
+                        }
                         return new Parameter(method.getParameterAnnotations()[index],
                                 method.getParameterTypes()[index], method.getGenericParameterTypes()[index++]);
                     }
@@ -77,7 +79,9 @@ public class Reflection {
 
                     @Override
                     public Parameter next() {
-                        if (!hasNext()) throw new NoSuchElementException();
+                        if (!hasNext()) {
+                            throw new NoSuchElementException();
+                        }
                         return new Parameter(constructor.getParameterAnnotations()[index],
                                 constructor.getParameterTypes()[index], constructor.getGenericParameterTypes()
                                 [index++]);

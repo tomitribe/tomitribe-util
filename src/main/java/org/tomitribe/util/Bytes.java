@@ -55,10 +55,18 @@ public class Bytes implements Comparable<Bytes> {
         compact();
         o.compact();
 
-        if (this.gb != o.gb) return (this.gb > o.gb) ? 1 : -1;
-        if (this.mb != o.mb) return (this.mb > o.mb) ? 1 : -1;
-        if (this.kb != o.kb) return (this.kb > o.kb) ? 1 : -1;
-        if (this.b != o.b) return (this.b > o.b) ? 1 : -1;
+        if (this.gb != o.gb) {
+            return (this.gb > o.gb) ? 1 : -1;
+        }
+        if (this.mb != o.mb) {
+            return (this.mb > o.mb) ? 1 : -1;
+        }
+        if (this.kb != o.kb) {
+            return (this.kb > o.kb) ? 1 : -1;
+        }
+        if (this.b != o.b) {
+            return (this.b > o.b) ? 1 : -1;
+        }
 
         return 0;
     }

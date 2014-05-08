@@ -56,7 +56,9 @@ public class JarLocation {
                 /*
                  * REMIND: we don't handle nested JAR URLs
                  */
-                if (separator == -1) throw new MalformedURLException("no ! found in jar url spec:" + spec);
+                if (separator == -1) {
+                    throw new MalformedURLException("no ! found in jar url spec:" + spec);
+                }
 
                 url = new URL(spec.substring(0, separator++));
 
@@ -82,7 +84,9 @@ public class JarLocation {
 
 
     public static String decode(final String fileName) {
-        if (fileName.indexOf('%') == -1) return fileName;
+        if (fileName.indexOf('%') == -1) {
+            return fileName;
+        }
 
         final StringBuilder result = new StringBuilder(fileName.length());
         final ByteArrayOutputStream out = new ByteArrayOutputStream();

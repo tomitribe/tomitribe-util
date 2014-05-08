@@ -40,7 +40,9 @@ public class StringTemplate {
         while (matcher.find()) {
             final String key = matcher.group(2);
 
-            if (key == null) throw new IllegalStateException("Key is null. Template '" + template + "'");
+            if (key == null) {
+                throw new IllegalStateException("Key is null. Template '" + template + "'");
+            }
 
             String value = value(map, key);
 
@@ -52,9 +54,10 @@ public class StringTemplate {
                 value = Strings.camelCase(value(map, key.substring(0, key.length() - 3)));
             }
 
-            if (value == null)
+            if (value == null) {
                 throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + template + "'. " +
                         "Keys: " + Join.join(", ", map.keySet()));
+            }
             matcher.appendReplacement(buf, value);
         }
 
@@ -64,7 +67,9 @@ public class StringTemplate {
 
     private String value(final Map<String, Object> map, final String key) {
         final Object o = map.get(key);
-        if (o == null) throw new IllegalStateException("Missing entry " + key);
+        if (o == null) {
+            throw new IllegalStateException("Missing entry " + key);
+        }
         return o.toString();
     }
 

@@ -27,8 +27,12 @@ public class FilteredIterator<T> extends AbstractIterator<T> implements Iterator
     private final Filter<T> filter;
 
     public FilteredIterator(final Iterator<T> iterator, final Filter<T> filter) {
-        if (iterator == null) throw new IllegalArgumentException("iterator cannot be null");
-        if (filter == null) throw new IllegalArgumentException("filter cannot be null");
+        if (iterator == null) {
+            throw new IllegalArgumentException("iterator cannot be null");
+        }
+        if (filter == null) {
+            throw new IllegalArgumentException("filter cannot be null");
+        }
 
         this.iterator = iterator;
         this.filter = filter;

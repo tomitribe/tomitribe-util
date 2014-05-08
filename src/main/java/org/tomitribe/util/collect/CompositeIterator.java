@@ -34,8 +34,12 @@ public class CompositeIterator<T> implements Iterator<T> {
     }
 
     public boolean hasNext() {
-        if (current == null) return false;
-        if (current.hasNext()) return true;
+        if (current == null) {
+            return false;
+        }
+        if (current.hasNext()) {
+            return true;
+        }
 
         if (source.hasNext()) {
             current = source.next();
@@ -45,7 +49,9 @@ public class CompositeIterator<T> implements Iterator<T> {
     }
 
     public T next() {
-        if (!hasNext()) throw new NoSuchElementException();
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
 
         return current.next();
     }
