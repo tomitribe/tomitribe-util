@@ -28,6 +28,9 @@ import java.util.Locale;
 
 public class DateEditor extends AbstractConverter {
 
+    public static final Date NO_MIN = new Date(0);
+    public static final Date NO_MAX = new Date(Integer.MAX_VALUE);
+
     private List<DateFormat> formats = new ArrayList<DateFormat>();
 
     protected DateEditor(final List<DateFormat> formats) {
@@ -35,7 +38,6 @@ public class DateEditor extends AbstractConverter {
     }
 
     public DateEditor() {
-
         formats.add(DateFormat.getInstance());
         formats.add(DateFormat.getDateInstance());
         formats.add(new SimpleDateFormat("yyyy-MM-dd")); // Atom (ISO 8601))) -- short version;
@@ -49,6 +51,13 @@ public class DateEditor extends AbstractConverter {
      * @throws org.tomitribe.util.editor.PropertyEditorException Unable to parse the string value into a Date.
      */
     protected Object toObjectImpl(final String text) {
+        if (text == null || text.isEmpty() || "0".equals(text)) {
+            return NO_MIN;
+        }
+        if (Integer.valueOf(Integer.MAX_VALUE).toString().equals(text)) {
+            return NO_MAX;
+        }
+
         for (final DateFormat format : formats) {
             try {
                 return format.parse(text);
@@ -114,4 +123,5 @@ public class DateEditor extends AbstractConverter {
         final String text = formats.get(0).format(date);
         return text;
     }
+
 }
