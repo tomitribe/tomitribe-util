@@ -75,6 +75,7 @@ public class Converter {
             // Force static initializers to run
             Class.forName(targetType.getName(), true, targetType.getClassLoader());
         } catch (final ClassNotFoundException e) {
+            // no-op
         }
 
         final PropertyEditor editor = Editors.get(targetType);

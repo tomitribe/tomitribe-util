@@ -68,7 +68,8 @@ public class Join {
     }
 
     public static <T> String join(final String delimiter, final NameCallback<T> nameCallback, 
-        final Collection<T> collection) {
+        final Collection<T> collection)
+    {
         if (collection.size() == 0) {
             return "";
         }

@@ -74,6 +74,7 @@ public class Size {
             for (; i < s.length(); i++) {
                 final char c = s.charAt(i);
                 if (Character.isWhitespace(c)) {
+                    // no-op
                 } else {
                     break;
                 }

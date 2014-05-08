@@ -212,7 +212,8 @@ public class IO {
     }
 
     private static void doCopyDirectory(final File srcDir, final File destDir, final List<String> exclusionList)
-            throws IOException {
+            throws IOException
+    {
         final File[] files = srcDir.listFiles();
         if (files == null) {  // null if security restricted
             throw new IOException("Failed to list contents of " + srcDir);

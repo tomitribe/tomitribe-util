@@ -53,6 +53,7 @@ public class DateEditor extends AbstractConverter {
             try {
                 return format.parse(text);
             } catch (final ParseException e) {
+                // no-op
             }
         }
 
