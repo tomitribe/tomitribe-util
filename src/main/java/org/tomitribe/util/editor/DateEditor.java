@@ -96,8 +96,11 @@ public class DateEditor extends AbstractConverter {
                 }
                 // locale is followed by mandatory style
                 final int nextSpaceIndex = text.indexOf(' ', firstSpaceIndex + 1);
+
                 token = text.substring(firstSpaceIndex + 1, nextSpaceIndex);
+
                 final String styleStr = token.substring(token.indexOf('=') + 1);
+
                 if ("SHORT".equalsIgnoreCase(styleStr)) {
                     style = DateFormat.SHORT;
                 } else if ("MEDIUM".equalsIgnoreCase(styleStr)) {
@@ -120,8 +123,7 @@ public class DateEditor extends AbstractConverter {
 
     protected String toStringImpl(final Object value) {
         final Date date = (Date) value;
-        final String text = formats.get(0).format(date);
-        return text;
+        return formats.get(0).format(date);
     }
 
 }

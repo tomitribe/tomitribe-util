@@ -67,9 +67,8 @@ public class StringTemplate {
 
     private String value(final Map<String, Object> map, final String key) {
         final Object o = map.get(key);
-        if (o == null) {
-            throw new IllegalStateException("Missing entry " + key);
-        }
+        if (o == null) throw new IllegalStateException("Missing entry " + key);
+
         return o.toString();
     }
 

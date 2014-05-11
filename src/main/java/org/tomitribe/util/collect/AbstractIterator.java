@@ -26,9 +26,7 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
 
     @Override
     public boolean hasNext() {
-        if (next != null) {
-            return true;
-        }
+        if (next != null) return true;
 
         try {
             next = advance();
@@ -41,9 +39,7 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
 
     @Override
     public T next() {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
+        if (!hasNext()) throw new NoSuchElementException();
 
         final T v = next;
         next = null;

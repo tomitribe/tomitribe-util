@@ -66,9 +66,8 @@ public class Classes {
             clazz = Class.forName(string, true, classLoader);
         }
 
-        if (arrayDimentions == 0) {
-            return clazz;
-        }
+        if (arrayDimentions == 0) return clazz;
+
         return Array.newInstance(clazz, new int[arrayDimentions]).getClass();
     }
 

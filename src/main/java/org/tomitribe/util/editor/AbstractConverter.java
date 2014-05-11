@@ -25,6 +25,4 @@ public abstract class AbstractConverter extends java.beans.PropertyEditorSupport
     }
 
     protected abstract Object toObjectImpl(String text);
-
-
 }

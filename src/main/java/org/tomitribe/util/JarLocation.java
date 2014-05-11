@@ -84,9 +84,7 @@ public class JarLocation {
 
 
     public static String decode(final String fileName) {
-        if (fileName.indexOf('%') == -1) {
-            return fileName;
-        }
+        if (fileName.indexOf('%') == -1) return fileName;
 
         final StringBuilder result = new StringBuilder(fileName.length());
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -105,8 +103,7 @@ public class JarLocation {
                     final int d2 = Character.digit(fileName.charAt(i + 2), 16);
 
                     if (d1 == -1 || d2 == -1) {
-                        throw new IllegalArgumentException("Invalid % sequence (" + fileName.substring(i,
-                                i + 3) + ") at: " + String.valueOf(i));
+                        throw new IllegalArgumentException("Invalid % sequence (" + fileName.substring(i, i + 3) + ") at: " + String.valueOf(i));
                     }
 
                     out.write((byte) ((d1 << 4) + d2));

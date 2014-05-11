@@ -84,12 +84,9 @@ public class IO {
      * @throws java.io.IOException
      */
     public static Properties readProperties(final InputStream in, final Properties properties) throws IOException {
-        if (in == null) {
-            throw new NullPointerException("InputStream is null");
-        }
-        if (properties == null) {
-            throw new NullPointerException("Properties is null");
-        }
+        if (in == null) throw new NullPointerException("InputStream is null");
+        if (properties == null) throw new NullPointerException("Properties is null");
+
         try {
             properties.load(in);
         } finally {
@@ -184,18 +181,10 @@ public class IO {
     }
 
     public static void copyDirectory(final File srcDir, final File destDir) throws IOException {
-        if (srcDir == null) {
-            throw new NullPointerException("Source must not be null");
-        }
-        if (destDir == null) {
-            throw new NullPointerException("Destination must not be null");
-        }
-        if (!srcDir.exists()) {
-            throw new FileNotFoundException("Source '" + srcDir + "' does not exist");
-        }
-        if (!srcDir.isDirectory()) {
-            throw new IOException("Source '" + srcDir + "' exists but is not a directory");
-        }
+        if (srcDir == null) throw new NullPointerException("Source must not be null");
+        if (destDir == null) throw new NullPointerException("Destination must not be null");
+        if (!srcDir.exists()) throw new FileNotFoundException("Source '" + srcDir + "' does not exist");
+        if (!srcDir.isDirectory()) throw new IOException("Source '" + srcDir + "' exists but is not a directory");
         if (srcDir.getCanonicalPath().equals(destDir.getCanonicalPath())) {
             throw new IOException("Source '" + srcDir + "' and destination '" + destDir + "' are the same");
         }
@@ -310,9 +299,8 @@ public class IO {
     }
 
     public static void close(final Closeable closeable) {
-        if (closeable == null) {
-            return;
-        }
+        if (closeable == null) return;
+
         try {
             if (Flushable.class.isInstance(closeable)) {
                 ((Flushable) closeable).flush();
@@ -328,9 +316,8 @@ public class IO {
     }
 
     public static boolean delete(final File file) {
-        if (file == null) {
-            return false;
-        }
+        if (file == null) return false;
+
         if (!file.delete()) {
             Logger.getLogger(IO.class.getName()).log(Level.WARNING, "Delete failed on: " + file.getAbsolutePath());
             return false;

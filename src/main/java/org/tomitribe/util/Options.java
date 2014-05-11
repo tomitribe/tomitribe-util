@@ -109,9 +109,7 @@ public class Options {
     }
 
     public <T> T get(final String property, final T defaultValue) {
-        if (defaultValue == null) {
-            throw new NullPointerException("defaultValue");
-        }
+        if (defaultValue == null) throw new NullPointerException("defaultValue");
 
         final String value = properties.getProperty(property);
 
@@ -179,9 +177,7 @@ public class Options {
     public Class<?> get(final String property, final Class<?> defaultValue) {
         final String className = properties.getProperty(property);
 
-        if (className == null) {
-            return parent.get(property, defaultValue);
-        }
+        if (className == null) return parent.get(property, defaultValue);
 
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
@@ -303,9 +299,7 @@ public class Options {
     }
 
     protected <V> V log(final String property, final V value) {
-        if (!getLogger().isInfoEnabled()) {
-            return value;
-        }
+        if (!getLogger().isInfoEnabled()) return value;
 
         if (value instanceof Class) {
             final Class clazz = (Class) value;
@@ -317,9 +311,7 @@ public class Options {
     }
 
     public <T extends Enum<T>> Set<T> logAll(final String property, final Set<T> value) {
-        if (!getLogger().isInfoEnabled()) {
-            return value;
-        }
+        if (!getLogger().isInfoEnabled()) return value;
 
         getLogger().info("Using \'" + property + "=" + join(", ", lowercase(value)) + "\'");
 
@@ -328,7 +320,9 @@ public class Options {
 
 
     protected static <T extends Enum<T>> String[] lowercase(final T... items) {
+
         final String[] values = new String[items.length];
+
         for (int i = 0; i < items.length; i++) {
             values[i] = items[i].name().toLowerCase();
         }
@@ -336,7 +330,9 @@ public class Options {
     }
 
     protected static <T extends Enum<T>> String[] lowercase(final Collection<T> items) {
+
         final String[] values = new String[items.size()];
+
         int i = 0;
         for (final T item : items) {
             values[i++] = item.name().toLowerCase();
@@ -356,12 +352,15 @@ public class Options {
 
     public static String join(final String delimiter, final Object... collection) {
         final StringBuilder sb = new StringBuilder();
+
         for (final Object obj : collection) {
             sb.append(obj).append(delimiter);
         }
+
         if (collection.length > 0) {
             sb.delete(sb.length() - delimiter.length(), sb.length());
         }
+
         return sb.toString();
     }
 
@@ -457,15 +456,21 @@ public class Options {
 
         protected <V> V log(final String property, final V value) {
             if (getLogger().isDebugEnabled()) {
+
                 if (value instanceof Enum) {
+
                     final Enum anEnum = (Enum) value;
-                    getLogger().debug("Using default \'" + property + "=" + anEnum.name().toLowerCase() + "\'.  " +
-                            "Possible values are: " + possibleValues(anEnum));
+                    getLogger().debug("Using default \'" + property + "=" + anEnum.name().toLowerCase() + "\'.  Possible values are: " + possibleValues(anEnum));
+
                 } else if (value instanceof Class) {
+
                     final Class clazz = (Class) value;
                     getLogger().debug("Using default \'" + property + "=" + clazz.getName() + "\'");
+
                 } else if (value != null) {
+
                     logger.debug("Using default \'" + property + "=" + value + "\'");
+
                 }
             }
             return value;

@@ -149,29 +149,17 @@ public class Size {
         }
 
         private static SizeUnit lowest(final Size a, final Size b) {
-            if (a.unit == null) {
-                return b.unit;
-            }
-            if (b.unit == null) {
-                return a.unit;
-            }
-            if (a.size == 0) {
-                return b.unit;
-            }
-            if (b.size == 0) {
-                return a.unit;
-            }
+            if (a.unit == null) return b.unit;
+            if (b.unit == null) return a.unit;
+            if (a.size == 0) return b.unit;
+            if (b.size == 0) return a.unit;
             return SizeUnit.values()[Math.min(a.unit.ordinal(), b.unit.ordinal())];
         }
     }
 
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         final Size that = (Size) o;
 
@@ -201,8 +189,7 @@ public class Size {
     }
 
     private static void invalidFormat(final String text) {
-        throw new IllegalArgumentException("Illegal size format: '" + text + "'.  Valid examples are '10kb' or '10 " +
-                "kilobytes'.");
+        throw new IllegalArgumentException("Illegal size format: '" + text + "'.  Valid examples are '10kb' or '10 kilobytes'.");
     }
 
     @Override
@@ -217,75 +204,33 @@ public class Size {
     }
 
     private static SizeUnit parseUnit(final String u) {
-        if (u.length() == 0) {
-            return null;
-        }
+        if (u.length() == 0) return null;
 
-        if ("BYTES".equalsIgnoreCase(u)) {
-            return SizeUnit.BYTES;
-        }
-        if ("BYTE".equalsIgnoreCase(u)) {
-            return SizeUnit.BYTES;
-        }
-        if ("B".equalsIgnoreCase(u)) {
-            return SizeUnit.BYTES;
-        }
+        if ("BYTES".equalsIgnoreCase(u)) return SizeUnit.BYTES;
+        if ("BYTE".equalsIgnoreCase(u)) return SizeUnit.BYTES;
+        if ("B".equalsIgnoreCase(u)) return SizeUnit.BYTES;
 
-        if ("KILOBYTES".equalsIgnoreCase(u)) {
-            return SizeUnit.KILOBYTES;
-        }
-        if ("KILOBYTE".equalsIgnoreCase(u)) {
-            return SizeUnit.KILOBYTES;
-        }
-        if ("KB".equalsIgnoreCase(u)) {
-            return SizeUnit.KILOBYTES;
-        }
-        if ("K".equalsIgnoreCase(u)) {
-            return SizeUnit.KILOBYTES;
-        }
+        if ("KILOBYTES".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("KILOBYTE".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("KB".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
+        if ("K".equalsIgnoreCase(u)) return SizeUnit.KILOBYTES;
 
-        if ("MEGABYTES".equalsIgnoreCase(u)) {
-            return SizeUnit.MEGABYTES;
-        }
-        if ("MEGABYTE".equalsIgnoreCase(u)) {
-            return SizeUnit.MEGABYTES;
-        }
-        if ("MB".equalsIgnoreCase(u)) {
-            return SizeUnit.MEGABYTES;
-        }
-        if ("M".equalsIgnoreCase(u)) {
-            return SizeUnit.MEGABYTES;
-        }
+        if ("MEGABYTES".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("MEGABYTE".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("MB".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
+        if ("M".equalsIgnoreCase(u)) return SizeUnit.MEGABYTES;
 
-        if ("GIGABYTES".equalsIgnoreCase(u)) {
-            return SizeUnit.GIGABYTES;
-        }
-        if ("GIGABYTE".equalsIgnoreCase(u)) {
-            return SizeUnit.GIGABYTES;
-        }
-        if ("GB".equalsIgnoreCase(u)) {
-            return SizeUnit.GIGABYTES;
-        }
-        if ("G".equalsIgnoreCase(u)) {
-            return SizeUnit.GIGABYTES;
-        }
+        if ("GIGABYTES".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("GIGABYTE".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("GB".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
+        if ("G".equalsIgnoreCase(u)) return SizeUnit.GIGABYTES;
 
-        if ("TERABYTES".equalsIgnoreCase(u)) {
-            return SizeUnit.TERABYTES;
-        }
-        if ("TERABYTE".equalsIgnoreCase(u)) {
-            return SizeUnit.TERABYTES;
-        }
-        if ("TB".equalsIgnoreCase(u)) {
-            return SizeUnit.TERABYTES;
-        }
-        if ("T".equalsIgnoreCase(u)) {
-            return SizeUnit.TERABYTES;
-        }
+        if ("TERABYTES".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("TERABYTE".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("TB".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
+        if ("T".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
 
-
-        throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ",
-                lowercase(SizeUnit.values())));
+        throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(SizeUnit.values())));
     }
 
     private static List<String> lowercase(final Enum... units) {

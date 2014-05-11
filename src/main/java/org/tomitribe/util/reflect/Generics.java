@@ -47,34 +47,43 @@ public class Generics {
             final Class rawClass = (Class) type;
 
             // if this is the collection class we're done
-            if (genericClass.equals(type)) {
-                return null;
-            }
+            if (genericClass.equals(type)) return null;
 
             for (final Type intf : rawClass.getGenericInterfaces()) {
                 final Type[] collectionType = getTypeParameters(genericClass, intf);
-                if (collectionType != null) {
-                    return collectionType;
-                }
+
+                if (collectionType != null) return collectionType;
             }
 
             final Type[] collectionType = getTypeParameters(genericClass, rawClass.getGenericSuperclass());
             return collectionType;
+
         } else if (type instanceof ParameterizedType) {
+
             final ParameterizedType parameterizedType = (ParameterizedType) type;
 
             final Type rawType = parameterizedType.getRawType();
+
             if (genericClass.equals(rawType)) {
+
                 final Type[] argument = parameterizedType.getActualTypeArguments();
                 return argument;
+
             }
+
             final Type[] collectionTypes = getTypeParameters(genericClass, rawType);
+
             if (collectionTypes != null) {
+
                 for (int i = 0; i < collectionTypes.length; i++) {
+
                     if (collectionTypes[i] instanceof TypeVariable) {
+
                         final TypeVariable typeVariable = (TypeVariable) collectionTypes[i];
                         final TypeVariable[] rawTypeParams = ((Class) rawType).getTypeParameters();
+
                         for (int j = 0; j < rawTypeParams.length; j++) {
+
                             if (typeVariable.getName().equals(rawTypeParams[j].getName())) {
                                 collectionTypes[i] = parameterizedType.getActualTypeArguments()[j];
                             }
@@ -82,8 +91,10 @@ public class Generics {
                     }
                 }
             }
+
             return collectionTypes;
         }
+
         return null;
     }
 

@@ -157,15 +157,9 @@ public class Files {
         final File[] files = dir.listFiles();
         if (files != null) {
             for (final File file : files) {
-                if (!filter.accept(file)) {
-                    return false;
-                }
-                if (!visitor.visit(file)) {
-                    return false;
-                }
-                if (!visit(file, filter, visitor)) {
-                    return false;
-                }
+                if (!filter.accept(file)) return false;
+                if (!visitor.visit(file)) return false;
+                if (!visit(file, filter, visitor)) return false;
             }
         }
 
@@ -215,19 +209,16 @@ public class Files {
     }
 
     public static void remove(final File file) {
-        if (file == null) {
-            return;
-        }
-        if (!file.exists()) {
-            return;
-        }
+        if (file == null) return;
+        if (!file.exists()) return;
 
         if (file.isDirectory()) {
             for (final File child : file.listFiles()) {
                 remove(child);
             }
         }
-        if (!file.delete()) {
+
+        if (!file.delete())  {
             throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
         }
     }
@@ -237,6 +228,7 @@ public class Files {
             dir(file);
             return;
         }
+
         if (!file.mkdir()) {
             throw new RuntimeException("Cannot mkdir: " + file.getAbsolutePath());
         }
@@ -245,9 +237,11 @@ public class Files {
     public static File tmpdir() {
         try {
             final File file = File.createTempFile("temp", "dir");
+
             if (!file.delete()) {
                 throw new IllegalStateException("Cannot make temp dir.  Delete failed");
             }
+
             mkdir(file);
             return file;
         } catch (final IOException e) {

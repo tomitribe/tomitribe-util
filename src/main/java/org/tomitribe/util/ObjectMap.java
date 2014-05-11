@@ -58,12 +58,8 @@ public class ObjectMap extends AbstractMap<String, Object> {
 
         for (final Method getter : clazz.getMethods()) {
             try {
-                if (!getter.getName().startsWith("get")) {
-                    continue;
-                }
-                if (getter.getParameterTypes().length != 0) {
-                    continue;
-                }
+                if (!getter.getName().startsWith("get")) continue;
+                if (getter.getParameterTypes().length != 0) continue;
 
 
                 final String name = getter.getName().replaceFirst("get", "set");
@@ -83,18 +79,14 @@ public class ObjectMap extends AbstractMap<String, Object> {
     @Override
     public Object get(final Object key) {
         final Entry<String, Object> entry = attributes.get(key);
-        if (entry == null) {
-            return null;
-        }
+        if (entry == null) return null;
         return entry.getValue();
     }
 
     @Override
     public Object put(final String key, final Object value) {
         final Entry<String, Object> entry = attributes.get(key);
-        if (entry == null) {
-            return null;
-        }
+        if (entry == null) return null;
         return entry.setValue(value);
     }
 
