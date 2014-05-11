@@ -75,6 +75,46 @@ public class ObjectMapTest extends TestCase {
         assertEquals(true, map.get("myboolean"));
     }
 
+
+    public void testReadOnlyKeys() throws Exception {
+
+        final ObjectMap map = new ObjectMap(new ReadOnlyKeys(42, true));
+
+        assertEquals((int)42, map.get("orange"));
+        assertEquals(true, map.get("red"));
+
+        try {
+            map.put("orange", 54);
+            fail();
+        } catch (IllegalArgumentException pass) {
+        }
+
+        try {
+            map.put("red", true);
+            fail();
+        } catch (IllegalArgumentException pass) {
+        }
+    }
+
+    public static class ReadOnlyKeys {
+
+        private final int orange;
+        private final boolean red;
+
+        public ReadOnlyKeys(int orange, boolean red) {
+            this.orange = orange;
+            this.red = red;
+        }
+
+        public int getOrange() {
+            return orange;
+        }
+
+        public boolean getRed() {
+            return red;
+        }
+    }
+
     public static class Foo {
 
         private String myString = "default";

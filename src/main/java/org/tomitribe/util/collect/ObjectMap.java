@@ -56,23 +56,27 @@ public class ObjectMap extends AbstractMap<String, Object> {
         }
 
         for (final Method getter : clazz.getMethods()) {
-            try {
-                if (!getter.getName().startsWith("get")) continue;
-                if (getter.getParameterTypes().length != 0) continue;
+            if (!getter.getName().startsWith("get")) continue;
+            if (getter.getParameterTypes().length != 0) continue;
 
 
-                final String name = getter.getName().replaceFirst("get", "set");
-                final Method setter = clazz.getMethod(name, getter.getReturnType());
+            final String name = getter.getName().replaceFirst("get", "set");
+            final Method setter = getOptionalMethod(clazz, name, getter.getReturnType());
 
-                final MethodEntry entry = new MethodEntry(getter, setter);
+            final MethodEntry entry = new MethodEntry(getter, setter);
 
-                attributes.put(entry.getKey(), entry);
-            } catch (final NoSuchMethodException e) {
-                // no-op
-            }
+            attributes.put(entry.getKey(), entry);
         }
 
         entries = Collections.unmodifiableSet(new HashSet<Entry<String, Object>>(attributes.values()));
+    }
+
+    private Method getOptionalMethod(Class<?> clazz, String name, Class<?>... parameterTypes) {
+        try {
+            return clazz.getMethod(name, parameterTypes);
+        } catch (NoSuchMethodException thisIsOk) {
+            return null;
+        }
     }
 
     @Override
@@ -191,6 +195,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
 
         @Override
         public Object setValue(Object value) {
+            if (setter == null) throw new IllegalArgumentException(String.format("'%s' is read-only"));
             final Object original = getValue();
             value = Converter.convert(value, setter.getParameterTypes()[0], getKey());
             invoke(setter, value);
