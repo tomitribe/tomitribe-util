@@ -24,6 +24,7 @@ import org.tomitribe.util.editor.Converter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.HashMap;
@@ -70,6 +71,8 @@ public class ObjectMap extends AbstractMap<String, Object> {
     }
 
     private boolean isValidGetter(Method m) {
+        if (Modifier.isAbstract(m.getModifiers())) return false;
+
         // Void methods are not valid getters
         if (Void.TYPE.equals(m.getReturnType())) return false;
 
@@ -126,7 +129,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
         return entries;
     }
 
-    public class FieldEntry implements Member<String, Object> {
+    public class FieldEntry implements Member {
 
         private final Field field;
 
@@ -164,13 +167,19 @@ public class ObjectMap extends AbstractMap<String, Object> {
         public Class<?> getType() {
             return field.getType();
         }
+
+        @Override
+        public boolean isReadOnly() {
+            return false;
+        }
     }
 
-    public interface Member<K, V> extends Entry<K, V> {
+    public interface Member extends Entry<String, Object> {
         Class<?> getType();
+        boolean isReadOnly();
     }
 
-    public class MethodEntry implements Member<String, Object> {
+    public class MethodEntry implements Member {
         private final String key;
         private final Method getter;
         private final Method setter;
@@ -221,6 +230,11 @@ public class ObjectMap extends AbstractMap<String, Object> {
         @Override
         public Class<?> getType() {
             return getter.getReturnType();
+        }
+
+        @Override
+        public boolean isReadOnly() {
+            return setter != null;
         }
     }
 

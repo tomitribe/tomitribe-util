@@ -18,6 +18,10 @@ package org.tomitribe.util.collect;
 
 import junit.framework.TestCase;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 public class ObjectMapTest extends TestCase {
 
     public void test() throws Exception {
@@ -75,6 +79,42 @@ public class ObjectMapTest extends TestCase {
         assertEquals(true, map.get("myboolean"));
     }
 
+    public void testGetType() throws Exception {
+        final Map<String,ObjectMap.Member> map = members(new ObjectMap(new Foo()));
+        assertEquals(String.class, map.get("myString").getType());
+        assertEquals(byte.class, map.get("mybyte").getType());
+        assertEquals(char.class, map.get("mychar").getType());
+        assertEquals(short.class, map.get("myshort").getType());
+        assertEquals(int.class, map.get("myint").getType());
+        assertEquals(long.class, map.get("mylong").getType());
+        assertEquals(float.class, map.get("myfloat").getType());
+        assertEquals(double.class, map.get("mydouble").getType());
+        assertEquals(boolean.class, map.get("myboolean").getType());
+    }
+
+    public void testIsReadOnly() throws Exception {
+        final Map<String,ObjectMap.Member> map = members(new ObjectMap(new Bar()));
+        assertEquals(true, map.get("myString").isReadOnly());
+        assertEquals(false, map.get("mybyte").isReadOnly());
+        assertEquals(true, map.get("mychar").isReadOnly());
+        assertEquals(false, map.get("myshort").isReadOnly());
+        assertEquals(true, map.get("myint").isReadOnly());
+        assertEquals(false, map.get("mylong").isReadOnly());
+        assertEquals(true, map.get("myfloat").isReadOnly());
+        assertEquals(false, map.get("mydouble").isReadOnly());
+        assertEquals(true, map.get("myboolean").isReadOnly());
+    }
+
+    private Map<String, ObjectMap.Member> members(final ObjectMap objectMap) {
+        final Map<String, ObjectMap.Member> map = new HashMap<String, ObjectMap.Member>();
+        for (final Map.Entry<String, Object> entry : objectMap.entrySet()) {
+            if (entry instanceof ObjectMap.Member) {
+                ObjectMap.Member member = (ObjectMap.Member) entry;
+                map.put(member.getKey(), member);
+            }
+        }
+        return map;
+    }
 
     public void testReadOnlyKeys() throws Exception {
 
@@ -227,6 +267,76 @@ public class ObjectMapTest extends TestCase {
 
         public void setMydouble(final double mydouble) {
             this.mydouble = mydouble;
+        }
+
+        public boolean getMyboolean() {
+            return myboolean;
+        }
+
+        public void setMyboolean(final boolean myboolean) {
+            this.myboolean = myboolean;
+        }
+    }
+
+    public static class Bar {
+
+        private String myString = "default";
+        private byte mybyte = 1;
+        private char mychar = 1;
+        private short myshort = 1;
+        private int myint = 1;
+        private long mylong = 1;
+        private float myfloat = 1;
+        private double mydouble = 1;
+        private boolean myboolean = true;
+
+        public String getMyString() {
+            return myString;
+        }
+
+        public void setMyString(final String myString) {
+            this.myString = myString;
+        }
+
+        public byte getMybyte() {
+            return mybyte;
+        }
+
+        public char getMychar() {
+            return mychar;
+        }
+
+        public void setMychar(final char mychar) {
+            this.mychar = mychar;
+        }
+
+        public short getMyshort() {
+            return myshort;
+        }
+
+        public int getMyint() {
+            return myint;
+        }
+
+        public void setMyint(final int myint) {
+            this.myint = myint;
+        }
+
+        public long getMylong() {
+            return mylong;
+        }
+
+
+        public float getMyfloat() {
+            return myfloat;
+        }
+
+        public void setMyfloat(final float myfloat) {
+            this.myfloat = myfloat;
+        }
+
+        public double getMydouble() {
+            return mydouble;
         }
 
         public boolean getMyboolean() {
