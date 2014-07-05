@@ -96,6 +96,39 @@ public class ObjectMapTest extends TestCase {
         }
     }
 
+
+    public void testBooleanIsGetter() throws Exception {
+
+        final ObjectMap map = new ObjectMap(new BooleanIsGetter(true, false));
+
+        assertEquals(true, map.get("orange"));
+        assertEquals(false, map.get("red"));
+
+    }
+
+    public static class BooleanIsGetter {
+
+        private boolean orange;
+        private final boolean red;
+
+        public BooleanIsGetter(boolean orange, boolean red) {
+            this.orange = orange;
+            this.red = red;
+        }
+
+        public boolean isOrange() {
+            return orange;
+        }
+
+        public boolean isRed() {
+            return red;
+        }
+
+        public void setOrange(boolean orange) {
+            this.orange = orange;
+        }
+    }
+
     public static class ReadOnlyKeys {
 
         private final int orange;

@@ -56,19 +56,35 @@ public class ObjectMap extends AbstractMap<String, Object> {
         }
 
         for (final Method getter : clazz.getMethods()) {
-            if (!getter.getName().startsWith("get")) continue;
-            if (getter.getParameterTypes().length != 0) continue;
+            if (!isValidGetter(getter)) continue;
 
-
-            final String name = getter.getName().replaceFirst("get", "set");
+            final String name = getter.getName().replaceFirst("(get|is)", "set");
             final Method setter = getOptionalMethod(clazz, name, getter.getReturnType());
 
-            final MethodEntry entry = new MethodEntry(getter, setter);
+            final MethodEntry entry = new MethodEntry(name, getter, setter);
 
             attributes.put(entry.getKey(), entry);
         }
 
         entries = Collections.unmodifiableSet(new HashSet<Entry<String, Object>>(attributes.values()));
+    }
+
+    private boolean isValidGetter(Method m) {
+        // Void methods are not valid getters
+        if (Void.TYPE.equals(m.getReturnType())) return false;
+
+        // Must have no parameters
+        if (m.getParameterTypes().length != 0) return false;
+
+        // Must start with "get" or "is"
+        if (m.getName().startsWith("get")) return true;
+        if (!m.getName().startsWith("is")) return false;
+
+        // If it starts with "is" it must return boolean
+        if (m.getReturnType().equals(Boolean.class)) return true;
+        if (m.getReturnType().equals(Boolean.TYPE)) return true;
+
+        return false;
     }
 
     private Method getOptionalMethod(Class<?> clazz, String name, Class<?>... parameterTypes) {
@@ -159,8 +175,8 @@ public class ObjectMap extends AbstractMap<String, Object> {
         private final Method getter;
         private final Method setter;
 
-        public MethodEntry(final Method getter, final Method setter) {
-            final StringBuilder name = new StringBuilder(getter.getName());
+        public MethodEntry(final String methodName, final Method getter, final Method setter) {
+            final StringBuilder name = new StringBuilder(methodName);
 
             // remove 'set' or 'get'
             name.delete(0, 3);
