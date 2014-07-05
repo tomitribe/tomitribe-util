@@ -103,6 +103,7 @@ public class ObjectMapTest extends TestCase {
 
         assertEquals(true, map.get("orange"));
         assertEquals(false, map.get("red"));
+        assertEquals(true, map.get("yellow"));
 
     }
 
@@ -122,6 +123,10 @@ public class ObjectMapTest extends TestCase {
 
         public boolean isRed() {
             return red;
+        }
+
+        public Boolean isYellow() {
+            return Boolean.TRUE;
         }
 
         public void setOrange(boolean orange) {
