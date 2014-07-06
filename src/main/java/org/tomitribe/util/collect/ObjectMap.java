@@ -220,7 +220,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
 
         @Override
         public Object setValue(Object value) {
-            if (setter == null) throw new IllegalArgumentException(String.format("'%s' is read-only"));
+            if (setter == null) throw new IllegalArgumentException(String.format("'%s' is read-only", key));
             final Object original = getValue();
             value = Converter.convert(value, setter.getParameterTypes()[0], getKey());
             invoke(setter, value);
