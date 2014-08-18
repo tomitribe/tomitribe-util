@@ -20,6 +20,7 @@ package org.tomitribe.util.collect;
 
 
 import org.tomitribe.util.editor.Converter;
+import org.tomitribe.util.reflect.SetAccessible;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -59,7 +60,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
         for (final Method getter : clazz.getMethods()) {
             if (!isValidGetter(getter)) continue;
 
-            final String name = getter.getName().replaceFirst("(get|is)", "set");
+            final String name = getter.getName().replaceFirst("(get|is|find)", "set");
             final Method setter = getOptionalMethod(clazz, name, getter.getReturnType());
 
             final MethodEntry entry = new MethodEntry(name, getter, setter);
@@ -80,7 +81,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
         if (m.getParameterTypes().length != 0) return false;
 
         // Must start with "get" or "is"
-        if (m.getName().startsWith("get")) return true;
+        if (m.getName().startsWith("get") || m.getName().startsWith("find")) return true;
         if (!m.getName().startsWith("is")) return false;
 
         // If it starts with "is" it must return boolean
@@ -199,12 +200,14 @@ public class ObjectMap extends AbstractMap<String, Object> {
         }
 
         protected Object invoke(final Method method, final Object... args) {
+            SetAccessible.on(method);
+
             try {
                 return method.invoke(object, args);
-            } catch (final IllegalAccessException e) {
-                throw new IllegalStateException(e);
             } catch (final InvocationTargetException e) {
                 throw new RuntimeException(e.getCause());
+            } catch (final Exception e) {
+                throw new IllegalStateException(String.format("Key: %s, Method: %s", key, method.toString()),e);
             }
         }
 
