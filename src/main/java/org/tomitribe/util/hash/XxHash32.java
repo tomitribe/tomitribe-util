@@ -22,11 +22,11 @@ import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
  * @author Martin Traverso
  */
 public class XxHash32 {
-    private final static long PRIME32_1 = 0x9E3779B185EBCA87L;
-    private final static long PRIME32_2 = 0xC2B2AE3D27D4EB4FL;
-    private final static long PRIME32_3 = 0x165667B19E3779F9L;
-    private final static long PRIME32_4 = 0x85EBCA77C2b2AE63L;
-    private final static long PRIME32_5 = 0x27D4EB2F165667C5L;
+    private final static long PRIME32_1 = 506952113; // 2654435761L & 0x7FFFFFFF
+    private final static long PRIME32_2 = 99338871; // 2246822519L & 0x7FFFFFFF
+    private final static long PRIME32_3 = 1119006269; // 3266489917L & 0x7FFFFFFF
+    private final static long PRIME32_4 = 668265263;
+    private final static long PRIME32_5 = 374761393;
 
     private final static long DEFAULT_SEED = 0;
 
