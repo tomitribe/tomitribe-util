@@ -22,16 +22,16 @@ import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
  * @author Martin Traverso
  */
 public class XxHash32 {
-    private final static long PRIME64_1 = 0x9E3779B185EBCA87L;
-    private final static long PRIME64_2 = 0xC2B2AE3D27D4EB4FL;
-    private final static long PRIME64_3 = 0x165667B19E3779F9L;
-    private final static long PRIME64_4 = 0x85EBCA77C2b2AE63L;
-    private final static long PRIME64_5 = 0x27D4EB2F165667C5L;
+    private final static long PRIME32_1 = 0x9E3779B185EBCA87L;
+    private final static long PRIME32_2 = 0xC2B2AE3D27D4EB4FL;
+    private final static long PRIME32_3 = 0x165667B19E3779F9L;
+    private final static long PRIME32_4 = 0x85EBCA77C2b2AE63L;
+    private final static long PRIME32_5 = 0x27D4EB2F165667C5L;
 
     private final static long DEFAULT_SEED = 0;
 
     public static long hash(long value) {
-        long hash = DEFAULT_SEED + PRIME64_5 + SizeOf.SIZE_OF_LONG;
+        long hash = DEFAULT_SEED + PRIME32_5 + SizeOf.SIZE_OF_LONG;
         hash = updateTail(hash, value);
         hash = finalShuffle(hash);
 
@@ -64,10 +64,10 @@ public class XxHash32 {
         long hash;
 
         if (length >= 32) {
-            long v1 = seed + PRIME64_1 + PRIME64_2;
-            long v2 = seed + PRIME64_2;
+            long v1 = seed + PRIME32_1 + PRIME32_2;
+            long v2 = seed + PRIME32_2;
             long v3 = seed + 0;
-            long v4 = seed - PRIME64_1;
+            long v4 = seed - PRIME32_1;
 
             long limit = end - 32;
             do {
@@ -92,7 +92,7 @@ public class XxHash32 {
             hash = update(hash, v3);
             hash = update(hash, v4);
         } else {
-            hash = seed + PRIME64_5;
+            hash = seed + PRIME32_5;
         }
 
         hash += length;
@@ -118,36 +118,36 @@ public class XxHash32 {
     }
 
     private static long mix(long current, long value) {
-        return rotateLeft(current + value * PRIME64_2, 31) * PRIME64_1;
+        return rotateLeft(current + value * PRIME32_2, 31) * PRIME32_1;
     }
 
     private static long update(long hash, long value) {
         long temp = hash ^ mix(0, value);
-        return temp * PRIME64_1 + PRIME64_4;
+        return temp * PRIME32_1 + PRIME32_4;
     }
 
     private static long updateTail(long hash, long value) {
         long temp = hash ^ mix(0, value);
-        return rotateLeft(temp, 27) * PRIME64_1 + PRIME64_4;
+        return rotateLeft(temp, 27) * PRIME32_1 + PRIME32_4;
     }
 
     private static long updateTail(long hash, int value) {
         long unsigned = value & 0xFFFFFFFFL;
-        long temp = hash ^ (unsigned * PRIME64_1);
-        return rotateLeft(temp, 23) * PRIME64_2 + PRIME64_3;
+        long temp = hash ^ (unsigned * PRIME32_1);
+        return rotateLeft(temp, 23) * PRIME32_2 + PRIME32_3;
     }
 
     private static long updateTail(long hash, byte value) {
         int unsigned = value & 0xFF;
-        long temp = hash ^ (unsigned * PRIME64_5);
-        return rotateLeft(temp, 11) * PRIME64_1;
+        long temp = hash ^ (unsigned * PRIME32_5);
+        return rotateLeft(temp, 11) * PRIME32_1;
     }
 
     private static long finalShuffle(long hash) {
         hash ^= hash >>> 33;
-        hash *= PRIME64_2;
+        hash *= PRIME32_2;
         hash ^= hash >>> 29;
-        hash *= PRIME64_3;
+        hash *= PRIME32_3;
         hash ^= hash >>> 32;
         return hash;
     }
