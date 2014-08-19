@@ -30,14 +30,6 @@ public class XxHash32 {
 
     private final static long DEFAULT_SEED = 0;
 
-    public static long hash(long value) {
-        long hash = DEFAULT_SEED + PRIME32_5 + SizeOf.SIZE_OF_LONG;
-        hash = updateTail(hash, value);
-        hash = finalShuffle(hash);
-
-        return hash;
-    }
-
     public static long hash(String data) {
         return hash(Slices.utf8Slice(data));
     }
@@ -58,97 +50,65 @@ public class XxHash32 {
         checkPositionIndexes(0, offset + length, data.length());
 
         Object base = data.getBase();
-        long index = data.getAddress() + offset;
-        long end = index + length;
+        long p = data.getAddress() + offset;
+        long end = p + length;
 
         long hash;
 
-        if (length >= 32) {
+        if (length >= 16) {
             long v1 = seed + PRIME32_1 + PRIME32_2;
             long v2 = seed + PRIME32_2;
             long v3 = seed + 0;
             long v4 = seed - PRIME32_1;
 
-            long limit = end - 32;
+            long limit = end - 16;
             do {
-                v1 = mix(v1, unsafe.getLong(base, index));
-                index += 8;
+                v1 = mix(v1, unsafe.getInt(base, p));
+                p += 4;
 
-                v2 = mix(v2, unsafe.getLong(base, index));
-                index += 8;
+                v2 = mix(v2, unsafe.getInt(base, p));
+                p += 4;
 
-                v3 = mix(v3, unsafe.getLong(base, index));
-                index += 8;
+                v3 = mix(v3, unsafe.getInt(base, p));
+                p += 4;
 
-                v4 = mix(v4, unsafe.getLong(base, index));
-                index += 8;
+                v4 = mix(v4, unsafe.getInt(base, p));
+                p += 4;
             }
-            while (index <= limit);
+            while (p <= limit);
 
             hash = rotateLeft(v1, 1) + rotateLeft(v2, 7) + rotateLeft(v3, 12) + rotateLeft(v4, 18);
 
-            hash = update(hash, v1);
-            hash = update(hash, v2);
-            hash = update(hash, v3);
-            hash = update(hash, v4);
         } else {
             hash = seed + PRIME32_5;
         }
 
         hash += length;
 
-        while (index <= end - 8) {
-            hash = updateTail(hash, unsafe.getLong(base, index));
-            index += 8;
+        if (p <= end - 4) {
+
+            hash += unsafe.getInt(base, p) * PRIME32_3;
+            hash = rotateLeft(hash, 17) * PRIME32_4;
+            p += 4;
         }
 
-        if (index <= end - 4) {
-            hash = updateTail(hash, unsafe.getInt(base, index));
-            index += 4;
+        while (p < end) {
+            int unsigned = unsafe.getByte(base, p) & 0xFF;
+            hash += (unsigned * PRIME32_5);
+            hash = rotateLeft(hash, 11) * PRIME32_1;
+            p++;
         }
 
-        while (index < end) {
-            hash = updateTail(hash, unsafe.getByte(base, index));
-            index++;
-        }
-
-        hash = finalShuffle(hash);
+        hash ^= hash >>> 15;
+        hash *= PRIME32_2;
+        hash ^= hash >>> 13;
+        hash *= PRIME32_3;
+        hash ^= hash >>> 16;
 
         return hash;
     }
 
     private static long mix(long current, long value) {
-        return rotateLeft(current + value * PRIME32_2, 31) * PRIME32_1;
-    }
-
-    private static long update(long hash, long value) {
-        long temp = hash ^ mix(0, value);
-        return temp * PRIME32_1 + PRIME32_4;
-    }
-
-    private static long updateTail(long hash, long value) {
-        long temp = hash ^ mix(0, value);
-        return rotateLeft(temp, 27) * PRIME32_1 + PRIME32_4;
-    }
-
-    private static long updateTail(long hash, int value) {
-        long unsigned = value & 0xFFFFFFFFL;
-        long temp = hash ^ (unsigned * PRIME32_1);
-        return rotateLeft(temp, 23) * PRIME32_2 + PRIME32_3;
-    }
-
-    private static long updateTail(long hash, byte value) {
-        int unsigned = value & 0xFF;
-        long temp = hash ^ (unsigned * PRIME32_5);
-        return rotateLeft(temp, 11) * PRIME32_1;
-    }
-
-    private static long finalShuffle(long hash) {
-        hash ^= hash >>> 33;
-        hash *= PRIME32_2;
-        hash ^= hash >>> 29;
-        hash *= PRIME32_3;
-        hash ^= hash >>> 32;
-        return hash;
+        return rotateLeft(current + value * PRIME32_2, 13) * PRIME32_1;
     }
 }
