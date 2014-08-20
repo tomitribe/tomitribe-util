@@ -30,6 +30,9 @@ public class XxHash32 {
 
     private final static int DEFAULT_SEED = 0;
 
+    private XxHash32() {
+    }
+
     public static int hash(String data) {
         return hash(Slices.utf8Slice(data));
     }

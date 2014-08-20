@@ -31,6 +31,7 @@ import static org.tomitribe.util.hash.Preconditions.checkNotNull;
 import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
+@SuppressWarnings("PMD.IllegalImport")
 public final class Slices {
     /**
      * A slice with size {@code 0}.

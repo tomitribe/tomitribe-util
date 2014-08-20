@@ -30,7 +30,6 @@ import java.io.IOException;
  * @see <a href="http://www.ietf.org/rfc/rfc2045.txt">RFC 2045</a>
  * @since 1.0-dev
  */
-@SuppressWarnings("PMD.OneDeclarationPerLine")
 public class Base64 {
 
     /**
@@ -277,7 +276,11 @@ public class Base64 {
 
         encodedData = new byte[encodedDataLength];
 
-        byte k = 0, l = 0, b1 = 0, b2 = 0, b3 = 0;
+        byte k = 0;
+        byte l = 0;
+        byte b1 = 0;
+        byte b2 = 0;
+        byte b3 = 0;
 
         int encodedIndex = 0;
         int dataIndex = 0;
@@ -400,7 +403,12 @@ public class Base64 {
 
         final int numberQuadruple = base64Data.length / FOURBYTE;
         final byte[] decodedData;
-        byte b1 = 0, b2 = 0, b3 = 0, b4 = 0, marker0 = 0, marker1 = 0;
+        byte b1 = 0;
+        byte b2 = 0;
+        byte b3 = 0;
+        byte b4 = 0;
+        byte marker0 = 0;
+        byte marker1 = 0;
 
         // Throw away anything not in base64Data
 

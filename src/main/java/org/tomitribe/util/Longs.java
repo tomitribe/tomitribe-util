@@ -18,6 +18,9 @@ package org.tomitribe.util;
 
 public class Longs {
 
+    private Longs() {
+    }
+
     public static byte[] toBytes(long v) {
         final byte[] bytes = new byte[8];
         bytes[0] = (byte) (v >>> 56);

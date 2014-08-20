@@ -17,6 +17,10 @@
 package org.tomitribe.util;
 
 public class Ints {
+
+    private Ints() {
+    }
+
     public static byte[] toBytes(int v) {
         final byte[] bytes = new byte[4];
         bytes[0] = (byte) (v >>> 24);

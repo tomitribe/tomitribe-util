@@ -30,6 +30,9 @@ public class XxHash64 {
 
     private final static long DEFAULT_SEED = 0;
 
+    private XxHash64() {
+    }
+
     public static long hash(long value) {
         long hash = DEFAULT_SEED + PRIME64_5 + SizeOf.SIZE_OF_LONG;
         hash = updateTail(hash, value);
