@@ -852,7 +852,8 @@ public final class Slice
         }
 
         try {
-            return (ByteBuffer) newByteBuffer.invokeExact(address + index, length, (Object) reference);
+            final Object[] args = {address + index, length, (Object) reference};
+            return (ByteBuffer) newByteBuffer.invokeExact(args);
         } catch (Throwable throwable) {
             if (throwable instanceof Error) {
                 throw (Error) throwable;
