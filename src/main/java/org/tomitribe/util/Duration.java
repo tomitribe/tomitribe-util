@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class Duration {
+public class Duration implements Comparable<Duration> {
 
     private long time;
     private TimeUnit unit;
@@ -253,6 +253,14 @@ public class Duration {
         if ("D".equalsIgnoreCase(u)) return TimeUnit.DAYS;
 
         throw new IllegalArgumentException("Unknown time unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(TimeUnit.values())));
+    }
+
+    @Override
+    public int compareTo(final Duration that) {
+        final Normalize n = new Normalize(this, that);
+        if (n.a > n.b) return 1;
+        if (n.a == n.b) return 0;
+        return -1;
     }
 
     private static List<String> lowercase(final Enum... units) {

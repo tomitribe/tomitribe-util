@@ -17,7 +17,9 @@
 package org.tomitribe.util;
 
 import junit.framework.TestCase;
+import org.junit.Assert;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.DAYS;
@@ -27,6 +29,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.tomitribe.util.Join.join;
 
 public class DurationTest extends TestCase {
 
@@ -108,5 +111,46 @@ public class DurationTest extends TestCase {
 
             assertEquals(expected, actual);
         }
+    }
+
+    public void testComparable() throws Exception {
+        final Duration[] expected = {
+                new Duration("2 nanosecond"),
+                new Duration("10 nanosecond"),
+                new Duration("2 microsecond"),
+                new Duration("10 microsecond"),
+                new Duration("2 millisecond"),
+                new Duration("10 millisecond"),
+                new Duration("2 second"),
+                new Duration("10 second"),
+                new Duration("2 minute"),
+                new Duration("10 minute"),
+                new Duration("2 hour"),
+                new Duration("10 hour"),
+                new Duration("2 day"),
+                new Duration("10 day")
+        };
+        final Duration[] actual = {
+                new Duration("10 second"),
+                new Duration("10 minute"),
+                new Duration("2 hour"),
+                new Duration("2 microsecond"),
+                new Duration("10 millisecond"),
+                new Duration("10 hour"),
+                new Duration("10 microsecond"),
+                new Duration("2 minute"),
+                new Duration("10 nanosecond"),
+                new Duration("2 second"),
+                new Duration("2 day"),
+                new Duration("2 millisecond"),
+                new Duration("2 nanosecond"),
+                new Duration("10 day")
+        };
+
+        Assert.assertNotEquals(join("\n", expected), join("\n", actual));
+
+        Arrays.sort(actual);
+
+        Assert.assertEquals(join("\n", expected), join("\n", actual));
     }
 }
