@@ -25,7 +25,7 @@ import java.beans.PropertyEditorManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Size {
+public class Size implements Comparable<Size> {
 
     private long size;
     private SizeUnit unit;
@@ -184,6 +184,10 @@ public class Size {
         return new Size(n.a - n.b, n.base);
     }
 
+    public Size to(SizeUnit unit) {
+        return new Size(unit.convert(this.size, this.unit), unit);
+    }
+
     public static Size parse(final String text) {
         return new Size(text);
     }
@@ -231,6 +235,19 @@ public class Size {
         if ("T".equalsIgnoreCase(u)) return SizeUnit.TERABYTES;
 
         throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(SizeUnit.values())));
+    }
+
+    @Override
+    public int compareTo(final Size that) {
+        final Normalize n = new Normalize(this, that);
+        if (n.a > n.b) return 1;
+        if (n.a == n.b) return 0;
+        return -1;
+    }
+
+    private SizeUnit lowest(SizeUnit a, SizeUnit b) {
+        final int min = Math.min(a.ordinal(), b.ordinal());
+        return SizeUnit.values()[min];
     }
 
     private static List<String> lowercase(final Enum... units) {

@@ -17,7 +17,11 @@
 package org.tomitribe.util;
 
 import junit.framework.TestCase;
+import org.junit.Assert;
 
+import java.util.Arrays;
+
+import static org.tomitribe.util.Join.join;
 import static org.tomitribe.util.SizeUnit.BYTES;
 import static org.tomitribe.util.SizeUnit.GIGABYTES;
 import static org.tomitribe.util.SizeUnit.KILOBYTES;
@@ -100,6 +104,7 @@ public class SizeTest extends TestCase {
 
     public void testMultiple() throws Exception {
         assertEquals(new Size(1101662261253l, BYTES), Size.parse("1tb and 2gb and 3mb and 4kb and 5 bytes"));
+        assertEquals(new Size(1101662261253l, BYTES), Size.parse("1 TB and 2 gb and 3 mb and 4 kb and 5 bytes"));
     }
 
     public void testDefaultUnit() throws Exception {
@@ -118,5 +123,38 @@ public class SizeTest extends TestCase {
         assertEquals(new Size(1109180547073l, BYTES), new Size("1tb and 2 and 3gb and 4 and 5mb and 1byte", GIGABYTES));
         assertEquals(new Size(7343109, MEGABYTES), new Size("1tb and 2 and 3gb and 4 and 5mb", TERABYTES));
         assertEquals(new Size(7343109 * 1024l * 1024l, BYTES), new Size("1tb and 2 and 3gb and 4 and 5mb", TERABYTES));
+    }
+
+    public void testComparable() throws Exception {
+        final Size[] expected = {
+                new Size("2b"),
+                new Size("10b"),
+                new Size("2kb"),
+                new Size("10kb"),
+                new Size("2mb"),
+                new Size("10mb"),
+                new Size("2gb"),
+                new Size("10gb"),
+                new Size("2tb"),
+                new Size("10tb")
+        };
+        final Size[] actual = {
+                new Size("2b"),
+                new Size("10gb"),
+                new Size("2kb"),
+                new Size("10kb"),
+                new Size("10b"),
+                new Size("10tb"),
+                new Size("2mb"),
+                new Size("2gb"),
+                new Size("10mb"),
+                new Size("2tb"),
+        };
+
+        Assert.assertNotEquals(join("\n", expected), join("\n", actual));
+
+        Arrays.sort(actual);
+
+        Assert.assertEquals(join("\n", expected), join("\n", actual));
     }
 }
