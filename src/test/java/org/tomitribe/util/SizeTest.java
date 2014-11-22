@@ -125,6 +125,32 @@ public class SizeTest extends TestCase {
         assertEquals(new Size(7343109 * 1024l * 1024l, BYTES), new Size("1tb and 2 and 3gb and 4 and 5mb", TERABYTES));
     }
 
+    public void testEverySinglePossibleAbbrevation() {
+        assertEquals(new Size(3, SizeUnit.BYTES), Size.parse("3 BYTES"));
+        assertEquals(new Size(3, SizeUnit.BYTES), Size.parse("3 BYTE"));
+        assertEquals(new Size(3, SizeUnit.BYTES), Size.parse("3 B"));
+
+        assertEquals(new Size(3, SizeUnit.KILOBYTES), Size.parse("3 KILOBYTES"));
+        assertEquals(new Size(3, SizeUnit.KILOBYTES), Size.parse("3 KILOBYTE"));
+        assertEquals(new Size(3, SizeUnit.KILOBYTES), Size.parse("3 KB"));
+        assertEquals(new Size(3, SizeUnit.KILOBYTES), Size.parse("3 K"));
+
+        assertEquals(new Size(3, SizeUnit.MEGABYTES), Size.parse("3 MEGABYTES"));
+        assertEquals(new Size(3, SizeUnit.MEGABYTES), Size.parse("3 MEGABYTE"));
+        assertEquals(new Size(3, SizeUnit.MEGABYTES), Size.parse("3 MB"));
+        assertEquals(new Size(3, SizeUnit.MEGABYTES), Size.parse("3 M"));
+
+        assertEquals(new Size(3, SizeUnit.GIGABYTES), Size.parse("3 GIGABYTES"));
+        assertEquals(new Size(3, SizeUnit.GIGABYTES), Size.parse("3 GIGABYTE"));
+        assertEquals(new Size(3, SizeUnit.GIGABYTES), Size.parse("3 GB"));
+        assertEquals(new Size(3, SizeUnit.GIGABYTES), Size.parse("3 G"));
+
+        assertEquals(new Size(3, SizeUnit.TERABYTES), Size.parse("3 TERABYTES"));
+        assertEquals(new Size(3, SizeUnit.TERABYTES), Size.parse("3 TERABYTE"));
+        assertEquals(new Size(3, SizeUnit.TERABYTES), Size.parse("3 TB"));
+        assertEquals(new Size(3, SizeUnit.TERABYTES), Size.parse("3 T"));
+    }
+
     public void testComparable() throws Exception {
         final Size[] expected = {
                 new Size("2b"),
