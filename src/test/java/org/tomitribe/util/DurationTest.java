@@ -113,6 +113,45 @@ public class DurationTest extends TestCase {
         }
     }
 
+    public void testEverySingleImplementedAbbreviation() {
+        assertEquals(new Duration(3, TimeUnit.NANOSECONDS), Duration.parse("3 NANOSECONDS"));
+        assertEquals(new Duration(3, TimeUnit.NANOSECONDS), Duration.parse("3 NANOSECOND"));
+        assertEquals(new Duration(3, TimeUnit.NANOSECONDS), Duration.parse("3 NANOS"));
+        assertEquals(new Duration(3, TimeUnit.NANOSECONDS), Duration.parse("3 NANO"));
+        assertEquals(new Duration(3, TimeUnit.NANOSECONDS), Duration.parse("3 NS"));
+
+        assertEquals(new Duration(3, TimeUnit.MICROSECONDS), Duration.parse("3 MICROSECONDS"));
+        assertEquals(new Duration(3, TimeUnit.MICROSECONDS), Duration.parse("3 MICROSECOND"));
+        assertEquals(new Duration(3, TimeUnit.MICROSECONDS), Duration.parse("3 MICROS"));
+        assertEquals(new Duration(3, TimeUnit.MICROSECONDS), Duration.parse("3 MICRO"));
+
+        assertEquals(new Duration(3, TimeUnit.MILLISECONDS), Duration.parse("3 MILLISECONDS"));
+        assertEquals(new Duration(3, TimeUnit.MILLISECONDS), Duration.parse("3 MILLISECOND"));
+        assertEquals(new Duration(3, TimeUnit.MILLISECONDS), Duration.parse("3 MILLIS"));
+        assertEquals(new Duration(3, TimeUnit.MILLISECONDS), Duration.parse("3 MILLI"));
+        assertEquals(new Duration(3, TimeUnit.MILLISECONDS), Duration.parse("3 MS"));
+
+        assertEquals(new Duration(3, TimeUnit.SECONDS), Duration.parse("3 SECONDS"));
+        assertEquals(new Duration(3, TimeUnit.SECONDS), Duration.parse("3 SECOND"));
+        assertEquals(new Duration(3, TimeUnit.SECONDS), Duration.parse("3 SEC"));
+        assertEquals(new Duration(3, TimeUnit.SECONDS), Duration.parse("3 S"));
+
+        assertEquals(new Duration(3, TimeUnit.MINUTES), Duration.parse("3 MINUTES"));
+        assertEquals(new Duration(3, TimeUnit.MINUTES), Duration.parse("3 MINUTE"));
+        assertEquals(new Duration(3, TimeUnit.MINUTES), Duration.parse("3 MIN"));
+        assertEquals(new Duration(3, TimeUnit.MINUTES), Duration.parse("3 M"));
+
+        assertEquals(new Duration(3, TimeUnit.HOURS), Duration.parse("3 HOURS"));
+        assertEquals(new Duration(3, TimeUnit.HOURS), Duration.parse("3 HOUR"));
+        assertEquals(new Duration(3, TimeUnit.HOURS), Duration.parse("3 HRS"));
+        assertEquals(new Duration(3, TimeUnit.HOURS), Duration.parse("3 HR"));
+        assertEquals(new Duration(3, TimeUnit.HOURS), Duration.parse("3 H"));
+
+        assertEquals(new Duration(3, TimeUnit.DAYS), Duration.parse("3 DAYS"));
+        assertEquals(new Duration(3, TimeUnit.DAYS), Duration.parse("3 DAY"));
+        assertEquals(new Duration(3, TimeUnit.DAYS), Duration.parse("3 D"));
+    }
+
     public void testComparable() throws Exception {
         final Duration[] expected = {
                 new Duration("2 nanosecond"),
