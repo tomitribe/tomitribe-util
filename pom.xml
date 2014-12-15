@@ -40,11 +40,9 @@
 
   <repositories>
     <repository>
-      <id>snapshots</id>
-      <url>http://repository.tomitribe.com/content/repositories/snapshots</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
+      <id>tomitribe-all</id>
+      <name>Tomitribe Repository</name>
+      <url>http://repository.tomitribe.com/content/groups/tomitribe/</url>
     </repository>
     <repository>
       <id>Sonatype-public</id>
@@ -58,6 +56,21 @@
       </releases>
     </repository>
   </repositories>
+
+  <distributionManagement>
+    <!--You need to define 'server' entries in your settings.xml to gain access here-->
+    <repository>
+      <id>tomitribe.releases.https</id>
+      <name>Tomitribe Release Distribution Repository</name>
+      <!--url>http://repository.tomitribe.com/service/local/staging/deploy/maven2</url-->
+      <url>http://repository.tomitribe.com/content/repositories/releases-tomitribe</url>
+    </repository>
+    <snapshotRepository>
+      <id>tomitribe.snapshots.https</id>
+      <name>Tomitribe Development Snapshot Repository</name>
+      <url>http://repository.tomitribe.com/content/repositories/snapshots-tomitribe</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <dependencies>
     <dependency>
