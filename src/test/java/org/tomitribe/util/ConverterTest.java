@@ -20,9 +20,21 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tomitribe.util.editor.Converter;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Arrays.asList;
 
 public class ConverterTest extends Assert {
+    private Collection<Duration> durations;
+    private Map<Key, Duration> durationsMap;
 
     @Test
     public void testConvert() throws Exception {
@@ -37,6 +49,63 @@ public class ConverterTest extends Assert {
         expected.value = "foo";
 
         assertEquals(expected, Converter.convert("foo", Yellow.class, null));
+    }
+
+    @Test
+    public void testConvertString() throws NoSuchFieldException {
+        assertEquals(
+                asList("a", "b", "c"),
+                Converter.convertString("a, b, c", new ParameterizedTypeImpl(List.class, String.class), "foo"));
+        assertEquals(
+                asList(new Duration("5 s"), new Duration("4 s"), new Duration("3 s")),
+                Converter.convertString("5s, 4 s, 3 seconds", ConverterTest.class.getDeclaredField("durations").getGenericType(), "reflection"));
+        assertEquals(
+                new HashSet<String>(asList("a", "b", "c")),
+                Converter.convertString("a, b, c", new ParameterizedTypeImpl(Set.class, String.class), "foo"));
+        assertEquals(
+                asList(1, 2, 3),
+                Converter.convertString("1, 2, 3", new ParameterizedTypeImpl(Collection.class, Integer.class), "foo"));
+        assertEquals(
+                new HashMap<Integer, String>() {{
+                    put(1, "a");
+                    put(2, "b");
+                    put(3, "c");
+                }},
+                Converter.convertString("1=a\n2=b\n3=c\n", new ParameterizedTypeImpl(Map.class, Integer.class, String.class), "foo"));
+        assertEquals(
+                new HashMap<Key, Duration>() {{
+                    put(new Key("__"), new Duration("5 s"));
+                    put(new Key("%&$"), new Duration("4 s"));
+                    put(new Key("---"), new Duration("3 s"));
+                }},
+                Converter.convertString("__=5s\n%&$=4s\n---=3 seconds",
+                        ConverterTest.class.getDeclaredField("durationsMap").getGenericType(), "reflection map"));
+
+    }
+
+    public static class ParameterizedTypeImpl implements ParameterizedType {
+        private final Type raw;
+        private final Type[] arg;
+
+        public ParameterizedTypeImpl(final Type raw, final Type... arg) {
+            this.raw = raw;
+            this.arg = arg;
+        }
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return arg;
+        }
+
+        @Override
+        public Type getRawType() {
+            return raw;
+        }
+
+        @Override
+        public Type getOwnerType() {
+            return null;
+        }
     }
 
     public static class Green {
@@ -102,6 +171,37 @@ public class ConverterTest extends Assert {
         @Override
         public int hashCode() {
             return value != null ? value.hashCode() : 0;
+        }
+    }
+
+    public static class Key {
+        private final String k;
+
+        public Key(String pwz) {
+            k = pwz;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Key key = (Key) o;
+
+            return k.equals(key.k);
+
+        }
+
+        @Override
+        public int hashCode() {
+            return k.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return "Key{" +
+                    "k='" + k + '\'' +
+                    '}';
         }
     }
 }

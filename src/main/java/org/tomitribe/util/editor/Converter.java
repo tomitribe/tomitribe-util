@@ -20,9 +20,25 @@ package org.tomitribe.util.editor;
 
 
 import java.beans.PropertyEditor;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Can convert anything with a:
@@ -36,13 +52,76 @@ public class Converter {
         // no-op
     }
 
+    public static Object convertString(final String value, final Type targetType, final String name) {
+        if (Class.class.isInstance(targetType)) {
+            return convert(value, Class.class.cast(targetType), name);
+        }
+        if (ParameterizedType.class.isInstance(targetType)) {
+            final ParameterizedType parameterizedType = ParameterizedType.class.cast(targetType);
+            final Type raw = parameterizedType.getRawType();
+            if (!Class.class.isInstance(raw)) {
+                throw new IllegalArgumentException("not supported parameterized type: " + targetType);
+            }
+
+            final Class<?> rawClass = Class.class.cast(raw);
+            final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+            if (Collection.class.isAssignableFrom(rawClass)) {
+                final Class<?> argType = actualTypeArguments.length == 0 ? String.class : toClass(actualTypeArguments[0]);
+                final String[] split = value.split(" *, *");
+
+                final Collection values;
+                if (Collection.class == raw || List.class == raw) {
+                    values = new ArrayList(split.length);
+                } else if (Set.class == raw) {
+                    values = SortedSet.class == raw ? new TreeSet() : new HashSet(split.length);
+                } else {
+                    throw new IllegalArgumentException(targetType + " collection type not supported");
+                }
+
+                for (final String val : split) {
+                    values.add(convert(val, argType, name));
+                }
+
+                return values;
+            } else if (Map.class.isAssignableFrom(rawClass)) {
+                final Map map;
+                if (SortedMap.class == raw) {
+                    map = new TreeMap();
+                } else {
+                    map = new HashMap();
+                }
+                final Properties p = new Properties();
+                try {
+                    p.load(new ByteArrayInputStream(value.getBytes()));
+                } catch (final IOException e) {
+                    // can't occur
+                }
+                final Class<?> keyType = actualTypeArguments.length == 0 ? String.class : toClass(actualTypeArguments[0]);
+                final Class<?> valueType = actualTypeArguments.length == 0 ? String.class : toClass(actualTypeArguments[1]);
+                for (final String k : p.stringPropertyNames()) {
+                    map.put(convert(k, keyType, name), convert(p.getProperty(k), valueType, name));
+                }
+                return map;
+            }
+        }
+        throw new IllegalArgumentException("not supported type: " + targetType);
+    }
+
+    private static Class<?> toClass(final Type type) {
+        try {
+            return Class.class.cast(type);
+        } catch (final Exception e) {
+            throw new IllegalArgumentException(type + " not supported");
+        }
+    }
+
     public static Object convert(final Object value, Class<?> targetType, final String name) {
         if (value == null) {
             if (targetType.equals(Boolean.TYPE)) return false;
-            return value;
+            return null;
         }
 
-        final Class<? extends Object> actualType = value.getClass();
+        final Class<?> actualType = value.getClass();
 
         if (targetType.isPrimitive()) targetType = boxPrimitive(targetType);
 
