@@ -21,6 +21,9 @@ import java.util.Iterator;
 
 public class StackTraceElements {
 
+    private StackTraceElements() {
+    }
+
     public static StackTraceElement getCurrentMethod() {
         final Iterator<StackTraceElement> stackTrace = seek(StackTraceElements.class, "getCurrentMethod");
 
