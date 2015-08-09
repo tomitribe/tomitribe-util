@@ -45,24 +45,39 @@ public class ClassesTest extends Assert {
     public void testPackageName() throws Exception {
         final String s = Classes.packageName(ClassesTest.class);
         assertEquals("org.tomitribe.util.reflect", s);
+
+        // Class from the Default package
+        final Class goodCatch = Classes.forName("GoodCatch", Thread.currentThread().getContextClassLoader());
+        assertEquals("", Classes.packageName(goodCatch));
     }
 
     @Test
     public void testPackageName1() throws Exception {
         final String s = Classes.packageName(ClassesTest.class.getName());
         assertEquals("org.tomitribe.util.reflect", s);
+
+        // Class from the Default package
+        final Class goodCatch = Classes.forName("GoodCatch", Thread.currentThread().getContextClassLoader());
+        assertEquals("", Classes.packageName(goodCatch.getName()));
     }
 
     @Test
     public void testSimpleName() throws Exception {
         final String s = Classes.simpleName(ClassesTest.class.getName());
         assertEquals("ClassesTest", s);
+
+        // Class from the Default package
+        final Class goodCatch = Classes.forName("GoodCatch", Thread.currentThread().getContextClassLoader());
+        assertEquals("GoodCatch", Classes.simpleName(goodCatch.getName()));
     }
 
     @Test
     public void testSimpleName1() throws Exception {
-        final String s = Classes.simpleName(ClassesTest.class);
-        assertEquals("ClassesTest", s);
+        assertEquals("ClassesTest", Classes.simpleName(ClassesTest.class));
+
+        // Class from the Default package
+        final Class goodCatch = Classes.forName("GoodCatch", Thread.currentThread().getContextClassLoader());
+        assertEquals("GoodCatch", Classes.simpleName(goodCatch));
     }
 
     @Test

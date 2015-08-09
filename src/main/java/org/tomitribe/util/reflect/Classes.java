@@ -90,7 +90,7 @@ public class Classes {
 
     public static String simpleName(String clazzName) {
         int i = clazzName.lastIndexOf(46);
-        return i > 0 ? clazzName.substring(i + 1) : "";
+        return i > 0 ? clazzName.substring(i + 1) : clazzName;
     }
 
     public static List<String> getSimpleNames(final Class... classes) {
