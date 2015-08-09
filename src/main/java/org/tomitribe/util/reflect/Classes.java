@@ -84,6 +84,15 @@ public class Classes {
         }
     }
 
+    public static String simpleName(final Class clazz) {
+        return clazz.getSimpleName();
+    }
+
+    public static String simpleName(String clazzName) {
+        int i = clazzName.lastIndexOf(46);
+        return i > 0 ? clazzName.substring(i + 1) : "";
+    }
+
     public static List<String> getSimpleNames(final Class... classes) {
         final List<String> list = new ArrayList<String>();
         for (final Class aClass : classes) {
