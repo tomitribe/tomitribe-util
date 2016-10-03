@@ -21,10 +21,13 @@ package org.tomitribe.util;
 
 import org.tomitribe.util.editor.Editors;
 
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.beans.PropertyEditorManager;
 import java.util.ArrayList;
 import java.util.List;
 
+@XmlJavaTypeAdapter(Size.Adapter.class)
 public class Size implements Comparable<Size> {
 
     private long size;
@@ -201,8 +204,7 @@ public class Size implements Comparable<Size> {
         final StringBuilder sb = new StringBuilder();
         sb.append(size);
         if (unit != null) {
-            sb.append(" ");
-            sb.append(unit);
+            sb.append(abbreviate(unit));
         }
         return sb.toString();
     }
@@ -237,6 +239,24 @@ public class Size implements Comparable<Size> {
         throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(SizeUnit.values())));
     }
 
+    private static String abbreviate(final SizeUnit u) {
+
+        switch (u) {
+            case BYTES:
+                return "bytes";
+            case KILOBYTES:
+                return "kb";
+            case MEGABYTES:
+                return "mb";
+            case GIGABYTES:
+                return "gb";
+            case TERABYTES:
+                return "tb";
+            default:
+                throw new IllegalArgumentException("Unknown size unit '" + u + "'.  Supported units " + Join.join(", ", lowercase(SizeUnit.values())));
+        }
+    }
+
     @Override
     public int compareTo(final Size that) {
         final Normalize n = new Normalize(this, that);
@@ -268,5 +288,18 @@ public class Size implements Comparable<Size> {
     static {
         PropertyEditorManager.registerEditor(Size.class, SizeEditor.class);
         Editors.get(Size.class);
+    }
+
+    public static class Adapter extends XmlAdapter<String, Size> {
+
+        @Override
+        public Size unmarshal(String v) throws Exception {
+            return new Size(v);
+        }
+
+        @Override
+        public String marshal(Size v) throws Exception {
+            return v.toString();
+        }
     }
 }
