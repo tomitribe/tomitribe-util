@@ -19,7 +19,6 @@ package org.tomitribe.util;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
-import javax.print.Doc;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
@@ -28,7 +27,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.Arrays;
-import java.util.function.Function;
 
 import static org.tomitribe.util.Join.join;
 import static org.tomitribe.util.SizeUnit.BYTES;
@@ -205,8 +203,8 @@ public class SizeTest extends TestCase {
             final Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.marshal(new Document(size), xmlContent);
             assertEquals("" +
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                    "<document><size>10gb</size></document>",
+                            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+                            "<document><size>10gb</size></document>",
                     xmlContent.toString());
         }
 
@@ -219,7 +217,7 @@ public class SizeTest extends TestCase {
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    public static class Document  {
+    public static class Document {
 
         @XmlJavaTypeAdapter(Size.Adapter.class)
         private final Size size;
