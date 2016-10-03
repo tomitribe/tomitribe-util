@@ -28,14 +28,14 @@
 
   <artifactId>tomitribe-util</artifactId>
   <packaging>jar</packaging>
-  <version>1.2.2</version>
+  <version>1.2.3-SNAPSHOT</version>
   <name>Tomitribe :: Util</name>
 
   <scm>
     <connection>scm:git:git@github.com:tomitribe/tomitribe-util.git</connection>
     <url>scm:git:git@github.com:tomitribe/tomitribe-util.git</url>
     <developerConnection>scm:git:git@github.com:tomitribe/tomitribe-util.git</developerConnection>
-    <tag>tomitribe-util-1.2.2</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencies>
