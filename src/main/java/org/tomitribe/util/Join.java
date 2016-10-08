@@ -18,8 +18,10 @@
  */
 package org.tomitribe.util;
 
-import java.io.File;
-import java.lang.reflect.Method;
+import org.tomitribe.util.callbacks.ClassCallback;
+import org.tomitribe.util.callbacks.MethodCallback;
+import org.tomitribe.util.callbacks.NameCallback;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -91,31 +93,5 @@ public class Join {
         }
 
         return list;
-    }
-
-    public interface NameCallback<T> {
-
-        String getName(T object);
-    }
-
-    public static class FileCallback implements NameCallback<File> {
-
-        public String getName(final File file) {
-            return file.getName();
-        }
-    }
-
-    public static class MethodCallback implements NameCallback<Method> {
-
-        public String getName(final Method method) {
-            return method.getName();
-        }
-    }
-
-    public static class ClassCallback implements NameCallback<Class<?>> {
-
-        public String getName(final Class<?> cls) {
-            return cls.getName();
-        }
     }
 }
