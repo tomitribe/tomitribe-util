@@ -683,7 +683,7 @@ public final class Slice
             compareLength--;
         }
 
-        return Integer.compare(length, otherLength);
+        return Integer.valueOf(length).compareTo(Integer.valueOf(otherLength));
     }
 
     /**
@@ -915,7 +915,7 @@ public final class Slice
     }
 
     private static int compareUnsignedLongs(long thisLong, long thatLong) {
-        return Long.compare(flipUnsignedLong(thisLong), flipUnsignedLong(thatLong));
+        return Long.valueOf(flipUnsignedLong(thisLong)).compareTo(Long.valueOf(flipUnsignedLong(thatLong)));
     }
 
     private static long flipUnsignedLong(long thisLong) {
