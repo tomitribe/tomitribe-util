@@ -13,8 +13,9 @@
  */
 package org.tomitribe.util.hash;
 
-import org.tomitribe.util.IO;
-import sun.nio.ch.DirectBuffer;
+import static org.tomitribe.util.hash.Preconditions.checkNotNull;
+import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BYTE_BASE_OFFSET;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,12 +27,11 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.Charset;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.tomitribe.util.hash.Preconditions.checkNotNull;
-import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
-import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
+import org.tomitribe.util.IO;
 
-@SuppressWarnings("PMD.IllegalImport")
+import sun.nio.ch.DirectBuffer;
+
+@SuppressWarnings({ "PMD.IllegalImport", "restriction" })
 public final class Slices {
     /**
      * A slice with size {@code 0}.
@@ -205,7 +205,7 @@ public final class Slices {
     }
 
     public static Slice utf8Slice(String string) {
-        return copiedBuffer(string, UTF_8);
+        return copiedBuffer(string, Charset.forName("UTF8"));
     }
 
     public static Slice mapFileReadOnly(File file)

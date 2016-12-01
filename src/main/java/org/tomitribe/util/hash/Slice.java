@@ -13,14 +13,7 @@
  */
 package org.tomitribe.util.hash;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-
 import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.tomitribe.util.hash.JvmUtils.newByteBuffer;
 import static org.tomitribe.util.hash.JvmUtils.unsafe;
 import static org.tomitribe.util.hash.Preconditions.checkArgument;
@@ -33,20 +26,28 @@ import static org.tomitribe.util.hash.SizeOf.SIZE_OF_INT;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_LONG;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_SHORT;
 import static org.tomitribe.util.hash.StringDecoder.decodeString;
-import static sun.misc.Unsafe.ARRAY_BOOLEAN_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_DOUBLE_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_DOUBLE_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_FLOAT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_FLOAT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_INT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_INT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_LONG_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_LONG_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_SHORT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BOOLEAN_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BOOLEAN_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BYTE_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_DOUBLE_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_DOUBLE_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_FLOAT_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_FLOAT_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_INT_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_INT_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_LONG_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_LONG_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_SHORT_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_SHORT_INDEX_SCALE;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+
+
+@SuppressWarnings("restriction")
 public final class Slice
         implements Comparable<Slice> {
     /**
@@ -695,7 +696,7 @@ public final class Slice
             compareLength--;
         }
 
-        return Integer.compare(length, otherLength);
+        return Integer.valueOf(length).compareTo(Integer.valueOf(otherLength));
     }
 
     /**
@@ -822,7 +823,7 @@ public final class Slice
      * character set.
      */
     public String toStringUtf8() {
-        return toString(UTF_8);
+        return toString(Charset.forName("UTF8"));
     }
 
     /**
@@ -927,7 +928,7 @@ public final class Slice
     }
 
     private static int compareUnsignedLongs(long thisLong, long thatLong) {
-        return Long.compare(flipUnsignedLong(thisLong), flipUnsignedLong(thatLong));
+        return Long.valueOf(flipUnsignedLong(thisLong)).compareTo(Long.valueOf(flipUnsignedLong(thatLong)));
     }
 
     private static long flipUnsignedLong(long thisLong) {
