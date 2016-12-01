@@ -22,13 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
-import static sun.misc.Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_BYTE_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_DOUBLE_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_FLOAT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_INT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_LONG_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.*;
 
 final class JvmUtils {
     static final Unsafe unsafe;

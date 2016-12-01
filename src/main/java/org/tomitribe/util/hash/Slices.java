@@ -28,9 +28,9 @@ import java.nio.charset.Charset;
 
 import static org.tomitribe.util.hash.Preconditions.checkNotNull;
 import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
-import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.*;
 
-@SuppressWarnings("PMD.IllegalImport")
+@SuppressWarnings({ "PMD.IllegalImport", "restriction" })
 public final class Slices {
     /**
      * A slice with size {@code 0}.

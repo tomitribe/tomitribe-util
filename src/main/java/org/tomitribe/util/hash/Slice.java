@@ -20,7 +20,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.tomitribe.util.hash.JvmUtils.newByteBuffer;
 import static org.tomitribe.util.hash.JvmUtils.unsafe;
 import static org.tomitribe.util.hash.Preconditions.checkArgument;
@@ -33,19 +32,8 @@ import static org.tomitribe.util.hash.SizeOf.SIZE_OF_INT;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_LONG;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_SHORT;
 import static org.tomitribe.util.hash.StringDecoder.decodeString;
-import static sun.misc.Unsafe.ARRAY_BOOLEAN_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_DOUBLE_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_DOUBLE_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_FLOAT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_FLOAT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_INT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_INT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_LONG_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_LONG_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_SHORT_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.*;
+
 
 public final class Slice
         implements Comparable<Slice> {
@@ -822,7 +810,7 @@ public final class Slice
      * character set.
      */
     public String toStringUtf8() {
-        return toString(UTF_8);
+        return toString(Charset.forName("UTF8"));
     }
 
     /**
