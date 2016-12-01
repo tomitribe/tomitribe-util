@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 
 import static org.tomitribe.util.hash.UnsafeConstants.*;
 
+@SuppressWarnings("restriction")
 final class JvmUtils {
     static final Unsafe unsafe;
     static final MethodHandle newByteBuffer;
