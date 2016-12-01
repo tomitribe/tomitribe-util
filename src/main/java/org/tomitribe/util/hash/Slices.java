@@ -26,7 +26,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.Charset;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.tomitribe.util.hash.Preconditions.checkNotNull;
 import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
@@ -205,7 +204,7 @@ public final class Slices {
     }
 
     public static Slice utf8Slice(String string) {
-        return copiedBuffer(string, UTF_8);
+        return copiedBuffer(string, Charset.forName("UTF8"));
     }
 
     public static Slice mapFileReadOnly(File file)
