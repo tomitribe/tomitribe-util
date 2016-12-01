@@ -13,12 +13,6 @@
  */
 package org.tomitribe.util.hash;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-
 import static java.lang.String.format;
 import static org.tomitribe.util.hash.JvmUtils.newByteBuffer;
 import static org.tomitribe.util.hash.JvmUtils.unsafe;
@@ -32,9 +26,28 @@ import static org.tomitribe.util.hash.SizeOf.SIZE_OF_INT;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_LONG;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_SHORT;
 import static org.tomitribe.util.hash.StringDecoder.decodeString;
-import static org.tomitribe.util.hash.UnsafeConstants.*;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BOOLEAN_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BOOLEAN_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BYTE_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_DOUBLE_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_DOUBLE_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_FLOAT_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_FLOAT_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_INT_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_INT_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_LONG_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_LONG_INDEX_SCALE;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_SHORT_BASE_OFFSET;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_SHORT_INDEX_SCALE;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 
+@SuppressWarnings("restriction")
 public final class Slice
         implements Comparable<Slice> {
     /**

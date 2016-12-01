@@ -13,8 +13,9 @@
  */
 package org.tomitribe.util.hash;
 
-import org.tomitribe.util.IO;
-import sun.nio.ch.DirectBuffer;
+import static org.tomitribe.util.hash.Preconditions.checkNotNull;
+import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
+import static org.tomitribe.util.hash.UnsafeConstants.ARRAY_BYTE_BASE_OFFSET;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,9 +27,9 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.Charset;
 
-import static org.tomitribe.util.hash.Preconditions.checkNotNull;
-import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
-import static org.tomitribe.util.hash.UnsafeConstants.*;
+import org.tomitribe.util.IO;
+
+import sun.nio.ch.DirectBuffer;
 
 @SuppressWarnings({ "PMD.IllegalImport", "restriction" })
 public final class Slices {
