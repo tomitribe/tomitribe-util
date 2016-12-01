@@ -14,16 +14,30 @@
 package org.tomitribe.util.hash;
 
 import static java.nio.NioPackageUtils.newDirectByteBuffer;
-import static sun.misc.Unsafe.getUnsafe;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 final class JvmUtils {
-    static final Unsafe unsafe = getUnsafe();
+    static final Unsafe unsafe;
     static final BackwardsCompatibleInnerClass newByteBuffer = new BackwardsCompatibleInnerClass();
+
+    static {
+        try {
+            // fetch theUnsafe object
+            Field field = Unsafe.class.getDeclaredField("theUnsafe");
+            field.setAccessible(true);
+            unsafe = (Unsafe) field.get(null);
+            if (unsafe == null) {
+                throw new RuntimeException("Unsafe access not available");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private JvmUtils() {
     }
