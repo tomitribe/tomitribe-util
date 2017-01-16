@@ -90,7 +90,7 @@ public class Duration implements Comparable<Duration> {
                 }
             }
 
-            part.time = Integer.parseInt(t.toString());
+            part.time = Long.parseLong(t.toString());
 
             part.unit = parseUnit(u.toString());
 

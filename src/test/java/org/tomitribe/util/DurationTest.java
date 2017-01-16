@@ -32,6 +32,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.tomitribe.util.Join.join;
 
 public class DurationTest extends TestCase {
+    public void testLongTimeDuration() {
+        assertEquals(2592000000L, Duration.parse(new Duration("30 days").getTime(MILLISECONDS) + "ms").getTime());
+    }
 
     public void test() throws Exception {
 
