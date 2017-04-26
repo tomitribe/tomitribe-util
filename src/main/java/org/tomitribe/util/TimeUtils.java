@@ -31,6 +31,16 @@ public class TimeUtils {
      * Converts time to a human readable format within the specified range
      *
      * @param duration the time in milliseconds to be converted
+     */
+    public static String formatMillis(final long duration) {
+        return format(duration, TimeUnit.MILLISECONDS, min(), max());
+    }
+
+
+    /**
+     * Converts time to a human readable format within the specified range
+     *
+     * @param duration the time in milliseconds to be converted
      * @param min      the lowest time unit of interest
      * @param max      the highest time unit of interest
      */
@@ -74,6 +84,68 @@ public class TimeUtils {
 
     private static TimeUnit min() {
         return TimeUnit.values()[0];
+    }
+
+    /**
+     * Converts time to a human readable abbreviate within the specified range
+     *
+     * @param duration the time in milliseconds to be converted
+     */
+    public static String abbreviateMillis(final long duration) {
+        return abbreviate(duration, TimeUnit.MILLISECONDS, min(), max());
+    }
+
+    /**
+     * Converts time to a human readable abbreviate within the specified range
+     *
+     * @param duration the time in milliseconds to be converted
+     * @param min      the lowest time unit of interest
+     * @param max      the highest time unit of interest
+     */
+    public static String abbreviateMillis(final long duration, final TimeUnit min, final TimeUnit max) {
+        return abbreviate(duration, TimeUnit.MILLISECONDS, min, max);
+    }
+
+    /**
+     * Converts time to a human readable abbreviate within the specified range
+     *
+     * @param duration the time in milliseconds to be converted
+     * @param min      the lowest time unit of interest
+     * @param max      the highest time unit of interest
+     */
+    public static String abbreviateNanos(final long duration, final TimeUnit min, final TimeUnit max) {
+        return abbreviate(duration, TimeUnit.NANOSECONDS, min, max);
+    }
+
+    /**
+     * Converts time to a human readable abbreviate within the specified range
+     *
+     * @param duration the time in milliseconds to be converted
+     * @param min      the lowest time unit of interest
+     */
+    public static String abbreviateNanos(final long duration, final TimeUnit min) {
+        return abbreviate(duration, TimeUnit.NANOSECONDS, min, max());
+    }
+
+    public static String abbreviate(final long duration, final TimeUnit sourceUnit, final TimeUnit min) {
+        return abbreviate(duration, sourceUnit, min, max());
+    }
+
+    public static String abbreviate(final long duration, final TimeUnit sourceUnit) {
+        return abbreviate(duration, sourceUnit, min(), max());
+    }
+
+    /**
+     * Converts time to a human readable format within the specified range
+     *
+     * @param duration   the time to be converted
+     * @param sourceUnit the unit representing this time
+     * @param min        the lowest time unit of interest
+     * @param max        the highest time unit of interest
+     */
+    public static String abbreviate(long duration, final TimeUnit sourceUnit, final TimeUnit min, final TimeUnit max) {
+        String format = format(duration, sourceUnit, min, max);
+        return abbreviate(format);
     }
 
     /**
@@ -204,15 +276,4 @@ public class TimeUtils {
     public static String hoursAndSeconds(final long duration) {
         return formatMillis(duration, TimeUnit.SECONDS, TimeUnit.HOURS);
     }
-
-
-    public static String asDuration(long milliseconds) {
-        if (milliseconds < 0) {
-            milliseconds = milliseconds * -1;
-            return TimeUtils.format(milliseconds, TimeUnit.MILLISECONDS) + " ago";
-        } else {
-            return TimeUtils.format(milliseconds, TimeUnit.MILLISECONDS);
-        }
-    }
-
 }
