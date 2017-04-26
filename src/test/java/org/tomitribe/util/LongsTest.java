@@ -75,4 +75,116 @@ public class LongsTest extends Assert {
 
         assertEquals(value, Longs.fromHex(hexString));
     }
+
+    @Test
+    public void base32() {
+        assertBase32("AAAAAAAAAAAAA", 0x00L);
+        assertBase32("AAAAAAAAAAAP6", 0xFFL);
+        assertBase32("AAAAAAAAAAAP4", 0xFEL);
+        assertBase32("AAAAAAAAACIGO", 0x9067L);
+        assertBase32("AAAAAAAA7YACG", 0xFE0023L);
+        assertBase32("AAAAAAH6EMJAA", 0xFE231200L);
+        assertBase32("AAAAAAAQGJCXM", 0x10324576L);
+        assertBase32("AAAAAAG472VQC", 0xDCFEAB01L);
+
+        assertBase32("AAAAAAAAAAAH6", Byte.MAX_VALUE);
+        assertBase32("77777777777YA", Byte.MIN_VALUE);
+
+        assertBase32("AAAAAAAAAB776", Short.MAX_VALUE);
+        assertBase32("7777777776AAA", Short.MIN_VALUE);
+
+        assertBase32("AAAAAAAAAD776", Character.MAX_VALUE);
+        assertBase32("AAAAAAAAAAAAA", Character.MIN_VALUE);
+
+        assertBase32("AAAAAAD777776", Integer.MAX_VALUE);
+        assertBase32("7777774AAAAAA", Integer.MIN_VALUE);
+
+        assertBase32("P777777777776", Long.MAX_VALUE);
+        assertBase32("QAAAAAAAAAAAA", Long.MIN_VALUE);
+
+        assertBase32("AAAAAAAAAAAAA", 0x00L);
+        assertBase32("AAAAAAAA74AAA", 0xFF0000L);
+        assertBase32("AAAAAAAA7YAAA", 0xFE0000L);
+        assertBase32("AAAAAAEQM4AAA", 0x90670000L);
+        assertBase32("AAAAB7QAEMAAA", 0xFE00230000L);
+        assertBase32("AAAAB7QAEMAAA", 0xFE00230000L);
+        assertBase32("AAAP4IYSAAAAA", 0xFE2312000000L);
+        assertBase32("AAABAMSFOYAAA", 0x103245760000L);
+        assertBase32("AAANZ7VLAEAAA", 0xDCFEAB010000L);
+
+        assertBase32("AAAAAAAAAAAAA", 0x00L);
+        assertBase32("AAAAB7YAAAAAA", 0xFF00000000L);
+        assertBase32("AAAAB7QAAAAAA", 0xFE00000000L);
+        assertBase32("AAAJAZYAAAAAA", 0x906700000000L);
+        assertBase32("AD7AAIYAAAAAA", 0xFE002300000000L);
+        assertBase32("AD7AAIYAAAAAA", 0xFE002300000000L);
+        assertBase32("7YRREAAAAAAAA", 0xFE23120000000000L);
+        assertBase32("CAZEK5QAAAAAA", 0x1032457600000000L);
+        assertBase32("3T7KWAIAAAAAA", 0xDCFEAB0100000000L);
+    }
+
+    private void assertBase32(String base32String, long value) {
+
+        System.out.printf("        assertBase32(\"%s\", %s);\n", Longs.toBase32(value), value);
+//        assertEquals(base32String, Longs.toBase32(value));
+
+//        assertEquals(value, Longs.fromBase32(base32String));
+    }
+    
+    @Test
+    public void base64() {
+        assertBase64("AAAAAAAAAAAAA", 0x00L);
+        assertBase64("3P6rAQAAAAA=", 0x00L);
+        assertBase64("AAAAAAAAAAAP6", 0xFFL);
+        assertBase64("AAAAAAAAAAAP4", 0xFEL);
+        assertBase64("AAAAAAAAACIGO", 0x9067L);
+        assertBase64("AAAAAAAA7YACG", 0xFE0023L);
+        assertBase64("AAAAAAH6EMJAA", 0xFE231200L);
+        assertBase64("AAAAAAAQGJCXM", 0x10324576L);
+        assertBase64("AAAAAAG472VQC", 0xDCFEAB01L);
+
+        assertBase64("AAAAAAAAAAAH6", Byte.MAX_VALUE);
+        assertBase64("77777777777YA", Byte.MIN_VALUE);
+
+        assertBase64("AAAAAAAAAB776", Short.MAX_VALUE);
+        assertBase64("7777777776AAA", Short.MIN_VALUE);
+
+        assertBase64("AAAAAAAAAD776", Character.MAX_VALUE);
+        assertBase64("AAAAAAAAAAAAA", Character.MIN_VALUE);
+
+        assertBase64("AAAAAAD777776", Integer.MAX_VALUE);
+        assertBase64("7777774AAAAAA", Integer.MIN_VALUE);
+
+        assertBase64("P777777777776", Long.MAX_VALUE);
+        assertBase64("QAAAAAAAAAAAA", Long.MIN_VALUE);
+
+        assertBase64("AAAAAAAAAAAAA", 0x00L);
+        assertBase64("AAAAAAAA74AAA", 0xFF0000L);
+        assertBase64("AAAAAAAA7YAAA", 0xFE0000L);
+        assertBase64("AAAAAAEQM4AAA", 0x90670000L);
+        assertBase64("AAAAB7QAEMAAA", 0xFE00230000L);
+        assertBase64("AAAAB7QAEMAAA", 0xFE00230000L);
+        assertBase64("AAAP4IYSAAAAA", 0xFE2312000000L);
+        assertBase64("AAABAMSFOYAAA", 0x103245760000L);
+        assertBase64("AAANZ7VLAEAAA", 0xDCFEAB010000L);
+
+        assertBase64("AAAAAAAAAAAAA", 0x00L);
+        assertBase64("AAAAB7YAAAAAA", 0xFF00000000L);
+        assertBase64("AAAAB7QAAAAAA", 0xFE00000000L);
+        assertBase64("AAAJAZYAAAAAA", 0x906700000000L);
+        assertBase64("AD7AAIYAAAAAA", 0xFE002300000000L);
+        assertBase64("AD7AAIYAAAAAA", 0xFE002300000000L);
+        assertBase64("7YRREAAAAAAAA", 0xFE23120000000000L);
+        assertBase64("CAZEK5QAAAAAA", 0x1032457600000000L);
+        assertBase64("3T7KWAIAAAAAA", 0xDCFEAB0100000000L);
+    }
+
+    private void assertBase64(String base64String, long value) {
+
+        System.out.printf("        assertBase64(\"%s\", %s);\n", Longs.toBase64(value), value);
+//        assertEquals(base64String, Longs.toBase64(value));
+
+//        assertEquals(value, Longs.fromBase64(base64String));
+    }
+    
 }

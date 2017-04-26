@@ -16,6 +16,8 @@
  */
 package org.tomitribe.util;
 
+import java.nio.charset.Charset;
+
 public class Longs {
 
     private Longs() {
@@ -55,6 +57,30 @@ public class Longs {
 
     public static long fromHex(final String hex) {
         final byte[] bytes = Hex.fromString(hex);
+        return fromBytes(bytes);
+    }
+
+    public static String toBase32(final long value) {
+        final byte[] bytes = toBytes(value);
+        return Base32.encode(bytes);
+    }
+
+    public static long fromBase32(final String base32) {
+        try {
+            final byte[] bytes = Base32.decode(base32);
+            return fromBytes(bytes);
+        } catch (Base32.DecodingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public static String toBase64(final long value) {
+        final byte[] bytes = toBytes(value);
+        return new String(Base64.encodeBase64(bytes), Charset.forName("UTF-8"));
+    }
+
+    public static long fromBase64(final String base64) {
+        final byte[] bytes = Base64.decodeBase64(base64.getBytes(Charset.forName("UTF-8")));
         return fromBytes(bytes);
     }
 }
