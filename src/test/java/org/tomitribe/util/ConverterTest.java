@@ -18,8 +18,12 @@ package org.tomitribe.util;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.tomitribe.util.editor.AbstractConverter;
 import org.tomitribe.util.editor.Converter;
+import org.tomitribe.util.editor.Editors;
 
+import java.beans.PropertyEditor;
+import java.beans.PropertyEditorManager;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -29,6 +33,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.asList;
 
@@ -81,6 +87,16 @@ public class ConverterTest extends Assert {
                 Converter.convertString("__=5s\n%&$=4s\n---=3 seconds",
                         ConverterTest.class.getDeclaredField("durationsMap").getGenericType(), "reflection map"));
 
+    }
+
+    @Test
+    public void testEnumEditor() throws Exception {
+        PropertyEditorManager.registerEditor(TimeUnit.class, TimeUnitEditor.class);
+        final PropertyEditor editor = Editors.get(TimeUnit.class);
+        assertNotNull(editor);
+
+        final Object o = Converter.convert("horas", TimeUnit.class, "time");
+        assertEquals(TimeUnit.HOURS, o);
     }
 
     public static class ParameterizedTypeImpl implements ParameterizedType {
@@ -202,6 +218,15 @@ public class ConverterTest extends Assert {
             return "Key{" +
                     "k='" + k + '\'' +
                     '}';
+        }
+    }
+
+    public static class TimeUnitEditor extends AbstractConverter {
+        @Override
+        protected Object toObjectImpl(String text) {
+            if ("horas".equals(text)) return TimeUnit.HOURS;
+            if ("dias".equals(text)) return TimeUnit.DAYS;
+            return TimeUnit.valueOf(text);
         }
     }
 }

@@ -138,19 +138,6 @@ public class Converter {
 
         final String stringValue = (String) value;
 
-        if (Enum.class.isAssignableFrom(targetType)) {
-            final Class<? extends Enum> enumType = (Class<? extends Enum>) targetType;
-            try {
-                return Enum.valueOf(enumType, stringValue);
-            } catch (final IllegalArgumentException e) {
-                try {
-                    return Enum.valueOf(enumType, stringValue.toUpperCase());
-                } catch (final IllegalArgumentException e1) {
-                    return Enum.valueOf(enumType, stringValue.toLowerCase());
-                }
-            }
-        }
-
         try {
             // Force static initializers to run
             Class.forName(targetType.getName(), true, targetType.getClassLoader());
@@ -176,6 +163,20 @@ public class Converter {
     }
 
     private static Object create(final Class<?> type, final String value) {
+
+        if (Enum.class.isAssignableFrom(type)) {
+            final Class<? extends Enum> enumType = (Class<? extends Enum>) type;
+            try {
+                return Enum.valueOf(enumType, value);
+            } catch (final IllegalArgumentException e) {
+                try {
+                    return Enum.valueOf(enumType, value.toUpperCase());
+                } catch (final IllegalArgumentException e1) {
+                    return Enum.valueOf(enumType, value.toLowerCase());
+                }
+            }
+        }
+
         try {
             final Constructor<?> constructor = type.getConstructor(String.class);
             return constructor.newInstance(value);
