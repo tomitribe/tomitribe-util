@@ -87,6 +87,12 @@ public class TimeUtils {
     public static String format(long duration, final TimeUnit sourceUnit, final TimeUnit min, final TimeUnit max) {
         final StringBuilder res = new StringBuilder();
 
+        String suffix = "";
+        if (duration < 0) {
+            duration = duration * -1;
+            suffix = " ago";
+        }
+
         TimeUnit current = max;
 
         while (duration > 0) {
@@ -127,6 +133,8 @@ public class TimeUtils {
             res.deleteCharAt(i);
             res.insert(i, " and");
         }
+
+        res.append(suffix);
 
         return res.toString();
     }
@@ -196,4 +204,15 @@ public class TimeUtils {
     public static String hoursAndSeconds(final long duration) {
         return formatMillis(duration, TimeUnit.SECONDS, TimeUnit.HOURS);
     }
+
+
+    public static String asDuration(long milliseconds) {
+        if (milliseconds < 0) {
+            milliseconds = milliseconds * -1;
+            return TimeUtils.format(milliseconds, TimeUnit.MILLISECONDS) + " ago";
+        } else {
+            return TimeUtils.format(milliseconds, TimeUnit.MILLISECONDS);
+        }
+    }
+
 }

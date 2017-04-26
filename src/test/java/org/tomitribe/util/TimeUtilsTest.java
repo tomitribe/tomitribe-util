@@ -20,8 +20,10 @@ import junit.framework.TestCase;
 
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.tomitribe.util.TimeUtils.abbreviate;
 import static org.tomitribe.util.TimeUtils.formatMillis;
@@ -69,6 +71,35 @@ public class TimeUtilsTest extends TestCase {
         assertEquals("2793 minutes", TimeUtils.formatHighest(time, MINUTES));
         assertEquals("167624 seconds", TimeUtils.formatHighest(time, SECONDS));
         assertEquals("167624555 milliseconds", TimeUtils.formatHighest(time, MILLISECONDS));
+    }
+
+    public void testFormat() throws Exception {
+        final int time = 167624555;
+        assertEquals("167624555 days", TimeUtils.format(time, DAYS));
+        assertEquals("6984356 days and 11 hours", TimeUtils.format(time, HOURS));
+        assertEquals("116405 days, 22 hours and 35 minutes", TimeUtils.format(time, MINUTES));
+        assertEquals("1940 days, 2 hours, 22 minutes and 35 seconds", TimeUtils.format(time, SECONDS));
+        assertEquals("1 day, 22 hours, 33 minutes, 44 seconds and 555 milliseconds", TimeUtils.format(time, MILLISECONDS));
+        assertEquals("2 minutes, 47 seconds, 624 milliseconds and 555 microseconds", TimeUtils.format(time, MICROSECONDS));
+        assertEquals("167 milliseconds, 624 microseconds and 555 nanoseconds", TimeUtils.format(time, NANOSECONDS, NANOSECONDS));
+        assertEquals("1 day, 22 hours and 33 minutes", TimeUtils.format(time, MILLISECONDS,MINUTES));
+        assertEquals("2 minutes and 47 seconds", TimeUtils.format(time, MICROSECONDS, SECONDS));
+        assertEquals("167624 microseconds and 555 nanoseconds", TimeUtils.format(time, NANOSECONDS, NANOSECONDS, MICROSECONDS));
+    }
+
+
+    public void testFormatAgo() throws Exception {
+        final int time = -167624555;
+        assertEquals("167624555 days ago", TimeUtils.format(time, DAYS));
+        assertEquals("6984356 days and 11 hours ago", TimeUtils.format(time, HOURS));
+        assertEquals("116405 days, 22 hours and 35 minutes ago", TimeUtils.format(time, MINUTES));
+        assertEquals("1940 days, 2 hours, 22 minutes and 35 seconds ago", TimeUtils.format(time, SECONDS));
+        assertEquals("1 day, 22 hours, 33 minutes, 44 seconds and 555 milliseconds ago", TimeUtils.format(time, MILLISECONDS));
+        assertEquals("2 minutes, 47 seconds, 624 milliseconds and 555 microseconds ago", TimeUtils.format(time, MICROSECONDS));
+        assertEquals("167 milliseconds, 624 microseconds and 555 nanoseconds ago", TimeUtils.format(time, NANOSECONDS, NANOSECONDS));
+        assertEquals("1 day, 22 hours and 33 minutes ago", TimeUtils.format(time, MILLISECONDS,MINUTES));
+        assertEquals("2 minutes and 47 seconds ago", TimeUtils.format(time, MICROSECONDS, SECONDS));
+        assertEquals("167624 microseconds and 555 nanoseconds ago", TimeUtils.format(time, NANOSECONDS, NANOSECONDS, MICROSECONDS));
     }
 
     public void testAbbreviate() throws Exception {
