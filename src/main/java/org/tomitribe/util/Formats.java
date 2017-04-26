@@ -22,7 +22,10 @@ package org.tomitribe.util;
  */
 public class Formats {
 
-    public String asDateTime(long milliseconds) {
+    private Formats() {
+    }
+
+    public static String asDateTime(long milliseconds) {
         return String.format("%tF %<tT", milliseconds);
     }
 }
