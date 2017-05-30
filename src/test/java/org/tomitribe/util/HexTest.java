@@ -40,30 +40,30 @@ public class HexTest extends Assert {
     }
 
     @Test
+    public void testEmptyString() throws Exception {
+        assertArrayEquals(new byte[0], Hex.fromString(""));
+    }
+
+    @Test
     public void testInvalidInput() throws Exception {
         try {
             Hex.fromString(null);
             fail();
-        } catch (Exception e) {
-            // pass
-        }
-        try {
-            Hex.fromString("");
-            fail();
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             // pass
         }
         try {
             Hex.fromString("q");
             fail();
-        } catch (Exception e) {
-            // pass
+        } catch (Hex.InvalidHexFormatException e) {
+            assertEquals("q", e.getString());
         }
+
         try {
             Hex.fromString("FFGF");
             fail();
-        } catch (Exception e) {
-            // pass
+        } catch (Hex.InvalidHexFormatException e) {
+            assertEquals("FFGF", e.getString());
         }
     }
 

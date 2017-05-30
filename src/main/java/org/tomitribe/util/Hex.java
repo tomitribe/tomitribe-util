@@ -40,8 +40,17 @@ public class Hex {
     }
 
     public static byte[] fromString(String s) {
+        if (s == null) {
+            throw new IllegalArgumentException("hex string is null");
+        }
+
+        // Empty string, empty bytes
+        if (s.length() == 0) {
+            return new byte[0];
+        }
+
         if (!valid.matcher(s).matches()) {
-            throw new InvalidHexStringException(s);
+            throw new InvalidHexFormatException(s);
         }
 
         final int len = s.length();
@@ -52,10 +61,10 @@ public class Hex {
         return data;
     }
 
-    public static class InvalidHexStringException extends IllegalArgumentException {
+    public static class InvalidHexFormatException extends IllegalArgumentException {
         private final String string;
 
-        public InvalidHexStringException(String string) {
+        public InvalidHexFormatException(String string) {
             super(String.format("Invalid hex string '%s'", string));
             this.string = string;
         }
