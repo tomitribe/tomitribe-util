@@ -16,9 +16,13 @@
  */
 package org.tomitribe.util;
 
+import java.util.regex.Pattern;
+
 import static java.lang.Character.digit;
 
 public class Hex {
+
+    private static final Pattern valid = Pattern.compile("^[A-Fa-f0-9]+$");
 
     final protected static char[] hexArray = "0123456789abcdef".toCharArray();
 
@@ -36,11 +40,28 @@ public class Hex {
     }
 
     public static byte[] fromString(String s) {
+        if (!valid.matcher(s).matches()) {
+            throw new InvalidHexStringException(s);
+        }
+
         final int len = s.length();
         final byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((digit(s.charAt(i), 16) << 4) + digit(s.charAt(i + 1), 16));
         }
         return data;
+    }
+
+    public static class InvalidHexStringException extends IllegalArgumentException {
+        private final String string;
+
+        public InvalidHexStringException(String string) {
+            super(String.format("Invalid hex string '%s'", string));
+            this.string = string;
+        }
+
+        public String getString() {
+            return string;
+        }
     }
 }

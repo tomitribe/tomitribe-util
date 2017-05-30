@@ -30,13 +30,50 @@ public class HexTest extends Assert {
 
     }
 
+    @Test
+    public void testMixedCase() throws Exception {
+        assertHex("fF", 0xFF);
+        assertHex("Fe", 0xFE);
+        assertHex("fE231200", 0xFE, 0x23, 0x12, 0x00);
+        assertHex("dcfeAB0132547689", 0xDC, 0xFE, 0xAB, 0x01, 0x32, 0x54, 0x76, 0x89);
+
+    }
+
+    @Test
+    public void testInvalidInput() throws Exception {
+        try {
+            Hex.fromString(null);
+            fail();
+        } catch (Exception e) {
+            // pass
+        }
+        try {
+            Hex.fromString("");
+            fail();
+        } catch (Exception e) {
+            // pass
+        }
+        try {
+            Hex.fromString("q");
+            fail();
+        } catch (Exception e) {
+            // pass
+        }
+        try {
+            Hex.fromString("FFGF");
+            fail();
+        } catch (Exception e) {
+            // pass
+        }
+    }
+
     private void assertHex(String hexString, int... bytes) {
         assertHex(hexString, bytes(bytes));
     }
 
     private void assertHex(String hexString, byte... bytes) {
         // creating HEX from bytes
-        assertEquals(hexString, Hex.toString(bytes));
+        assertEquals(hexString.toLowerCase(), Hex.toString(bytes));
 
         // creating bytes from HEX
         assertArrayEquals(bytes, Hex.fromString(hexString));
