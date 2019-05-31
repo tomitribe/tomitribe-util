@@ -231,8 +231,7 @@ public class Options {
     }
 
     protected <T extends Enum<T>> Set<T> getAll(final String property, final Set<T> defaultValue, 
-        final Class<T> enumType)
-    {
+        final Class<T> enumType) {
 
         final String value = properties.getProperty(property);
 
@@ -420,8 +419,7 @@ public class Options {
 
         @Override
         protected <T extends Enum<T>> Set<T> getAll(final String property, final Set<T> defaults, 
-            final Class<T> enumType)
-        {
+            final Class<T> enumType) {
 
             if (getLogger().isDebugEnabled()) {
                 String possibleValues = "  Possible values are: " + possibleValues(enumType);
