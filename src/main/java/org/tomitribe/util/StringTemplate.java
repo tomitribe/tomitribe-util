@@ -21,6 +21,7 @@ package org.tomitribe.util;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,54 @@ public class StringTemplate {
 
     public StringTemplate(final String template) {
         this.template = template;
+    }
+
+    public String format(final Map<String, Object> map) {
+        final Function<String, String> function = new Function<String, String>() {
+            @Override
+            public String apply(final String s) {
+                final Object value = map.get(s);
+                return value != null ? value.toString() : "";
+            }
+        };
+        return apply(function);
+    }
+
+    public String apply(final Function<String, String> map) {
+        final Matcher matcher = PATTERN.matcher(template);
+        final StringBuffer buf = new StringBuffer();
+
+        while (matcher.find()) {
+            final String key = matcher.group(2);
+
+            if (key == null) {
+                throw new IllegalStateException("Key is null. Template '" + template + "'");
+            }
+
+            final String value;
+
+            if (key.toLowerCase().endsWith(".lc")) {
+                final String key1 = key.substring(0, key.length() - 3);
+                value = map.apply(key1).toLowerCase();
+            } else if (key.toLowerCase().endsWith(".uc")) {
+                final String key1 = key.substring(0, key.length() - 3);
+                value = map.apply(key1).toUpperCase();
+            } else if (key.toLowerCase().endsWith(".cc")) {
+                final String key1 = key.substring(0, key.length() - 3);
+                value = Strings.camelCase(map.apply(key1));
+            } else {
+                value = map.apply(key);
+            }
+
+            if (value == null) {
+                throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + template + "'.");
+            }
+
+            matcher.appendReplacement(buf, value);
+        }
+
+        matcher.appendTail(buf);
+        return buf.toString();
     }
 
     public String apply(final Map<String, Object> map) {
