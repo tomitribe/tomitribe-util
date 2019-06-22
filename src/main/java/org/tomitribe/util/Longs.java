@@ -83,4 +83,14 @@ public class Longs {
         final byte[] bytes = Base64.decodeBase64(base64.getBytes(Charset.forName("UTF-8")));
         return fromBytes(bytes);
     }
+
+    public static String toBase58(final long value) {
+        final byte[] bytes = toBytes(value);
+        return Base58.encode(bytes);
+    }
+
+    public static long fromBase58(final String base58) {
+        final byte[] bytes = Base58.decode(base58);
+        return fromBytes(bytes);
+    }
 }
