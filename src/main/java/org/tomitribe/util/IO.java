@@ -262,6 +262,15 @@ public class IO {
         }
     }
 
+    public static void copy(final URL from, final File to) throws IOException {
+        final OutputStream write = write(to);
+        try {
+            copy(from, write);
+        } finally {
+            close(write);
+        }
+    }
+
     public static void copy(final InputStream from, final File to, final boolean append) throws IOException {
         final OutputStream write = write(to, append);
         try {
