@@ -25,6 +25,10 @@ import org.tomitribe.util.collect.FilteredIterator;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -33,6 +37,8 @@ import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 public class Files {
+
+    private static final DeleteOnExit DELETE_ON_EXIT = new DeleteOnExit();
 
     public static final FileFilter ALL = new FileFilter() {
         @Override
@@ -218,7 +224,7 @@ public class Files {
             }
         }
 
-        if (!file.delete())  {
+        if (!file.delete()) {
             throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
         }
     }
@@ -243,6 +249,9 @@ public class Files {
             }
 
             mkdir(file);
+
+            DELETE_ON_EXIT.clean(file);
+
             return file;
         } catch (final IOException e) {
             throw new RuntimeException(e);
@@ -379,4 +388,52 @@ public class Files {
         }
     }
 
+    public static class DeleteOnExit {
+        private final List<File> files = new ArrayList<>();
+
+        public DeleteOnExit() {
+            Runtime.getRuntime().addShutdownHook(new Thread(this::clean));
+        }
+
+        public File clean(final File file) {
+            this.files.add(file);
+            return file;
+        }
+
+        public void clean() {
+            files.stream().forEach(this::delete);
+        }
+
+        private void delete(final File file) {
+            try {
+                java.nio.file.Files.walkFileTree(file.toPath(), new RecursiveDelete());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private static class RecursiveDelete implements FileVisitor<Path> {
+            @Override
+            public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                java.nio.file.Files.deleteIfExists(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(final Path file, final IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
+                java.nio.file.Files.deleteIfExists(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        }
+    }
 }
