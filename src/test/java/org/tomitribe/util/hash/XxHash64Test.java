@@ -18,6 +18,8 @@ package org.tomitribe.util.hash;
 
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+
 import static org.junit.Assert.assertEquals;
 import static org.tomitribe.util.hash.XxHash64.hash;
 
@@ -57,6 +59,14 @@ public class XxHash64Test {
 
         assertEquals(hash(0, buffer), 0x0EAB543384F878ADL);
         assertEquals(hash(PRIME, buffer), 0xCAA65939306F1E21L);
+    }
+
+    @Test
+    public void testSanityStream()
+            throws Exception {
+
+        assertEquals(hash(0, new ByteArrayInputStream(buffer.getBytes())), 0x0EAB543384F878ADL);
+        assertEquals(hash(PRIME, new ByteArrayInputStream(buffer.getBytes())), 0xCAA65939306F1E21L);
     }
 
     @Test
