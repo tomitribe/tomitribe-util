@@ -205,8 +205,8 @@ public class IO {
     }
 
     private static void doCopyDirectory(final File srcDir, final File destDir, final List<String> exclusionList)
-            throws IOException
-    {
+            throws IOException {
+
         final File[] files = srcDir.listFiles();
         if (files == null) {  // null if security restricted
             throw new IOException("Failed to list contents of " + srcDir);
@@ -254,6 +254,15 @@ public class IO {
     }
 
     public static void copy(final InputStream from, final File to) throws IOException {
+        final OutputStream write = write(to);
+        try {
+            copy(from, write);
+        } finally {
+            close(write);
+        }
+    }
+
+    public static void copy(final URL from, final File to) throws IOException {
         final OutputStream write = write(to);
         try {
             copy(from, write);
