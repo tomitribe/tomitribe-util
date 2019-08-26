@@ -20,6 +20,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tomitribe.util.Longs;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,6 +52,26 @@ public class XxHash32Test extends Assert {
                 "\n" +
                 "nemo enim ipsam voluptatem, quia voluptas sit,%s aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum, quia dolor sit, amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt, ut labore et dolore magnam aliquam quaerat voluptatem.");
         assertEquals(118, data.conflicts);
+    }
+
+    @Test
+    public void sanityCheck() {
+        // expected values computed with old code
+
+        assertEquals(0x5f627d81, XxHash32.hash("http://host%s.foo.com"));
+        assertEquals(0xbd37dd97, XxHash32.hash("http://stackoverflow.com/questions/%s/convert-from-byte-array-to-hex-string-in-java"));
+        assertEquals(0x9ad1f057, XxHash32.hash("\"Lorem ipsum\" (a.k.a. \"Lipsum\") is a popular placeholder often used in typography and web design. At its best, \"Lorem ipsum\" is a completely incomprehensible text which, to an untrained eye, may very well look like Latin. Be assured, Latin it is not. The text begins at half word as a quote from from Cicero's \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil):\n" +
+                "\n" +
+                "nemo enim ipsam voluptatem, quia voluptas sit,%s aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum, quia dolor sit, amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt, ut labore et dolore magnam aliquam quaerat voluptatem."));
+    }
+
+    @Test
+    public void sanityCheckStream() throws Exception {
+        assertEquals(0x5f627d81, XxHash32.hash(new ByteArrayInputStream("http://host%s.foo.com".getBytes())));
+        assertEquals(0xbd37dd97, XxHash32.hash(new ByteArrayInputStream("http://stackoverflow.com/questions/%s/convert-from-byte-array-to-hex-string-in-java".getBytes())));
+        assertEquals(0x9ad1f057, XxHash32.hash(new ByteArrayInputStream(("\"Lorem ipsum\" (a.k.a. \"Lipsum\") is a popular placeholder often used in typography and web design. At its best, \"Lorem ipsum\" is a completely incomprehensible text which, to an untrained eye, may very well look like Latin. Be assured, Latin it is not. The text begins at half word as a quote from from Cicero's \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil):\n" +
+                "\n" +
+                "nemo enim ipsam voluptatem, quia voluptas sit,%s aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum, quia dolor sit, amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt, ut labore et dolore magnam aliquam quaerat voluptatem.").getBytes())));
     }
 
     private static class Data {
