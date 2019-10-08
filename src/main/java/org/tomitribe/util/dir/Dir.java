@@ -17,6 +17,7 @@
 package org.tomitribe.util.dir;
 
 import org.tomitribe.util.Files;
+import org.tomitribe.util.reflect.Generics;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -28,7 +29,6 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 /**
@@ -149,14 +149,16 @@ public interface Dir {
 
             final Class<?> returnType = method.getReturnType();
 
+            if (returnType.isArray()) {
+                return returnArray(method);
+            }
+
+            if (Stream.class.equals(returnType) && args == null) {
+                return returnStream(method);
+            }
+
             if (File.class.equals(returnType) && args == null) {
-
-                // They want an exception if the file isn't found
-                if (exceptions(method).contains(FileNotFoundException.class) && !file.exists()) {
-                    throw new FileNotFoundException(file.getAbsolutePath());
-                }
-
-                return file;
+                return returnFile(method, file);
             }
 
             if (returnType.isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
@@ -167,32 +169,50 @@ public interface Dir {
                 return Dir.of(returnType, file);
             }
 
-            if (returnType.isArray()) {
-                final Predicate<File> filter = getFilter(method);
+            throw new UnsupportedOperationException(method.toGenericString());
+        }
 
-                final Class<?> arrayType = returnType.getComponentType();
+        private Object returnStream(final Method method) {
+            final Class returnType = (Class) Generics.getReturnType(method);
+            final Predicate<File> filter = getFilter(method);
 
-                if (File.class.equals(arrayType)){
-                    return Stream.of(dir.listFiles())
-                            .filter(filter)
-                            .toArray(File[]::new);
-                } else if (arrayType.isInterface()) {
-                    // will be an array of type Object[]
-                    final Object[] src = Stream.of(dir.listFiles())
-                            .filter(filter)
-                            .map(child -> Dir.of(arrayType, child))
-                            .toArray();
+            return Stream.of(dir.listFiles())
+                    .filter(filter)
+                    .map(child -> Dir.of(returnType, child));
+        }
 
-                    // will be an array of the user's interface type
-                    final Object[] dest = (Object[]) Array.newInstance(arrayType, src.length);
-
-                    System.arraycopy(src, 0, dest, 0, src.length);
-
-                    return dest;
-                }
-
+        private Object returnFile(final Method method, final File file) throws FileNotFoundException {
+            // They want an exception if the file isn't found
+            if (exceptions(method).contains(FileNotFoundException.class) && !file.exists()) {
+                throw new FileNotFoundException(file.getAbsolutePath());
             }
 
+            return file;
+        }
+
+        private Object returnArray(final Method method) {
+            final Predicate<File> filter = getFilter(method);
+
+            final Class<?> arrayType = method.getReturnType().getComponentType();
+
+            if (File.class.equals(arrayType)) {
+                return Stream.of(dir.listFiles())
+                        .filter(filter)
+                        .toArray(File[]::new);
+            } else if (arrayType.isInterface()) {
+                // will be an array of type Object[]
+                final Object[] src = Stream.of(dir.listFiles())
+                        .filter(filter)
+                        .map(child -> Dir.of(arrayType, child))
+                        .toArray();
+
+                // will be an array of the user's interface type
+                final Object[] dest = (Object[]) Array.newInstance(arrayType, src.length);
+
+                System.arraycopy(src, 0, dest, 0, src.length);
+
+                return dest;
+            }
             throw new UnsupportedOperationException(method.toGenericString());
         }
 
