@@ -19,12 +19,17 @@ package org.tomitribe.util.dir;
 import org.tomitribe.util.Files;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 /**
  * <p>Efforts to create strongly-typed code are often poisoned by string file path references
@@ -131,6 +136,7 @@ public interface Dir {
 
         @Override
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+
             if (method.getDeclaringClass().equals(Dir.class)) {
                 if (method.getName().equals("dir")) return dir;
                 if (method.getName().equals("get")) return dir;
@@ -141,7 +147,9 @@ public interface Dir {
 
             final File file = new File(dir, name(method));
 
-            if (File.class.equals(method.getReturnType()) && args == null) {
+            final Class<?> returnType = method.getReturnType();
+
+            if (File.class.equals(returnType) && args == null) {
 
                 // They want an exception if the file isn't found
                 if (exceptions(method).contains(FileNotFoundException.class) && !file.exists()) {
@@ -151,19 +159,55 @@ public interface Dir {
                 return file;
             }
 
-            if (method.getReturnType().isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
-                return Dir.of(method.getReturnType(), new File(dir, (String) args[0]));
+            if (returnType.isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
+                return Dir.of(returnType, new File(dir, (String) args[0]));
             }
 
-            if (method.getReturnType().isInterface() && args == null) {
-                return Dir.of(method.getReturnType(), file);
+            if (returnType.isInterface() && args == null) {
+                return Dir.of(returnType, file);
+            }
+
+            if (returnType.isArray()) {
+                final Predicate<File> filter = getFilter(method);
+
+                final Class<?> arrayType = returnType.getComponentType();
+
+                if (File.class.equals(arrayType)){
+                    return Stream.of(dir.listFiles())
+                            .filter(filter)
+                            .toArray(File[]::new);
+                } else if (arrayType.isInterface()) {
+                    // will be an array of type Object[]
+                    final Object[] src = Stream.of(dir.listFiles())
+                            .filter(filter)
+                            .map(child -> Dir.of(arrayType, child))
+                            .toArray();
+
+                    // will be an array of the user's interface type
+                    final Object[] dest = (Object[]) Array.newInstance(arrayType, src.length);
+
+                    System.arraycopy(src, 0, dest, 0, src.length);
+
+                    return dest;
+                }
+
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
         }
 
-        private boolean returnsFile(final Method method) {
-            return File.class.equals(method.getReturnType());
+        private Predicate<File> getFilter(final Method method) {
+            final Filter filter = method.getAnnotation(Filter.class);
+
+            if (filter == null) return pathname -> true;
+
+            final Class<? extends FileFilter> clazz = filter.value();
+            try {
+                final FileFilter fileFilter = clazz.newInstance();
+                return fileFilter::accept;
+            } catch (Exception e) {
+                throw new IllegalStateException("Unable to instantiate filter " + clazz, e);
+            }
         }
 
         private File mkdkr() {
