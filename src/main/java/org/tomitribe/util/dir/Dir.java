@@ -176,9 +176,16 @@ public interface Dir {
             final Class returnType = (Class) Generics.getReturnType(method);
             final Predicate<File> filter = getFilter(method);
 
-            return Stream.of(dir.listFiles())
-                    .filter(filter)
-                    .map(child -> Dir.of(returnType, child));
+            if (returnType.isInterface()) {
+                return Stream.of(dir.listFiles())
+                        .filter(filter)
+                        .map(child -> Dir.of(returnType, child));
+            }
+            if (File.class.equals(returnType)) {
+                return Stream.of(dir.listFiles())
+                        .filter(filter);
+            }
+            throw new UnsupportedOperationException(method.toGenericString());
         }
 
         private Object returnFile(final Method method, final File file) throws FileNotFoundException {
