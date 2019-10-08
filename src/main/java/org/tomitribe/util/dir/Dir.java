@@ -30,6 +30,7 @@ import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -148,6 +149,7 @@ public interface Dir {
             }
 
             final File file = new File(dir, name(method));
+            final Function<File, File> action = action(method);
 
             final Class<?> returnType = method.getReturnType();
 
@@ -160,15 +162,15 @@ public interface Dir {
             }
 
             if (File.class.equals(returnType) && args == null) {
-                return returnFile(method, file);
+                return returnFile(method, action.apply(file));
             }
 
             if (returnType.isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
-                return Dir.of(returnType, new File(dir, (String) args[0]));
+                return Dir.of(returnType, action.apply(new File(dir, (String) args[0])));
             }
 
             if (returnType.isInterface() && args == null) {
-                return Dir.of(returnType, file);
+                return Dir.of(returnType, action.apply(file));
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
@@ -280,6 +282,51 @@ public interface Dir {
         public List<Class<?>> exceptions(final Method method) {
             final Class<?>[] exceptionTypes = method.getExceptionTypes();
             return Arrays.asList(exceptionTypes);
+        }
+
+        public Function<File, File> action(final Method method) {
+            if (method.isAnnotationPresent(Mkdir.class)) return mkdir(method);
+            if (method.isAnnotationPresent(Mkdirs.class)) return mkdirs(method);
+            return noop(method);
+        }
+
+        public Function<File, File> mkdir(final Method method) {
+            return file -> {
+                try {
+                    Files.mkdir(file);
+                    return file;
+                } catch (Exception e) {
+                    throw new MkdirFailedException(method, file, e);
+                }
+            };
+        }
+
+        public Function<File, File> mkdirs(final Method method) {
+            return file -> {
+                try {
+                    Files.mkdirs(file);
+                    return file;
+                } catch (Exception e) {
+                    throw new MkdirsFailedException(method, file, e);
+                }
+            };
+        }
+
+        public Function<File, File> noop(final Method method) {
+            return file -> file;
+        }
+    }
+
+
+    class MkdirFailedException extends RuntimeException {
+        public MkdirFailedException(final Method method, final File dir, final Throwable t) {
+            super(String.format("@Mkdir failed%n method: %s%n path: %s", method, dir.getAbsolutePath()), t);
+        }
+    }
+
+    class MkdirsFailedException extends RuntimeException {
+        public MkdirsFailedException(final Method method, final File dir, final Throwable t) {
+            super(String.format("@Mkdirs failed%n method: %s%n path: %s", method, dir.getAbsolutePath()), t);
         }
     }
 }
