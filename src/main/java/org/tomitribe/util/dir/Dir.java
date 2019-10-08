@@ -26,8 +26,86 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * <p>Efforts to create strongly-typed code are often poisoned by string file path references
+ * spread all over the same codebase.</p>
+ *
+ * <p>This utility was born out of a desire that all path references could be compile-time checked and code completed.</p>
+ *
+ * <h3>Step 1 Create an interface matching a directory</h3>
+ *
+ * <p>For example, a directory structure like this:</p>
+ *
+ * <pre>
+ * project/
+ *   - src/
+ *   - target/
+ *   - .git/
+ *   - pom.xml</pre>
+ *
+ * <p>Could be handled with the following interface:</p>
+ *
+ * <pre>
+ * public interface Project {
+ *     File src();
+ *     File target();
+ *     &#64;Name(".git")
+ *     File git();
+ *     &#64;Name("pom.xml")
+ *     File pomXml();
+ * }</pre>
+ *
+ * <h3>Step 2 Get a proxied reference to that directory</h3>
+ *
+ * <pre>
+ *     File mydir = new File("/some/path/to/a/project");
+ *     Project project = Dir.of(Project.class,  mydir);</pre>
+ *
+ * <p>Under the covers the interface is implemented as a dynamic proxy whose InvocationHandler is
+ * holding the actual File object.</p>
+ *
+ * <h3>Returning Another Interface</h3>
+ *
+ * <p>Instead of <code>src()</code> returning a <code>File</code>, it could return another similar interface. For example</p>
+ *
+ * <pre>
+ * public interface Src {
+ *     File main();
+ *     File test();
+ * } </pre>
+ *
+ * <p>And now we update <code>Project</code> so the <code>src()</code> method will return <code>Src</code>
+ * <pre>
+ * public interface Project {
+ *     Src src();
+ *     File target();
+ *     &#64;Name(".git")
+ *     File git();
+ *     &#64;Name("pom.xml")
+ *     File pomXml();
+ * } </pre>
+ *
+ *
+ * <p>Now we have a strongly-typed directory structure that also supports code completion in the IDE.</p>
+ *
+ * <h3>Passing a Subdirectory Name</h3>
+ *
+ * <p>There may be times when you don't know the exact subdirectory name, but you know that it will use a specific
+ * directory structure.  Here's how you might reference a nested Maven module structure:</p>
+
+ * <pre>
+ * public interface Module {
+ *     &#64;Name("pom.xml")
+ *     File pomXml();
+ *     File src();
+ *     File target();
+ *     Module submodule(String name);
+ * } </pre>
+ *
+ */
 public interface Dir {
     File dir();
+
     File mkdir();
 
     File get();
@@ -57,14 +135,13 @@ public interface Dir {
                 if (method.getName().equals("dir")) return dir;
                 if (method.getName().equals("get")) return dir;
                 if (method.getName().equals("parent")) return dir.getParentFile();
-                if (method.getName().equals("file")) return new File(dir, args[0].toString());
                 if (method.getName().equals("mkdir")) return mkdkr();
                 throw new IllegalStateException("Unknown method " + method);
             }
 
             final File file = new File(dir, name(method));
 
-            if (File.class.equals(method.getReturnType())) {
+            if (File.class.equals(method.getReturnType()) && args == null) {
 
                 // They want an exception if the file isn't found
                 if (exceptions(method).contains(FileNotFoundException.class) && !file.exists()) {
@@ -74,11 +151,19 @@ public interface Dir {
                 return file;
             }
 
-            if (method.getReturnType().isInterface()) {
+            if (method.getReturnType().isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
+                return Dir.of(method.getReturnType(), new File(dir, (String) args[0]));
+            }
+
+            if (method.getReturnType().isInterface() && args == null) {
                 return Dir.of(method.getReturnType(), file);
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        private boolean returnsFile(final Method method) {
+            return File.class.equals(method.getReturnType());
         }
 
         private File mkdkr() {

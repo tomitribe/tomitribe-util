@@ -268,7 +268,8 @@ public class Files {
         return file;
     }
 
-    public static File mkdirs(final File file) {
+    public static File mkdirs(final File dir, final String... parts) {
+        final File file = file(dir, parts);
         if (!file.exists()) {
             if (!file.mkdirs()) {
                 throw new RuntimeException("Cannot mkdirs: " + file.getAbsolutePath());
