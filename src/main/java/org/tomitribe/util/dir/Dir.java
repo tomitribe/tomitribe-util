@@ -22,10 +22,12 @@ import org.tomitribe.util.reflect.Generics;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
@@ -177,12 +179,12 @@ public interface Dir {
             final Predicate<File> filter = getFilter(method);
 
             if (returnType.isInterface()) {
-                return Stream.of(dir.listFiles())
+                return stream(dir, method)
                         .filter(filter)
                         .map(child -> Dir.of(returnType, child));
             }
             if (File.class.equals(returnType)) {
-                return Stream.of(dir.listFiles())
+                return stream(dir, method)
                         .filter(filter);
             }
             throw new UnsupportedOperationException(method.toGenericString());
@@ -203,12 +205,15 @@ public interface Dir {
             final Class<?> arrayType = method.getReturnType().getComponentType();
 
             if (File.class.equals(arrayType)) {
-                return Stream.of(dir.listFiles())
+
+                return stream(dir, method)
                         .filter(filter)
                         .toArray(File[]::new);
+
             } else if (arrayType.isInterface()) {
+
                 // will be an array of type Object[]
-                final Object[] src = Stream.of(dir.listFiles())
+                final Object[] src = stream(dir, method)
                         .filter(filter)
                         .map(child -> Dir.of(arrayType, child))
                         .toArray();
@@ -220,7 +225,30 @@ public interface Dir {
 
                 return dest;
             }
+
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        private static Stream<File> stream(final File dir, final Method method) {
+            final Walk walk = method.getAnnotation(Walk.class);
+
+            if (walk != null) return walk(walk, dir);
+
+            return Stream.of(dir.listFiles());
+
+        }
+
+        private static Stream<File> walk(final Walk walk, final File dir) {
+            try {
+                if (walk.maxDepth() != -1) {
+                    return java.nio.file.Files.walk(dir.toPath(), walk.maxDepth())
+                            .map(Path::toFile);
+                }
+                return java.nio.file.Files.walk(dir.toPath())
+                        .map(Path::toFile);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
         }
 
         private Predicate<File> getFilter(final Method method) {
