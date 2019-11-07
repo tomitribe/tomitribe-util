@@ -279,6 +279,7 @@ NOTE: The `@Walk` only works when returning a `java.util.stream.Stream`
 
 Under the covers `java.nio.file.Files.walk` is used to traverse, filter each matching file, and return it as a `Stream`.  If happen to know your modules are not more than say 2 or 3 directories deep, you can specify a `maxDepth` to speed up the walk.
 
+[source,java]
 ----
 import java.util.stream.Stream;
 import org.tomitribe.util.dir.Filter;
@@ -291,3 +292,62 @@ public interface Project {
 }
 ----
 
+# `@Mkdir` 
+
+To force a directory to be created simply annotate it with `@Mkdir` as follows.  When the `target()` method is invoked a check will be done and the directory created lazily if it needed.
+
+[source,java]
+----
+public interface Project {
+    Src src();
+
+    @Mkdir
+    File target();
+
+    @Name("pom.xml")
+    File pomXml();
+}
+----
+
+# `@Mkdirs`
+
+The above `@Mkdir` instruction will still fail if the path leading up to `target` does not exist.  It's possible to create all parent directories via `@Mkdirs`
+
+[source,java]
+----
+public interface Project {
+    Src src();
+}
+----
+
+[source,java]
+----
+public interface Src  {
+    Section main();
+    Section test();
+}
+----
+
+[source,java]
+----
+public interface Section {
+    @Mkdirs
+    File java();
+
+    @Mkdir
+    File resources();
+}
+----
+
+In this example if the path `src/main/java` would be created if we invoke code like this:
+
+[source,java]
+----
+Project project = ...
+
+final File srcMainJava = project.src().main().java();
+----
+
+Here we could safely write files into the `srcMainJava` reference as the directory and any parents would have been automatically created the moment `java()` was called.
+
+NOTE: The path `src/test/java` would still not exist unless `project.src().test().java()` is also called.
