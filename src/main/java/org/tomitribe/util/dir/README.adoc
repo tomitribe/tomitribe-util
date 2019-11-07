@@ -1,5 +1,22 @@
-Efforts to create strongly-typed code are often poisoned by string file path references
- spread all over the same codebase.
+Efforts to create strongly-typed code are often poisoned by string file path references spread all over the same codebase.
+
+We constantly see code like this refering to file paths with strings.  This one has to have a typo in it.  Which is correct, `resource` or `resources`?
+
+[source,java]
+----
+final File moduleDir = ...
+final File srcMainResources = new File(moduleDir, "src/main/resources");
+final File srcTestResources = new File(moduleDir, "src/test/resource");
+----
+
+What if you could have typo-proof, compile-time checked and code-completable paths like this?  Perhaps DSL-style approach to file paths, like so:
+
+----
+final File moduleDir = ...
+final Module module = Dir.of(Module.class, moduleDir);
+final File srcMainResources = module.src().main().resources();
+final File srcTestResources = module.src().test().resources();
+----
 
 This utility was born out of a desire that all path references could be compile-time checked and code completed.
 
@@ -35,8 +52,10 @@ Could be handled with the following interface:
 
 [source,java]
 ----
-     File mydir = new File("/some/path/to/a/project");
-     Project project = Dir.of(Project.class,  mydir);
+import org.tomitribe.util.dir.Dir;
+
+File mydir = new File("/some/path/to/a/project");
+Project project = Dir.of(Project.class,  mydir);
 ----
 
 Under the covers the interface is implemented as a dynamic proxy whose InvocationHandler is
