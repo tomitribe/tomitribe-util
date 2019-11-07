@@ -1,0 +1,87 @@
+Efforts to create strongly-typed code are often poisoned by string file path references
+ spread all over the same codebase.
+
+This utility was born out of a desire that all path references could be compile-time checked and code completed.
+
+## Step 1 Create an interface matching a directory
+
+For example, a directory structure like this:
+
+[source,java]
+----
+ project/
+   - src/
+   - target/
+   - .git/
+   - pom.xml
+----
+
+Could be handled with the following interface:
+
+[source,java]
+----
+ public interface Project {
+     File src();
+     File target();
+     @Name(".git")
+     File git();
+     @Name("pom.xml")
+     File pomXml();
+ }
+----
+
+## Step 2 Get a proxied reference to that directory
+
+
+[source,java]
+----
+     File mydir = new File("/some/path/to/a/project");
+     Project project = Dir.of(Project.class,  mydir);
+----
+
+Under the covers the interface is implemented as a dynamic proxy whose InvocationHandler is
+ holding the actual File object.
+
+# Returning Another Interface
+
+Instead of `src()` returning a `File`, it could return another similar interface. For example
+
+[source,java]
+----
+ public interface Src {
+     File main();
+     File test();
+ } 
+----
+
+And now we update `Project` so the `src()` method will return `Src`
+
+[source,java]
+----
+ public interface Project {
+     Src src();
+     File target();
+     @Name(".git")
+     File git();
+     @Name("pom.xml")
+     File pomXml();
+ } 
+----
+
+Now we have a strongly-typed directory structure that also supports code completion in the IDE.
+
+# Passing a Subdirectory Name
+
+There may be times when you don't know the exact subdirectory name, but you know that it will use a specific
+ directory structure.  Here's how you might reference a nested Maven module structure:
+
+[source,java]
+----
+ public interface Module {
+     @Name("pom.xml")
+     File pomXml();
+     File src();
+     File target();
+     Module submodule(String name);
+ } 
+----
