@@ -104,3 +104,45 @@ There may be times when you don't know the exact subdirectory name, but you know
      Module submodule(String name);
  } 
 ----
+
+
+# `@Name` for indicating file names
+
+By default file names are derived from the method name.  The following would indicate a directory or file named `src` under the module directory.
+
+[source,java]
+----
+public interface Module {
+
+    File src();
+}
+----
+
+But what if you had a filename with a dot or other illegal java character for method name?  Just use `@Name` to indicate the expected file name:
+
+[source,java]
+----
+public interface Module {
+    File src();
+
+    @Name("pom.xml")
+    File pomXml();
+}
+----
+
+This can also be useful for files that are otherwise hidden, such as `.gitignore`
+
+
+[source,java]
+----
+public interface Module {
+    File src();
+
+    @Name("pom.xml")
+    File pomXml();
+    
+    @Name(".gitignore")
+    File gitignore();
+}
+----
+
