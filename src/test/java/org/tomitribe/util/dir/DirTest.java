@@ -18,6 +18,7 @@
  */
 package org.tomitribe.util.dir;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.tomitribe.util.Files;
 
@@ -66,6 +67,17 @@ public class DirTest {
         assertFiles(dir, "target", project.target());
     }
 
+    @Test
+    public void hasDefault() throws Exception {
+        final File dir = Files.tmpdir();
+
+        final HasDefault hasDefault = Dir.of(HasDefault.class, dir);
+
+        final long modified = hasDefault.modified();
+        Assert.assertTrue(modified > 1573459973000L);
+        System.out.println(modified);
+    }
+
     private void assertFiles(final File dir, final String expectedPath, final File actual) {
         final File expected = new File(dir, expectedPath);
         assertEquals(expected.getAbsolutePath(), actual.getAbsolutePath());
@@ -94,4 +106,11 @@ public class DirTest {
         File resources();
     }
 
+    public interface HasDefault extends Dir {
+        File java();
+
+        default long modified() {
+            return get().lastModified();
+        }
+    }
 }

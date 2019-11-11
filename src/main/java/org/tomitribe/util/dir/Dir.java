@@ -23,7 +23,11 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -100,7 +104,6 @@ import java.util.stream.Stream;
  *
  * <p>There may be times when you don't know the exact subdirectory name, but you know that it will use a specific
  * directory structure.  Here's how you might reference a nested Maven module structure:</p>
-
  * <pre>
  * public interface Module {
  *     &#64;Name("pom.xml")
@@ -144,6 +147,15 @@ public interface Dir {
         @Override
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 
+            if (method.isDefault()) {
+                final float version = Float.parseFloat(System.getProperty("java.class.version"));
+                if (version <= 52) {
+                    return java8(proxy, method, args);
+                } else {
+                    return java9(proxy, method, args);
+                }
+            }
+
             if (method.getDeclaringClass().equals(Dir.class)) {
                 if (method.getName().equals("dir")) return dir;
                 if (method.getName().equals("get")) return dir;
@@ -180,6 +192,29 @@ public interface Dir {
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        private static Object java8(final Object proxy, final Method method, final Object[] args) throws Throwable {
+            final Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class);
+            constructor.setAccessible(true);
+
+            final Class<?> clazz = method.getDeclaringClass();
+            return constructor.newInstance(clazz)
+                    .in(clazz)
+                    .unreflectSpecial(method, clazz)
+                    .bindTo(proxy)
+                    .invokeWithArguments(args);
+        }
+
+        private static Object java9(final Object proxy, final Method method, final Object[] args) throws Throwable {
+            return MethodHandles.lookup()
+                    .findSpecial(
+                            method.getDeclaringClass(),
+                            method.getName(),
+                            MethodType.methodType(method.getReturnType(), new Class[0]),
+                            method.getDeclaringClass()
+                    ).bindTo(proxy)
+                    .invokeWithArguments(args);
         }
 
         private Object returnStream(final Method method) {
