@@ -60,6 +60,7 @@
             <include>pom.xml</include>
           </includes>
           <excludes>
+            <exclude>**/*.adoc</exclude>
             <exclude>**/*/MANIFEST.MF</exclude>
             <exclude>.git</exclude>
             <exclude>.gitignore</exclude>
