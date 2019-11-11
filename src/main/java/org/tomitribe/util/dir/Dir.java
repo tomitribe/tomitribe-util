@@ -148,12 +148,7 @@ public interface Dir {
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 
             if (method.isDefault()) {
-                final float version = Float.parseFloat(System.getProperty("java.class.version"));
-                if (version <= 52) {
-                    return java8(proxy, method, args);
-                } else {
-                    return java9(proxy, method, args);
-                }
+                return invokeDefault(proxy, method, args);
             }
 
             if (method.getDeclaringClass().equals(Dir.class)) {
@@ -194,27 +189,28 @@ public interface Dir {
             throw new UnsupportedOperationException(method.toGenericString());
         }
 
-        private static Object java8(final Object proxy, final Method method, final Object[] args) throws Throwable {
-            final Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class);
-            constructor.setAccessible(true);
+        private static Object invokeDefault(final Object proxy, final Method method, final Object[] args) throws Throwable {
+            final float version = Float.parseFloat(System.getProperty("java.class.version"));
+            if (version <= 52) { // Java 8
+                final Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class);
+                constructor.setAccessible(true);
 
-            final Class<?> clazz = method.getDeclaringClass();
-            return constructor.newInstance(clazz)
-                    .in(clazz)
-                    .unreflectSpecial(method, clazz)
-                    .bindTo(proxy)
-                    .invokeWithArguments(args);
-        }
-
-        private static Object java9(final Object proxy, final Method method, final Object[] args) throws Throwable {
-            return MethodHandles.lookup()
-                    .findSpecial(
-                            method.getDeclaringClass(),
-                            method.getName(),
-                            MethodType.methodType(method.getReturnType(), new Class[0]),
-                            method.getDeclaringClass()
-                    ).bindTo(proxy)
-                    .invokeWithArguments(args);
+                final Class<?> clazz = method.getDeclaringClass();
+                return constructor.newInstance(clazz)
+                        .in(clazz)
+                        .unreflectSpecial(method, clazz)
+                        .bindTo(proxy)
+                        .invokeWithArguments(args);
+            } else { // Java 9 and later
+                return MethodHandles.lookup()
+                        .findSpecial(
+                                method.getDeclaringClass(),
+                                method.getName(),
+                                MethodType.methodType(method.getReturnType(), new Class[0]),
+                                method.getDeclaringClass()
+                        ).bindTo(proxy)
+                        .invokeWithArguments(args);
+            }
         }
 
         private Object returnStream(final Method method) {
