@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -219,13 +220,31 @@ public class Files {
         if (!file.exists()) return;
 
         if (file.isDirectory()) {
-            for (final File child : file.listFiles()) {
-                remove(child);
-            }
-        }
-
-        if (!file.delete()) {
+            delete(file);
+        } else if (!file.delete()) {
             throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
+        }
+    }
+
+    private static void delete(final File file) {
+        final SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                java.nio.file.Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                java.nio.file.Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+        };
+
+        try {
+            java.nio.file.Files.walkFileTree(file.toPath(), visitor);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not delete directory: " + file.getAbsolutePath(), e);
         }
     }
 

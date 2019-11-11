@@ -116,11 +116,15 @@ public interface Dir {
 
     File mkdir();
 
+    File mkdirs();
+
     File get();
 
     File parent();
 
     File file(String name);
+
+    void delete();
 
     static <T> T of(final Class<T> clazz, final File file) {
         return (T) Proxy.newProxyInstance(
@@ -144,7 +148,9 @@ public interface Dir {
                 if (method.getName().equals("dir")) return dir;
                 if (method.getName().equals("get")) return dir;
                 if (method.getName().equals("parent")) return dir.getParentFile();
-                if (method.getName().equals("mkdir")) return mkdkr();
+                if (method.getName().equals("mkdir")) return mkdir();
+                if (method.getName().equals("mkdirs")) return mkdirs();
+                if (method.getName().equals("delete")) return delete();
                 throw new IllegalStateException("Unknown method " + method);
             }
 
@@ -267,9 +273,19 @@ public interface Dir {
             }
         }
 
-        private File mkdkr() {
+        private File mkdir() {
             Files.mkdir(dir);
             return dir;
+        }
+
+        private Void mkdirs() {
+            Files.mkdirs(dir);
+            return null;
+        }
+
+        private Void delete() {
+            Files.remove(dir);
+            return null;
         }
 
         private String name(final Method method) {
