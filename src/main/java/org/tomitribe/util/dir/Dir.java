@@ -34,6 +34,7 @@ import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -151,6 +152,11 @@ public interface Dir {
                 return invokeDefault(proxy, method, args);
             }
 
+            if (method.getDeclaringClass().equals(Object.class)) {
+                if (method.getName().equals("toString")) return toString();
+                if (method.getName().equals("equals")) return equals(proxy, args);
+                if (method.getName().equals("hashCode")) return hashCode();
+            }
             if (method.getDeclaringClass().equals(Dir.class)) {
                 if (method.getName().equals("dir")) return dir;
                 if (method.getName().equals("get")) return dir;
@@ -158,6 +164,7 @@ public interface Dir {
                 if (method.getName().equals("mkdir")) return mkdir();
                 if (method.getName().equals("mkdirs")) return mkdirs();
                 if (method.getName().equals("delete")) return delete();
+                if (method.getName().equals("file")) return file(args);
                 throw new IllegalStateException("Unknown method " + method);
             }
 
@@ -187,6 +194,28 @@ public interface Dir {
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        private boolean equals(final Object proxy, final Object[] args) {
+            if (args.length != 1) return false;
+            if (args[0] == null) return false;
+            if (!proxy.getClass().isAssignableFrom(args[0].getClass())) return false;
+
+            final InvocationHandler handler = Proxy.getInvocationHandler(args[0]);
+            return equals(handler);
+        }
+
+        private Object file(final Object[] args) {
+            if (args.length != 1) {
+                throw new IllegalArgumentException("Expected String argument.  Found args length: " + args.length);
+            }
+            if (args[0] == null) {
+                throw new IllegalArgumentException("Expected String argument.  Found null");
+            }
+            if (!String.class.equals(args[0].getClass())) {
+                throw new IllegalArgumentException("Expected String argument.  Found " + args[0].getClass());
+            }
+            return new File(this.dir, args[0].toString());
         }
 
         private static Object invokeDefault(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -361,6 +390,24 @@ public interface Dir {
 
         public Function<File, File> noop(final Method method) {
             return file -> file;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            final DirHandler that = (DirHandler) o;
+            return dir.equals(that.dir);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(dir);
+        }
+
+        @Override
+        public String toString() {
+            return dir.getAbsolutePath();
         }
     }
 
