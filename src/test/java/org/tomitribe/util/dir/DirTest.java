@@ -20,9 +20,14 @@ package org.tomitribe.util.dir;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.tomitribe.util.Archive;
 import org.tomitribe.util.Files;
+import org.tomitribe.util.Join;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,6 +43,15 @@ public class DirTest {
         final Dir dir = Dir.of(Dir.class, original);
 
         assertEquals(original.getAbsolutePath(), dir.dir().getAbsolutePath());
+    }
+
+    @Test
+    public void testDirByName() throws Exception {
+        final File original = Files.tmpdir();
+        final Dir dir = Dir.of(Dir.class, original);
+
+        assertEquals(original.getAbsolutePath(), dir.dir().getAbsolutePath());
+        assertEquals(new File(original, "color").getAbsolutePath(), dir.dir("color").get().getAbsolutePath());
     }
 
     @Test
@@ -166,12 +180,122 @@ public class DirTest {
     }
 
     @Test
+    public void walk() throws IOException {
+
+        final Archive nested = new Archive()
+                .add("red.txt", "crimson")
+                .add("green/emerald.txt", "#50c878");
+        final Archive archive = new Archive();
+        archive.add("colors", nested);
+        archive.add("more/depth/shades", nested);
+
+        final File original = archive.toDir();
+        final Dir dir = Dir.of(Dir.class, original);
+
+        final List<String> paths = dir.walk()
+                .map(File::getAbsolutePath)
+                .sorted()
+                .map(s -> s.substring(original.getAbsolutePath().length()))
+                .collect(Collectors.toList());
+
+        assertEquals("\n" +
+                "/colors\n" +
+                "/colors/green\n" +
+                "/colors/green/emerald.txt\n" +
+                "/colors/red.txt\n" +
+                "/more\n" +
+                "/more/depth\n" +
+                "/more/depth/shades\n" +
+                "/more/depth/shades/green\n" +
+                "/more/depth/shades/green/emerald.txt\n" +
+                "/more/depth/shades/red.txt", Join.join("\n", paths));
+    }
+
+    @Test
+    public void walkWithDepth() throws IOException {
+
+        final Archive nested = new Archive()
+                .add("red.txt", "crimson")
+                .add("green/emerald.txt", "#50c878");
+        final Archive archive = new Archive();
+        archive.add("colors", nested);
+        archive.add("more/depth/shades", nested);
+
+        final File original = archive.toDir();
+        final Dir dir = Dir.of(Dir.class, original);
+
+        final List<String> paths = dir.walk(3)
+                .map(File::getAbsolutePath)
+                .sorted()
+                .map(s -> s.substring(original.getAbsolutePath().length()))
+                .collect(Collectors.toList());
+
+        assertEquals("\n" +
+                "/colors\n" +
+                "/colors/green\n" +
+                "/colors/green/emerald.txt\n" +
+                "/colors/red.txt\n" +
+                "/more\n" +
+                "/more/depth\n" +
+                "/more/depth/shades", Join.join("\n", paths));
+    }
+
+
+    @Test
+    public void files() throws IOException {
+
+        final Archive nested = new Archive()
+                .add("red.txt", "crimson")
+                .add("green/emerald.txt", "#50c878");
+        final Archive archive = new Archive();
+        archive.add("colors", nested);
+        archive.add("more/depth/shades", nested);
+
+        final File original = archive.toDir();
+        final Dir dir = Dir.of(Dir.class, original);
+
+        final List<String> paths = dir.files()
+                .map(File::getAbsolutePath)
+                .sorted()
+                .map(s -> s.substring(original.getAbsolutePath().length()))
+                .collect(Collectors.toList());
+
+        assertEquals("/colors/green/emerald.txt\n" +
+                "/colors/red.txt\n" +
+                "/more/depth/shades/green/emerald.txt\n" +
+                "/more/depth/shades/red.txt", Join.join("\n", paths));
+    }
+
+    @Test
+    public void filesWithDepth() throws IOException {
+
+        final Archive nested = new Archive()
+                .add("red.txt", "crimson")
+                .add("green/emerald.txt", "#50c878");
+        final Archive archive = new Archive();
+        archive.add("colors", nested);
+        archive.add("more/depth/shades", nested);
+
+        final File original = archive.toDir();
+        final Dir dir = Dir.of(Dir.class, original);
+
+        final List<String> paths = dir.files(3)
+                .map(File::getAbsolutePath)
+                .sorted()
+                .map(s -> s.substring(original.getAbsolutePath().length()))
+                .collect(Collectors.toList());
+
+        assertEquals("/colors/green/emerald.txt\n" +
+                "/colors/red.txt", Join.join("\n", paths));
+    }
+
+    @Test
     public void testToString() throws Exception {
         final File original = Files.tmpdir();
 
         final File color = new File(original, "color");
         final Dir dir = Dir.of(Dir.class, color);
-        
+
         assertEquals(color.getAbsolutePath(), dir.toString());
     }
 

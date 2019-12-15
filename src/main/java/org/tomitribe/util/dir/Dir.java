@@ -116,7 +116,10 @@ import java.util.stream.Stream;
  *
  */
 public interface Dir {
+    // TODO this should return Dir
     File dir();
+
+    Dir dir(String name);
 
     File mkdir();
 
@@ -126,7 +129,36 @@ public interface Dir {
 
     File parent();
 
+    // replacement for dir()
+    File file();
+
     File file(String name);
+
+    /**
+     * Recursively walks downward from this path.
+     * @return Stream of files and directories down from this path
+     */
+    Stream<File> walk();
+
+    /**
+     * Recursively walks downward from this path.
+     * @param depth Limit the recursion to specified depth
+     * @return Stream of files and directories down from this path
+     */
+    Stream<File> walk(int depth);
+
+    /**
+     * Recursively walks downward from this path.
+     * @return Stream of files down from this path, excluding directories
+     */
+    Stream<File> files();
+
+    /**
+     * Recursively walks downward from this path.
+     * @param depth Limit the recursion to specified depth
+     * @return Stream of files down from this path, excluding directories
+     */
+    Stream<File> files(int depth);
 
     void delete();
 
@@ -158,13 +190,15 @@ public interface Dir {
                 if (method.getName().equals("hashCode")) return hashCode();
             }
             if (method.getDeclaringClass().equals(Dir.class)) {
-                if (method.getName().equals("dir")) return dir;
+                if (method.getName().equals("dir")) return dir(args);
                 if (method.getName().equals("get")) return dir;
                 if (method.getName().equals("parent")) return dir.getParentFile();
                 if (method.getName().equals("mkdir")) return mkdir();
                 if (method.getName().equals("mkdirs")) return mkdirs();
                 if (method.getName().equals("delete")) return delete();
                 if (method.getName().equals("file")) return file(args);
+                if (method.getName().equals("walk")) return walk(args);
+                if (method.getName().equals("files")) return walk(args).filter(File::isFile);
                 throw new IllegalStateException("Unknown method " + method);
             }
 
@@ -196,6 +230,16 @@ public interface Dir {
             throw new UnsupportedOperationException(method.toGenericString());
         }
 
+        private Object dir(final Object[] args) {
+            if (args == null || args.length == 0) return dir;
+            return Dir.of(Dir.class, file(args));
+        }
+
+        private Stream<File> walk(final Object[] args) {
+            if (args == null || args.length == 0) return walk(dir, -1);
+            return walk(dir, (Integer) args[0]);
+        }
+
         private boolean equals(final Object proxy, final Object[] args) {
             if (args.length != 1) return false;
             if (args[0] == null) return false;
@@ -205,7 +249,7 @@ public interface Dir {
             return equals(handler);
         }
 
-        private Object file(final Object[] args) {
+        private File file(final Object[] args) {
             if (args.length != 1) {
                 throw new IllegalArgumentException("Expected String argument.  Found args length: " + args.length);
             }
@@ -307,9 +351,13 @@ public interface Dir {
         }
 
         private static Stream<File> walk(final Walk walk, final File dir) {
+            return walk(dir, walk.maxDepth());
+        }
+
+        private static Stream<File> walk(final File dir, final int depth) {
             try {
-                if (walk.maxDepth() != -1) {
-                    return java.nio.file.Files.walk(dir.toPath(), walk.maxDepth())
+                if (depth != -1) {
+                    return java.nio.file.Files.walk(dir.toPath(), depth)
                             .map(Path::toFile);
                 }
                 return java.nio.file.Files.walk(dir.toPath())

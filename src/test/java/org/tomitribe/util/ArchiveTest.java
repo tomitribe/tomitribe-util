@@ -69,8 +69,8 @@ public class ArchiveTest {
         assertEquals(1, dir.listFiles().length);
         assertEquals("org", dir.listFiles()[0].getName());
 
-        final File parent = new File(dir,"org/tomitribe/util/ArchiveTest.class");
-        final File child = new File(dir,"org/tomitribe/util/ArchiveTest$MomINeedYou.class");
+        final File parent = new File(dir, "org/tomitribe/util/ArchiveTest.class");
+        final File child = new File(dir, "org/tomitribe/util/ArchiveTest$MomINeedYou.class");
         assertTrue(parent.exists());
         assertTrue(child.exists());
     }
