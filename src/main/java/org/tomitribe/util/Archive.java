@@ -34,7 +34,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Makes it significantly easier to create test directory structures and jars
+ * Think of an Archive like a Jar that lives in memory.  When you make an Archive from a specific
+ * directory you end up with a jar-like collection of files that are all relative paths.
+ *
+ * The archive can be turned into an actual jar or simply copied into a directory.  If output to
+ * a directory, it works like unzipping a jar and any files in that already exist in the directory
+ * are simply overwritten.
+ *
+ * Unlike a Jar, which is a collection of bytes, an Archive is a collection of lambdas that produce
+ * bytes.  This means they take very little memory as any files added are still sitting on disk and
+ * are not actually read till the archive is turned into a jar or output to a directory.
  */
 public class Archive {
 
