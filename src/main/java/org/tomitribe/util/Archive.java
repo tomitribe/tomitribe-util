@@ -85,6 +85,14 @@ public class Archive {
         return add(name, () -> readBytes(content));
     }
 
+    public Archive add(final String name, final Archive archive) {
+        this.manifest.putAll(archive.manifest);
+        for (final Map.Entry<String, Supplier<byte[]>> entry : archive.entries.entrySet()) {
+            this.entries.put(name + "/" + entry.getKey(), entry.getValue());
+        }
+        return this;
+    }
+
     public static byte[] readBytes(final File content) {
         try {
             return IO.readBytes(content);
@@ -233,7 +241,9 @@ public class Archive {
 
     private HashMap<String, Supplier<byte[]>> entries() {
         final HashMap<String, Supplier<byte[]>> entries = new HashMap<>(this.entries);
-        entries.put("META-INF/MANIFEST.MF", buildManifest()::getBytes);
+        if (manifest.size() > 0) {
+            entries.put("META-INF/MANIFEST.MF", buildManifest()::getBytes);
+        }
         return entries;
     }
 
