@@ -79,6 +79,9 @@ public class Archive {
     }
 
     public Archive add(final String name, final File content) {
+        if (content.isDirectory()) {
+            return addDir(name, content);
+        }
         return add(name, () -> readBytes(content));
     }
 
@@ -127,18 +130,10 @@ public class Archive {
     }
 
     public Archive addDir(final File dir) {
-        try {
-
-            addDir(null, dir);
-
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        return this;
+        return addDir(null, dir);
     }
 
-    private void addDir(final String path, final File dir) throws IOException {
+    private Archive addDir(final String path, final File dir) {
         for (final File file : dir.listFiles()) {
 
             final String childPath = (path != null) ? path + "/" + file.getName() : file.getName();
@@ -149,6 +144,7 @@ public class Archive {
                 addDir(childPath, file);
             }
         }
+        return this;
     }
 
     public Archive addJar(final File file) {
