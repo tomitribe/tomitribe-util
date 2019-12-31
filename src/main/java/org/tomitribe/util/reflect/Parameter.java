@@ -27,11 +27,17 @@ public class Parameter implements AnnotatedElement {
     private final Annotation[] annotations;
     private final Class<?> type;
     private final Type genericType;
+    private final int index;
 
-    public Parameter(final Annotation[] annotations, final Class<?> type, final Type genericType) {
+    public Parameter(final Annotation[] annotations, final Class<?> type, final Type genericType, final int index) {
         this.annotations = annotations;
         this.type = type;
         this.genericType = genericType;
+        this.index = index;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public Class<?> getType() {

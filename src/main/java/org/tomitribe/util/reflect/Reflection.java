@@ -54,7 +54,8 @@ public class Reflection {
                         return new Parameter(
                                 method.getParameterAnnotations()[index],
                                 method.getParameterTypes()[index],
-                                method.getGenericParameterTypes()[index++]);
+                                method.getGenericParameterTypes()[index],
+                                index++);
                     }
 
                     @Override
@@ -85,7 +86,8 @@ public class Reflection {
                         return new Parameter(
                                 constructor.getParameterAnnotations()[index],
                                 constructor.getParameterTypes()[index],
-                                constructor.getGenericParameterTypes()[index++]);
+                                constructor.getGenericParameterTypes()[index],
+                                index++);
                     }
 
                     @Override

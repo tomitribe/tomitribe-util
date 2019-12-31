@@ -35,18 +35,21 @@ public class ReflectionTest extends Assert {
             assertEquals(String.class, parameter.getType());
             assertEquals(1, parameter.getAnnotations().length);
             assertEquals(Red.class, parameter.getAnnotations()[0].annotationType());
+            assertEquals(0, parameter.getIndex());
         }
         {
             final Parameter parameter = params.next();
             assertEquals(int.class, parameter.getType());
             assertEquals(1, parameter.getAnnotations().length);
             assertEquals(Green.class, parameter.getAnnotations()[0].annotationType());
+            assertEquals(1, parameter.getIndex());
         }
         {
             final Parameter parameter = params.next();
             assertEquals(boolean.class, parameter.getType());
             assertEquals(1, parameter.getAnnotations().length);
             assertEquals(Blue.class, parameter.getAnnotations()[0].annotationType());
+            assertEquals(2, parameter.getIndex());
         }
         {
             final Parameter parameter = params.next();
@@ -55,6 +58,7 @@ public class ReflectionTest extends Assert {
             assertEquals(Red.class, parameter.getAnnotations()[0].annotationType());
             assertEquals(Green.class, parameter.getAnnotations()[1].annotationType());
             assertEquals(Blue.class, parameter.getAnnotations()[2].annotationType());
+            assertEquals(3, parameter.getIndex());
         }
 
         assertFalse(params.hasNext());
