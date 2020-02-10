@@ -260,6 +260,10 @@ public class Files {
     }
 
     public static File tmpdir() {
+        return tmpdir(true);
+    }
+
+    public static File tmpdir(final boolean deleteOnExit) {
         try {
             final File file = File.createTempFile("temp", "dir");
 
@@ -269,7 +273,10 @@ public class Files {
 
             mkdir(file);
 
-            DELETE_ON_EXIT.clean(file);
+            if (deleteOnExit) {
+                new Exception("Delete on exit").fillInStackTrace().printStackTrace();
+                DELETE_ON_EXIT.clean(file);
+            }
 
             return file;
         } catch (final IOException e) {
