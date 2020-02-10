@@ -274,7 +274,6 @@ public class Files {
             mkdir(file);
 
             if (deleteOnExit) {
-                new Exception("Delete on exit").fillInStackTrace().printStackTrace();
                 DELETE_ON_EXIT.clean(file);
             }
 
