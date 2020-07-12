@@ -20,6 +20,7 @@ package org.tomitribe.util.dir;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.tomitribe.util.Archive;
 import org.tomitribe.util.Files;
 import org.tomitribe.util.Join;
 
@@ -116,6 +117,129 @@ public class WalkTest {
                 .collect(Collectors.toList());
 
         assertEquals(Join.join("\n", expected), Join.join("\n", actual));
+    }
+
+    @Test
+    public void walk() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.nofilter().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("/\n" +
+                "/repository/\n" +
+                "/repository/io.tomitribe/\n" +
+                "/repository/io.tomitribe/crest/\n" +
+                "/repository/io.tomitribe/crest/5/\n" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/\n" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
+                "/repository/junit/\n" +
+                "/repository/junit/junit/\n" +
+                "/repository/junit/junit/4/\n" +
+                "/repository/junit/junit/4/4.12/\n" +
+                "/repository/junit/junit/4/4.12/bar.txt\n" +
+                "/repository/org.color.bright/\n" +
+                "/repository/org.color.bright/green/\n" +
+                "/repository/org.color.bright/green/1/\n" +
+                "/repository/org.color.bright/green/1/1.4/\n" +
+                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
+                "/repository/org.color/\n" +
+                "/repository/org.color/red/\n" +
+                "/repository/org.color/red/1/\n" +
+                "/repository/org.color/red/1/1.4/\n" +
+                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
+    }
+
+    @Test
+    public void maxDepthOne() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.maxOne().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("/\n" +
+                "/repository/", Join.join("\n", paths));
+    }
+
+    @Test
+    public void maxDepthTwo() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.maxTwo().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("/\n" +
+                "/repository/\n" +
+                "/repository/io.tomitribe/\n" +
+                "/repository/junit/\n" +
+                "/repository/org.color.bright/\n" +
+                "/repository/org.color/", Join.join("\n", paths));
+    }
+
+    @Test
+    public void files() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.files().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
+                "/repository/junit/junit/4/4.12/bar.txt\n" +
+                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
+                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
+    }
+
+    public String path(final File file) {
+        if (file.isDirectory()) return file.getAbsolutePath() + "/";
+        else return file.getAbsolutePath();
+    }
+
+    private List<String> paths(final File dir, final List<File> list) {
+        final int trim = path(dir).length() - 1;
+        return list.stream()
+                .map(this::path)
+                .map(s -> s.substring(trim))
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    public interface Work extends Dir {
+        @Walk
+        Stream<File> nofilter();
+
+        @Walk(maxDepth = 1)
+        Stream<File> maxOne();
+
+        @Walk(maxDepth = 2)
+        Stream<File> maxTwo();
     }
 
     public interface Module extends Dir {
