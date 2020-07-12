@@ -390,8 +390,24 @@ public interface Dir {
         }
 
         private Predicate<File> getFilter(final Method method) {
-            final Filter filter = method.getAnnotation(Filter.class);
+            if (method.isAnnotationPresent(Filter.class)) {
+                final Filter filter = method.getAnnotation(Filter.class);
+                return asPredicate(filter);
+            }
 
+            if (method.isAnnotationPresent(Filters.class)) {
+                final Filters filters = method.getAnnotation(Filters.class);
+                Predicate<File> predicate = file -> true;
+                for (final Filter filter : filters.value()) {
+                    predicate = predicate.and(asPredicate(filter));
+                }
+                return predicate;
+            }
+
+            return pathname -> true;
+        }
+
+        private Predicate<File> asPredicate(final Filter filter) {
             if (filter == null) return pathname -> true;
 
             final Class<? extends FileFilter> clazz = filter.value();
