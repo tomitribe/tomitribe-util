@@ -25,4 +25,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Walk {
     int maxDepth() default -1;
+
+    int minDepth() default 0;
 }

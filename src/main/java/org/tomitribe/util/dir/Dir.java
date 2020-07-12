@@ -236,8 +236,8 @@ public interface Dir {
         }
 
         private Stream<File> walk(final Object[] args) {
-            if (args == null || args.length == 0) return walk(dir, -1);
-            return walk(dir, (Integer) args[0]);
+            if (args == null || args.length == 0) return walk(dir, -1, 0);
+            return walk(dir, (Integer) args[0], 0);
         }
 
         private boolean equals(final Object proxy, final Object[] args) {
@@ -351,20 +351,42 @@ public interface Dir {
         }
 
         private static Stream<File> walk(final Walk walk, final File dir) {
-            return walk(dir, walk.maxDepth());
+            return walk(dir, walk.maxDepth(), walk.minDepth());
         }
 
-        private static Stream<File> walk(final File dir, final int depth) {
+        private static Stream<File> walk(final File dir, final int maxDepth, final int minDepth) {
+            final Predicate<File> min = minDepth <= 0 ? file -> true : minDepth(dir, minDepth);
             try {
-                if (depth != -1) {
-                    return java.nio.file.Files.walk(dir.toPath(), depth)
-                            .map(Path::toFile);
+                if (maxDepth != -1) {
+                    return java.nio.file.Files.walk(dir.toPath(), maxDepth)
+                            .map(Path::toFile)
+                            .filter(min);
                 }
                 return java.nio.file.Files.walk(dir.toPath())
-                        .map(Path::toFile);
+                        .map(Path::toFile)
+                        .filter(min);
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
+        }
+
+        private static Predicate<File> minDepth(final File dir, final int minDepth) {
+            int parentDepth = getDepth(dir);
+            return file -> {
+                final int fileDepth = getDepth(file);
+                final int depth = fileDepth - parentDepth;
+                return depth >= minDepth;
+            };
+        }
+
+        private static int getDepth(final File dir) {
+            int depth = 0;
+            File f = dir;
+            while (f != null) {
+                f = f.getParentFile();
+                depth++;
+            }
+            return depth;
         }
 
         private Predicate<File> getFilter(final Method method) {

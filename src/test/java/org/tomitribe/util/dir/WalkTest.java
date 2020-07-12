@@ -198,6 +198,122 @@ public class WalkTest {
     }
 
     @Test
+    public void minDepthOne() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.minOne().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("/repository/\n" +
+                "/repository/io.tomitribe/\n" +
+                "/repository/io.tomitribe/crest/\n" +
+                "/repository/io.tomitribe/crest/5/\n" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/\n" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
+                "/repository/junit/\n" +
+                "/repository/junit/junit/\n" +
+                "/repository/junit/junit/4/\n" +
+                "/repository/junit/junit/4/4.12/\n" +
+                "/repository/junit/junit/4/4.12/bar.txt\n" +
+                "/repository/org.color.bright/\n" +
+                "/repository/org.color.bright/green/\n" +
+                "/repository/org.color.bright/green/1/\n" +
+                "/repository/org.color.bright/green/1/1.4/\n" +
+                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
+                "/repository/org.color/\n" +
+                "/repository/org.color/red/\n" +
+                "/repository/org.color/red/1/\n" +
+                "/repository/org.color/red/1/1.4/\n" +
+                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
+    }
+
+    @Test
+    public void minDepthTwo() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.minTwo().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("" +
+                "/repository/io.tomitribe/\n" +
+                "/repository/io.tomitribe/crest/\n" +
+                "/repository/io.tomitribe/crest/5/\n" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/\n" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
+                "/repository/junit/\n" +
+                "/repository/junit/junit/\n" +
+                "/repository/junit/junit/4/\n" +
+                "/repository/junit/junit/4/4.12/\n" +
+                "/repository/junit/junit/4/4.12/bar.txt\n" +
+                "/repository/org.color.bright/\n" +
+                "/repository/org.color.bright/green/\n" +
+                "/repository/org.color.bright/green/1/\n" +
+                "/repository/org.color.bright/green/1/1.4/\n" +
+                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
+                "/repository/org.color/\n" +
+                "/repository/org.color/red/\n" +
+                "/repository/org.color/red/1/\n" +
+                "/repository/org.color/red/1/1.4/\n" +
+                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
+    }
+
+    @Test
+    public void minOneMaxTwo() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.minOneMaxTwo().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("/repository/\n" +
+                "/repository/io.tomitribe/\n" +
+                "/repository/junit/\n" +
+                "/repository/org.color.bright/\n" +
+                "/repository/org.color/", Join.join("\n", paths));
+    }
+
+    @Test
+    public void minTwoMaxTwo() throws Exception {
+        final File dir = new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir();
+
+        final Work work = Dir.of(Work.class, dir);
+        final List<File> list = work.minTwoMaxTwo().collect(Collectors.toList());
+
+        final List<String> paths = paths(dir, list);
+
+        assertEquals("" +
+                "/repository/io.tomitribe/\n" +
+                "/repository/junit/\n" +
+                "/repository/org.color.bright/\n" +
+                "/repository/org.color/", Join.join("\n", paths));
+    }
+
+    @Test
     public void files() throws Exception {
         final File dir = new Archive()
                 .add("repository/org.color/red/1/1.4/foo.txt", "")
@@ -240,6 +356,18 @@ public class WalkTest {
 
         @Walk(maxDepth = 2)
         Stream<File> maxTwo();
+
+        @Walk(minDepth = 1)
+        Stream<File> minOne();
+
+        @Walk(minDepth = 2)
+        Stream<File> minTwo();
+
+        @Walk(minDepth = 1, maxDepth = 2)
+        Stream<File> minOneMaxTwo();
+
+        @Walk(minDepth = 2, maxDepth = 2)
+        Stream<File> minTwoMaxTwo();
     }
 
     public interface Module extends Dir {
