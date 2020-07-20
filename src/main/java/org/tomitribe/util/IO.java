@@ -64,7 +64,9 @@ public class IO {
     }
 
     public static Properties readProperties(final URL resource, final Properties properties) throws IOException {
-        return readProperties(read(resource), properties);
+        try (InputStream read = read(resource)) {
+            return readProperties(read, properties);
+        }
     }
 
     public static Properties readProperties(final File resource) throws IOException {
@@ -72,7 +74,9 @@ public class IO {
     }
 
     public static Properties readProperties(final File resource, final Properties properties) throws IOException {
-        return readProperties(read(resource), properties);
+        try (final InputStream read = read(resource)) {
+            return readProperties(read, properties);
+        }
     }
 
     /**
@@ -96,40 +100,28 @@ public class IO {
     }
 
     public static String readString(final URL url) throws IOException {
-        final InputStream in = url.openStream();
-        try {
+        try (InputStream in = url.openStream()) {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             return reader.readLine();
-        } finally {
-            close(in);
         }
     }
 
     public static String readString(final File file) throws IOException {
-        final FileReader in = new FileReader(file);
-        try {
+        try (FileReader in = new FileReader(file)) {
             final BufferedReader reader = new BufferedReader(in);
             return reader.readLine();
-        } finally {
-            close(in);
         }
     }
 
     public static byte[] readBytes(final File file) throws IOException {
-        final InputStream in = read(file);
-        try {
+        try (InputStream in = read(file)) {
             return readBytes(in);
-        } finally {
-            close(in);
         }
     }
 
     public static byte[] readBytes(final URL url) throws IOException {
-        final InputStream in = read(url);
-        try {
+        try (InputStream in = read(url)) {
             return readBytes(in);
-        } finally {
-            close(in);
         }
     }
 
@@ -140,12 +132,16 @@ public class IO {
     }
 
     public static String slurp(final File file) throws IOException {
-        return slurp(read(file));
+        try (InputStream read = read(file)) {
+            return slurp(read);
+        }
     }
 
 
     public static String slurp(final URL url) throws IOException {
-        return slurp(url.openStream());
+        try (InputStream in = url.openStream()) {
+            return slurp(in);
+        }
     }
 
     public static String slurp(final InputStream in) throws IOException {
@@ -153,27 +149,18 @@ public class IO {
     }
 
     public static void writeString(final File file, final String string) throws IOException {
-        final FileWriter out = new FileWriter(file);
-        try {
-            final BufferedWriter bufferedWriter = new BufferedWriter(out);
-            try {
+        try (FileWriter out = new FileWriter(file)) {
+            try (BufferedWriter bufferedWriter = new BufferedWriter(out)) {
                 bufferedWriter.write(string);
                 bufferedWriter.newLine();
-            } finally {
-                close(bufferedWriter);
             }
-        } finally {
-            close(out);
         }
     }
 
     public static void copy(final File from, final File to) throws IOException {
         if (!from.isDirectory()) {
-            final FileOutputStream fos = new FileOutputStream(to);
-            try {
+            try (FileOutputStream fos = new FileOutputStream(to)) {
                 copy(from, fos);
-            } finally {
-                close(fos);
             }
         } else {
             copyDirectory(from, to);
@@ -236,47 +223,32 @@ public class IO {
     }
 
     public static void copy(final File from, final OutputStream to) throws IOException {
-        final InputStream read = read(from);
-        try {
+        try (InputStream read = read(from)) {
             copy(read, to);
-        } finally {
-            close(read);
         }
     }
 
     public static void copy(final URL from, final OutputStream to) throws IOException {
-        final InputStream read = read(from);
-        try {
+        try (InputStream read = read(from)) {
             copy(read, to);
-        } finally {
-            close(read);
         }
     }
 
     public static void copy(final InputStream from, final File to) throws IOException {
-        final OutputStream write = write(to);
-        try {
+        try (OutputStream write = write(to)) {
             copy(from, write);
-        } finally {
-            close(write);
         }
     }
 
     public static void copy(final URL from, final File to) throws IOException {
-        final OutputStream write = write(to);
-        try {
+        try (OutputStream write = write(to)) {
             copy(from, write);
-        } finally {
-            close(write);
         }
     }
 
     public static void copy(final InputStream from, final File to, final boolean append) throws IOException {
-        final OutputStream write = write(to, append);
-        try {
+        try (OutputStream write = write(to, append)) {
             copy(from, write);
-        } finally {
-            close(write);
         }
     }
 

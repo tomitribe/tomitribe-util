@@ -37,12 +37,8 @@ public class Zips {
         Files.writable(destination);
         Files.file(zipFile);
         Files.readable(zipFile);
-        InputStream read = IO.read(zipFile);
-
-        try {
+        try (InputStream read = IO.read(zipFile)) {
             unzip(read, destination, noparent);
-        } finally {
-            IO.close(read);
         }
 
     }
@@ -52,20 +48,20 @@ public class Zips {
             ZipInputStream e = new ZipInputStream(read);
 
             ZipEntry entry;
-            while((entry = e.getNextEntry()) != null) {
+            while ((entry = e.getNextEntry()) != null) {
                 String path = entry.getName();
-                if(noparent) {
+                if (noparent) {
                     path = path.replaceFirst("^[^/]+/", "");
                 }
 
                 File file = new File(destination, path);
-                if(entry.isDirectory()) {
+                if (entry.isDirectory()) {
                     Files.mkdir(file);
                 } else {
                     Files.mkdir(file.getParentFile());
                     IO.copy(e, file);
                     long lastModified = entry.getTime();
-                    if(lastModified > 0L) {
+                    if (lastModified > 0L) {
                         file.setLastModified(lastModified);
                     }
                 }
