@@ -81,7 +81,8 @@ public class ObjectMap extends AbstractMap<String, Object> {
         if (m.getParameterTypes().length != 0) return false;
 
         // Must start with "get" or "is"
-        if (m.getName().startsWith("get") || m.getName().startsWith("find")) return true;
+        if (m.getName().startsWith("get") && m.getName().length() > 3) return true;
+        if (m.getName().startsWith("find") && m.getName().length() > 4) return true;
         if (!m.getName().startsWith("is")) return false;
 
         // If it starts with "is" it must return boolean
@@ -177,6 +178,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
 
     public interface Member extends Entry<String, Object> {
         Class<?> getType();
+
         boolean isReadOnly();
     }
 
@@ -207,7 +209,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
             } catch (final InvocationTargetException e) {
                 throw new RuntimeException(e.getCause());
             } catch (final Exception e) {
-                throw new IllegalStateException(String.format("Key: %s, Method: %s", key, method.toString()),e);
+                throw new IllegalStateException(String.format("Key: %s, Method: %s", key, method.toString()), e);
             }
         }
 

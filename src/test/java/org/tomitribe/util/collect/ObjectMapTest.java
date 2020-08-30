@@ -20,7 +20,6 @@ import junit.framework.TestCase;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class ObjectMapTest extends TestCase {
 
@@ -80,7 +79,7 @@ public class ObjectMapTest extends TestCase {
     }
 
     public void testGetType() throws Exception {
-        final Map<String,ObjectMap.Member> map = members(new ObjectMap(new Foo()));
+        final Map<String, ObjectMap.Member> map = members(new ObjectMap(new Foo()));
         assertEquals(String.class, map.get("myString").getType());
         assertEquals(byte.class, map.get("mybyte").getType());
         assertEquals(char.class, map.get("mychar").getType());
@@ -93,7 +92,7 @@ public class ObjectMapTest extends TestCase {
     }
 
     public void testIsReadOnly() throws Exception {
-        final Map<String,ObjectMap.Member> map = members(new ObjectMap(new Bar()));
+        final Map<String, ObjectMap.Member> map = members(new ObjectMap(new Bar()));
         assertEquals(true, map.get("myString").isReadOnly());
         assertEquals(false, map.get("mybyte").isReadOnly());
         assertEquals(true, map.get("mychar").isReadOnly());
@@ -120,7 +119,7 @@ public class ObjectMapTest extends TestCase {
 
         final ObjectMap map = new ObjectMap(new ReadOnlyKeys(42, true));
 
-        assertEquals((int)42, map.get("orange"));
+        assertEquals((int) 42, map.get("orange"));
         assertEquals(true, map.get("red"));
 
         try {
@@ -144,6 +143,20 @@ public class ObjectMapTest extends TestCase {
         assertEquals(true, map.get("orange"));
         assertEquals(false, map.get("red"));
         assertEquals(true, map.get("yellow"));
+
+    }
+
+    public void testPlainGetMethod() throws Exception {
+        final HasPlainGet object = new HasPlainGet();
+        object.setRed(255);
+        object.setGreen(165);
+        object.setBlue(0);
+
+        final ObjectMap map = new ObjectMap(object);
+
+        assertEquals(255, map.get("red"));
+        assertEquals(165, map.get("green"));
+        assertEquals(0, map.get("blue"));
 
     }
 
@@ -190,6 +203,40 @@ public class ObjectMapTest extends TestCase {
 
         public boolean getRed() {
             return red;
+        }
+    }
+
+    public static class HasPlainGet {
+        private int red;
+        private int green;
+        private int blue;
+
+        public HasPlainGet get() {
+            return this;
+        }
+
+        public int getRed() {
+            return red;
+        }
+
+        public void setRed(final int red) {
+            this.red = red;
+        }
+
+        public int getGreen() {
+            return green;
+        }
+
+        public void setGreen(final int green) {
+            this.green = green;
+        }
+
+        public int getBlue() {
+            return blue;
+        }
+
+        public void setBlue(final int blue) {
+            this.blue = blue;
         }
     }
 
