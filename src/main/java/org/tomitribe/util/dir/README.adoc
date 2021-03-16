@@ -1,3 +1,5 @@
+= Strongly typed filesystem manipulation
+
 Efforts to create strongly-typed code are often poisoned by string file path references spread all over the same codebase.
 
 We constantly see code like this refering to file paths with strings.  This one has to have a typo in it.  Which is correct, `resource` or `resources`?
@@ -20,7 +22,7 @@ final File srcTestResources = module.src().test().resources();
 
 This utility was born out of a desire that all path references could be compile-time checked and code completed.
 
-## Step 1 Create an interface matching a directory
+== Step 1 Create an interface matching a directory
 
 For example, a directory structure like this:
 
@@ -47,7 +49,7 @@ Could be handled with the following interface:
  }
 ----
 
-## Step 2 Get a proxied reference to that directory
+== Step 2 Get a proxied reference to that directory
 
 
 [source,java]
@@ -61,7 +63,7 @@ Project project = Dir.of(Project.class,  mydir);
 Under the covers the interface is implemented as a dynamic proxy whose InvocationHandler is
  holding the actual File object.
 
-# Returning Another Interface
+== Returning Another Interface
 
 Instead of `src()` returning a `File`, it could return another similar interface. For example
 
@@ -89,7 +91,7 @@ And now we update `Project` so the `src()` method will return `Src`
 
 Now we have a strongly-typed directory structure that also supports code completion in the IDE.
 
-# Passing a Subdirectory Name
+== Passing a Subdirectory Name
 
 There may be times when you don't know the exact subdirectory name, but you know that it will use a specific
  directory structure.  Here's how you might reference a nested Maven module structure:
@@ -106,7 +108,7 @@ There may be times when you don't know the exact subdirectory name, but you know
 ----
 
 
-# `@Name` for indicating file names
+== `@Name` for indicating file names
 
 By default file names are derived from the method name.  The following would indicate a directory or file named `src` under the module directory.
 
@@ -146,7 +148,7 @@ public interface Module {
 }
 ----
 
-# Listing Files
+== Listing Files
 
 Let's imagine we have a Maven project structure with many submodules.  How do we list the `cheese` and `pepperoni` submodules?
 
@@ -162,7 +164,7 @@ pizza/
    target/
 ----
 
-## Array of `File`
+=== Array of `File`
 
 The simplest way is to return an array of `java.io.File` such as:
 
@@ -175,7 +177,7 @@ public interface Project {
 
 This is close, but we haven't given any way for unwanted directories such as `target` to be filtered out.
 
-## `@Filter` Array of `File`
+=== `@Filter` Array of `File`
 
 To get just `File` instances that are directories and contain a `pom.xml` we can create a simple `FileFilter`, like so:
 
@@ -205,7 +207,7 @@ public interface Project {
 }
 ----
 
-## Array of `interface`
+=== Array of `interface`
 
 Of course, the main goal of the `Dir` utility is to elimnate `File` references where possible.  So let's put our `Module` interface back like so:
 
@@ -229,7 +231,7 @@ public interface Module {
 }
 ----
 
-## `Stream` of an `interface`
+=== `Stream` of an `interface`
 
 Arrays are fine, but often it's far more fun to use `java.util.stream.Stream`
 
@@ -254,7 +256,7 @@ public interface Module {
 }
 ----
 
-## `@Walk` to recursively `Stream` all matches
+=== `@Walk` to recursively `Stream` all matches
 
 What if your Maven project structure is fairly deep and has modules inside modules?  By default, returning a `Stream` or array will only the matches immediately under the current directory, in our case the `Project` directory.
 
@@ -275,7 +277,7 @@ public interface Project {
 
 NOTE: The `@Walk` only works when returning a `java.util.stream.Stream`
 
-## `@Walk` to recursively `Stream` matches N levels deep
+=== `@Walk` to recursively `Stream` matches N levels deep
 
 Under the covers `java.nio.file.Files.walk` is used to traverse, filter each matching file, and return it as a `Stream`.  If happen to know your modules are not more than say 2 or 3 directories deep, you can specify a `maxDepth` to speed up the walk.
 
@@ -292,7 +294,7 @@ public interface Project {
 }
 ----
 
-# `@Mkdir` 
+== `@Mkdir` 
 
 To force a directory to be created simply annotate it with `@Mkdir` as follows.  When the `target()` method is invoked a check will be done and the directory created lazily if it needed.
 
@@ -309,7 +311,7 @@ public interface Project {
 }
 ----
 
-# `@Mkdirs`
+== `@Mkdirs`
 
 The above `@Mkdir` instruction will still fail if the path leading up to `target` does not exist.  It's possible to create all parent directories via `@Mkdirs`
 
