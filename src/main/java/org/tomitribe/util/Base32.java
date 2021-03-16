@@ -18,8 +18,6 @@
 
 package org.tomitribe.util;
 
-import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -38,10 +36,6 @@ import java.util.Locale;
 public class Base32 {
     // singleton
 
-    private static final int SECRET_SIZE = 10;
-
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     private static final Base32 INSTANCE =
             new Base32("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"); // RFC 4648/3548
 
@@ -49,18 +43,16 @@ public class Base32 {
         return INSTANCE;
     }
 
-    // 32 alpha-numeric characters.
-    private String ALPHABET;
-    private char[] DIGITS;
-    private int MASK;
-    private int SHIFT;
-    private HashMap<Character, Integer> CHAR_MAP;
+    private final char[] DIGITS;
+    private final int MASK;
+    private final int SHIFT;
+    private final HashMap<Character, Integer> CHAR_MAP;
 
     static final String SEPARATOR = "-";
 
-    protected Base32(String alphabet) {
-        this.ALPHABET = alphabet;
-        DIGITS = ALPHABET.toCharArray();
+    protected Base32(final String alphabet) {
+        // 32 alpha-numeric characters.
+        DIGITS = alphabet.toCharArray();
         MASK = DIGITS.length - 1;
         SHIFT = Integer.numberOfTrailingZeros(DIGITS.length);
         CHAR_MAP = new HashMap<Character, Integer>();
@@ -69,7 +61,7 @@ public class Base32 {
         }
     }
 
-    public static byte[] decode(String encoded) throws DecodingException {
+    public static byte[] decode(final String encoded) throws DecodingException {
         return getInstance().decodeInternal(encoded);
     }
 
@@ -106,7 +98,6 @@ public class Base32 {
             }
         }
         // We'll ignore leftover bits for now.
-        //
         // if (next != outLength || bitsLeft >= SHIFT) {
         //  throw new DecodingException("Bits left: " + bitsLeft);
         // }
@@ -160,16 +151,4 @@ public class Base32 {
         }
     }
 
-    public static String random() {
-
-        // Allocating the buffer
-        byte[] buffer = new byte[SECRET_SIZE];
-
-        // Filling the buffer with random numbers.
-        RANDOM.nextBytes(buffer);
-
-        // Getting the key and converting it to Base32
-        byte[] secretKey = Arrays.copyOf(buffer, SECRET_SIZE);
-        return encode(secretKey);
-    }
 }

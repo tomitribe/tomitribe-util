@@ -1,20 +1,20 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+/*
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
  */
 package org.tomitribe.util;
 
@@ -267,11 +267,6 @@ public class Options {
     /**
      * Use this instead of Enum.valueOf() when you want to ensure that the
      * the enum values are case insensitive.
-     *
-     * @param enumType
-     * @param name
-     * @param <T>
-     * @return
      */
     public static <T extends Enum<T>> T valueOf(final Class<T> enumType, final String name) {
         final Map<String, T> map = new HashMap<String, T>();
@@ -282,7 +277,7 @@ public class Options {
         final T value = map.get(name.toUpperCase());
 
         // Call Enum.valueOf for the clean exception
-        if (value == null || "".equals(value)) {
+        if (value == null) {
             Enum.valueOf(enumType, name);
         }
 

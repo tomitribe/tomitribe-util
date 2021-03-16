@@ -1,20 +1,20 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+/*
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
  */
 package org.tomitribe.util;
 
@@ -73,9 +73,7 @@ public class Duration implements Comparable<Duration> {
             // skip whitespace
             for (; i < s.length(); i++) {
                 final char c = s.charAt(i);
-                if (Character.isWhitespace(c)) {
-                    // no-op
-                } else {
+                if (!Character.isWhitespace(c)) {
                     break;
                 }
             }
@@ -125,23 +123,10 @@ public class Duration implements Comparable<Duration> {
         this.unit = unit;
     }
 
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//
-//        final Duration duration = (Duration) o;
-//
-//        if (time != duration.time) return false;
-//        if (unit != duration.unit) return false;
-//
-//        return true;
-//    }
-
-    //
     private static class Normalize {
-        private long a;
-        private long b;
-        private TimeUnit base;
+        private final long a;
+        private final long b;
+        private final TimeUnit base;
 
         private Normalize(final Duration a, final Duration b) {
             this.base = lowest(a, b);
@@ -258,9 +243,7 @@ public class Duration implements Comparable<Duration> {
     @Override
     public int compareTo(final Duration that) {
         final Normalize n = new Normalize(this, that);
-        if (n.a > n.b) return 1;
-        if (n.a == n.b) return 0;
-        return -1;
+        return Long.compare(n.a, n.b);
     }
 
     private static List<String> lowercase(final Enum... units) {

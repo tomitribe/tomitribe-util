@@ -17,13 +17,14 @@
 package org.tomitribe.util;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class Longs {
 
     private Longs() {
     }
 
-    public static byte[] toBytes(long v) {
+    public static byte[] toBytes(final long v) {
         final byte[] bytes = new byte[8];
         bytes[0] = (byte) (v >>> 56);
         bytes[1] = (byte) (v >>> 48);
@@ -32,13 +33,13 @@ public class Longs {
         bytes[4] = (byte) (v >>> 24);
         bytes[5] = (byte) (v >>> 16);
         bytes[6] = (byte) (v >>> 8);
-        bytes[7] = (byte) (v >>> 0);
+        bytes[7] = (byte) (v);
         return bytes;
     }
 
-    public static long fromBytes(byte[] bytes) {
+    public static long fromBytes(final byte[] bytes) {
         if (bytes == null) throw new IllegalArgumentException("bytes are null");
-        if (bytes == null) throw new IllegalArgumentException("bytes length not 8: " + bytes.length);
+        if (bytes.length != 8) throw new IllegalArgumentException("bytes length not 8: " + bytes.length);
 
         return (((long) bytes[0] << 56) +
                 ((long) (bytes[1] & 255) << 48) +
@@ -47,7 +48,7 @@ public class Longs {
                 ((long) (bytes[4] & 255) << 24) +
                 ((bytes[5] & 255) << 16) +
                 ((bytes[6] & 255) << 8) +
-                ((bytes[7] & 255) << 0));
+                ((bytes[7] & 255)));
     }
 
     public static String toHex(final long value) {
@@ -76,11 +77,11 @@ public class Longs {
 
     public static String toBase64(final long value) {
         final byte[] bytes = toBytes(value);
-        return new String(Base64.encodeBase64(bytes), Charset.forName("UTF-8"));
+        return new String(Base64.encodeBase64(bytes), StandardCharsets.UTF_8);
     }
 
     public static long fromBase64(final String base64) {
-        final byte[] bytes = Base64.decodeBase64(base64.getBytes(Charset.forName("UTF-8")));
+        final byte[] bytes = Base64.decodeBase64(base64.getBytes(StandardCharsets.UTF_8));
         return fromBytes(bytes);
     }
 

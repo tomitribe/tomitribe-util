@@ -94,14 +94,7 @@ public class XxHash32 {
     }
 
     private int computeBody() {
-        int hash = rotateLeft(v1, 1) + rotateLeft(v2, 7) + rotateLeft(v3, 12) + rotateLeft(v4, 18);
-
-//        hash = update(hash, v1);
-//        hash = update(hash, v2);
-//        hash = update(hash, v3);
-//        hash = update(hash, v4);
-
-        return hash;
+        return rotateLeft(v1, 1) + rotateLeft(v2, 7) + rotateLeft(v3, 12) + rotateLeft(v4, 18);
     }
 
     private void updateHash(Object base, long address, int length) {
@@ -247,14 +240,7 @@ public class XxHash32 {
             remaining -= 16;
         }
 
-        int hash = rotateLeft(v1, 1) + rotateLeft(v2, 7) + rotateLeft(v3, 12) + rotateLeft(v4, 18);
-//
-//        hash = update(hash, v1);
-//        hash = update(hash, v2);
-//        hash = update(hash, v3);
-//        hash = update(hash, v4);
-
-        return hash;
+        return rotateLeft(v1, 1) + rotateLeft(v2, 7) + rotateLeft(v3, 12) + rotateLeft(v4, 18);
     }
 
     private static int mix(int current, int value) {

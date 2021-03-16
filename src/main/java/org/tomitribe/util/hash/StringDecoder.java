@@ -36,7 +36,6 @@ final class StringDecoder {
     private StringDecoder() {
     }
 
-    @SuppressWarnings("ObjectToString")
     public static String decodeString(ByteBuffer src, Charset charset) {
         CharsetDecoder decoder = getDecoder(charset);
         CharBuffer dst = CharBuffer.allocate((int) ((double) src.remaining() * decoder.maxCharsPerByte()));

@@ -1,20 +1,20 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+/*
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
  */
 package org.tomitribe.util.collect;
 
@@ -36,8 +36,8 @@ import java.util.Set;
 public class ObjectMap extends AbstractMap<String, Object> {
 
     private final Object object;
-    private Map<String, Entry<String, Object>> attributes;
-    private Set<Entry<String, Object>> entries;
+    private final Map<String, Entry<String, Object>> attributes;
+    private final Set<Entry<String, Object>> entries;
 
     public ObjectMap(final Object object) {
         this(object.getClass(), object);
@@ -87,9 +87,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
 
         // If it starts with "is" it must return boolean
         if (m.getReturnType().equals(Boolean.class)) return true;
-        if (m.getReturnType().equals(Boolean.TYPE)) return true;
-
-        return false;
+        return m.getReturnType().equals(Boolean.TYPE);
     }
 
     private Method getOptionalMethod(Class<?> clazz, String name, Class<?>... parameterTypes) {

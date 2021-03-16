@@ -21,23 +21,23 @@ public class Ints {
     private Ints() {
     }
 
-    public static byte[] toBytes(int v) {
+    public static byte[] toBytes(final int v) {
         final byte[] bytes = new byte[4];
         bytes[0] = (byte) (v >>> 24);
         bytes[1] = (byte) (v >>> 16);
         bytes[2] = (byte) (v >>> 8);
-        bytes[3] = (byte) (v >>> 0);
+        bytes[3] = (byte) (v);
         return bytes;
     }
 
-    public static int fromBytes(byte[] bytes) {
+    public static int fromBytes(final byte[] bytes) {
         if (bytes == null) throw new IllegalArgumentException("bytes are null");
-        if (bytes == null) throw new IllegalArgumentException("bytes length not 4: " + bytes.length);
+        if (bytes.length != 4) throw new IllegalArgumentException("bytes length not 4: " + bytes.length);
 
         return ((bytes[0] << 24) +
                 ((bytes[1] & 255) << 16) +
                 ((bytes[2] & 255) << 8) +
-                ((bytes[3] & 255) << 0));
+                ((bytes[3] & 255)));
     }
 
     public static String toHex(final int value) {
