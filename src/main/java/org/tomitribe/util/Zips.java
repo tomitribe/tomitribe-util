@@ -51,6 +51,11 @@ public class Zips {
     }
 
     public static void unzip(final InputStream read, final File destination,
+                             final boolean noparent) throws IOException {
+        unzip(read, destination, noparent, false, AcceptAll.INSTANCE);
+    }
+
+    public static void unzip(final InputStream read, final File destination,
                              final boolean noparent, final boolean flatten,
                              final Filter filter) throws IOException {
         try {
@@ -85,7 +90,6 @@ public class Zips {
                 }
             }
 
-            e.close();
         } catch (IOException var9) {
             throw new IOException("Unable to unzip " + read, var9);
         }

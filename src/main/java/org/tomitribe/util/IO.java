@@ -59,6 +59,12 @@ public class IO {
         // no-op
     }
 
+    public static final OutputStream IGNORE_OUTPUT = new OutputStream() {
+        @Override
+        public void write(final int b) {
+        }
+    };
+
     public static Properties readProperties(final URL resource) throws IOException {
         return readProperties(resource, new Properties());
     }
