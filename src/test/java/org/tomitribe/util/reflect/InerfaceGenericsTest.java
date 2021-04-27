@@ -19,10 +19,13 @@ package org.tomitribe.util.reflect;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 
 public class InerfaceGenericsTest {
 
@@ -42,5 +45,66 @@ public class InerfaceGenericsTest {
 
         // The type we're expecting is URI
         assertEquals(URI.class, interfaceTypes[0]);
+    }
+
+    @Test
+    public void parametersSpecifiedByParent() throws Exception {
+
+        class URIConsumer implements Consumer<URI> {
+            @Override
+            public void accept(URI uri) {
+            }
+        }
+
+        class SpecializedConsumer extends URIConsumer {
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, SpecializedConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URI.class, interfaceTypes[0]);
+    }
+
+    @Test
+    public void parametersDeferredByParent() throws Exception {
+
+        class URIConsumer<T> implements Consumer<T> {
+            @Override
+            public void accept(T uri) {
+            }
+        }
+
+        class SpecializedConsumer extends URIConsumer<URI> {
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, SpecializedConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URI.class, interfaceTypes[0]);
+    }
+
+    /**
+     * If the specified class does not implement the interface, null will
+     * be returned
+     */
+    @Test
+    public void interfaceNotImplemented() throws Exception {
+
+        class URIConsumer implements Consumer<URI> {
+            @Override
+            public void accept(URI uri) {
+            }
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Function.class, URIConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertNull(interfaceTypes);
     }
 }

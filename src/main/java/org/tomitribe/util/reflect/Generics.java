@@ -19,6 +19,7 @@
 package org.tomitribe.util.reflect;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -44,20 +45,110 @@ public class Generics {
         return getTypeParameters(method.getReturnType(), method.getGenericReturnType())[0];
     }
 
+    /**
+     * Get the generic parameter for a specific interface we implement.  The generic types
+     * of other interfaces the specified class may implement will be ignored and not reported.
+     *
+     * If the interface has multiple generic parameters then multiple types will be returned.
+     * If the interface has no generic parameters, then a zero-length array is returned.
+     * If the class does not implement this interface, null will be returned.
+     *
+     * @param intrface The interface that has generic parameters
+     * @param clazz    The class implementing the interface and specifying the generic type
+     * @return the parameter types for this interface or null if the class does not implement the interface
+     */
     public static Type[] getInterfaceTypes(final Class<?> intrface, final Class<?> clazz) {
-        final TypeVariable<? extends Class<?>>[] typeParameters = clazz.getTypeParameters();
-        final Type[] genericInterfaces = clazz.getGenericInterfaces();
-        final Type genericSuperclass = clazz.getGenericSuperclass();
+        if (!intrface.isAssignableFrom(clazz)) return null;
 
-        final Optional<Type[]> types = Stream.of(genericInterfaces)
+        { // Is this one of our immediate interfaces or super classes?
+            final Optional<Type[]> types = genericTypes(clazz)
+                    .filter(type -> type instanceof ParameterizedType)
+                    .map(ParameterizedType.class::cast)
+                    .filter(parameterizedType -> intrface.equals(parameterizedType.getRawType()))
+                    .map(ParameterizedType::getActualTypeArguments)
+                    .findFirst();
+
+            if (types.isPresent()) return types.get();
+        }
+
+        // Is our parent java.lang.Object, if so we're done
+        if (Object.class.equals(clazz.getSuperclass())) {
+            return null;
+        }
+
+        // Look at our parent for the type
+        final Type[] types = getInterfaceTypes(intrface, clazz.getSuperclass());
+        if (types == null) {
+            // Our parent does not implement this interface.  We are
+            // assignable to this interface, so it must be coming from
+            // a place we aren't yet looking.  Feature gap.
+            return null;
+        }
+
+        // The types we got back may in fact have variables in them,
+        // in which case we need resolve them.
+        for (int i = 0; i < types.length; i++) {
+            types[i] = resolveTypeVariable(types[i], clazz);
+        }
+
+        return types;
+    }
+
+    private static Stream<Type> genericTypes(Class<?> clazz) {
+        return Stream.concat(Stream.of(clazz.getGenericSuperclass()), Stream.of(clazz.getGenericInterfaces()));
+    }
+
+    private static Type resolveTypeVariable(final Type variable, final Class<?> clazz) {
+        // If this isn't actually a variable, return what they passed us
+        // as there is nothing to resolve
+        if (!(variable instanceof TypeVariable)) return variable;
+        final TypeVariable<?> typeVariable = (TypeVariable<?>) variable;
+
+        // Where was this type variable declared?
+        final GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
+
+        // At the moment we only support type variables on class definitions
+        // so if it isn't of type Class, return the unresolved variable
+        if (!(genericDeclaration instanceof Class)) return variable;
+        final Class<?> declaringClass = (Class<?>) genericDeclaration;
+
+        // Get the position of the variable in the generic signature
+        // where variable names are specified
+        final int typePosition = positionOf(variable, declaringClass.getTypeParameters());
+
+        // We cannot seem to find our type variable in the list of parameters?
+        // This shouldn't happen, but it did.  Return the unresolved variable
+        if (typePosition == -1) return variable;
+
+        // Get the actual type arguments passed from the place where the declaringClass
+        // was used by clazz in either an 'extends' or 'implements' context
+        final Type[] actualTypes = genericTypes(clazz)
                 .filter(type -> type instanceof ParameterizedType)
                 .map(ParameterizedType.class::cast)
-                .filter(parameterizedType -> intrface.equals(parameterizedType.getRawType()))
+                .filter(parameterizedType -> declaringClass.equals(parameterizedType.getRawType()))
                 .map(ParameterizedType::getActualTypeArguments)
-                .findFirst();
+                .findFirst().orElse(null);
 
+        // We cannot seem to find where the types are specified. We have a
+        // feature gap in our code. Return the unresolved variable
+        if (actualTypes == null) return variable;
 
-        return types.orElse(null);
+        // We found where the actual types were supplied, but somehow the
+        // array lengths don't line up? This shouldn't happen, but did.
+        // Return the unresolved variable
+        if (actualTypes.length != declaringClass.getTypeParameters().length) return variable;
+
+        final Type resolvedType = actualTypes[typePosition];
+
+        return resolvedType;
+    }
+
+    private static int positionOf(final Type variable, final TypeVariable<? extends Class<?>>[] typeParameters) {
+        for (int i = 0; i < typeParameters.length; i++) {
+            final TypeVariable<? extends Class<?>> typeParameter = typeParameters[i];
+            if (variable.equals(typeParameter)) return i;
+        }
+        return -1;
     }
 
     public static Type[] getTypeParameters(final Class genericClass, final Type type) {
