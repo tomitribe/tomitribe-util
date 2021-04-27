@@ -68,8 +68,13 @@ public class InerfaceGenericsTest {
         assertEquals(URI.class, interfaceTypes[0]);
     }
 
+    /**
+     * Scenario: our parent class implemented the generic interface and did
+     * not specify the actual type either.  The actual type is declared
+     * by the subclass.
+     */
     @Test
-    public void parametersDeferredByParent() throws Exception {
+    public void parametersDeferredByParent() {
 
         class URIConsumer<T> implements Consumer<T> {
             @Override
@@ -81,6 +86,35 @@ public class InerfaceGenericsTest {
         }
 
         final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, SpecializedConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URI.class, interfaceTypes[0]);
+    }
+
+    /**
+     * Scenario: our parent class implemented the generic interface and did
+     * not specify the actual type either.  The actual type is declared
+     * by the subclass.
+     */
+    @Test
+    public void parametersDeferredByParentOfParent() {
+
+        class URIConsumer<T> implements Consumer<T> {
+            @Override
+            public void accept(T uri) {
+            }
+        }
+
+        class SpecializedConsumer<V> extends URIConsumer<V> {
+        }
+
+        class VerySpecializedConsumer extends URIConsumer<URI> {
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, VerySpecializedConsumer.class);
 
         // Consumer has only one parameter, so we are expecting one type
         assertEquals(1, interfaceTypes.length);
