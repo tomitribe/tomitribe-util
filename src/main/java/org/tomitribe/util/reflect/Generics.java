@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class Generics {
 
@@ -40,6 +42,22 @@ public class Generics {
 
     public static Type getReturnType(final Method method) {
         return getTypeParameters(method.getReturnType(), method.getGenericReturnType())[0];
+    }
+
+    public static Type[] getInterfaceTypes(final Class<?> intrface, final Class<?> clazz) {
+        final TypeVariable<? extends Class<?>>[] typeParameters = clazz.getTypeParameters();
+        final Type[] genericInterfaces = clazz.getGenericInterfaces();
+        final Type genericSuperclass = clazz.getGenericSuperclass();
+
+        final Optional<Type[]> types = Stream.of(genericInterfaces)
+                .filter(type -> type instanceof ParameterizedType)
+                .map(ParameterizedType.class::cast)
+                .filter(parameterizedType -> intrface.equals(parameterizedType.getRawType()))
+                .map(ParameterizedType::getActualTypeArguments)
+                .findFirst();
+
+
+        return types.orElse(null);
     }
 
     public static Type[] getTypeParameters(final Class genericClass, final Type type) {
