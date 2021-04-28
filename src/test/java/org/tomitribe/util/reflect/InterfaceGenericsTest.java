@@ -31,7 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
-public class InerfaceGenericsTest {
+public class InterfaceGenericsTest {
 
     @Test
     public void testGetInterfaceParameter() throws Exception {
