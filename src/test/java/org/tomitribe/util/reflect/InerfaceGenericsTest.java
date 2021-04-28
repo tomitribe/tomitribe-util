@@ -16,8 +16,10 @@
  */
 package org.tomitribe.util.reflect;
 
+import java.io.File;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.net.URL;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -133,7 +135,7 @@ public class InerfaceGenericsTest {
         class URIConsumer implements ImprovedConsumer<URI> {
             @Override
             public void accept(URI uri) {
-                
+
             }
         }
 
@@ -145,7 +147,9 @@ public class InerfaceGenericsTest {
         // The type we're expecting is URI
         assertEquals(URI.class, interfaceTypes[0]);
     }
-    interface ImprovedConsumer<T> extends Consumer<T>{}
+
+    interface ImprovedConsumer<T> extends Consumer<T> {
+    }
 
 
     /**
@@ -175,7 +179,90 @@ public class InerfaceGenericsTest {
         assertEquals(URI.class, interfaceTypes[0]);
     }
 
+    /**
+     * Our parent has a type variable that maps to
+     * a type variable of one of its interfaces that
+     * itself maps to an interface
+     */
+    @Test
+    public void unrelatedGenericInterfacesAreIgnored() {
 
+        class URIConsumer implements Consumer<URI>, Function<URL, File> {
+            @Override
+            public void accept(URI uri) {
+            }
+
+            @Override
+            public File apply(URL url) {
+                return null;
+            }
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, URIConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URI.class, interfaceTypes[0]);
+    }
+
+    @Test
+    public void multipleParametersAreSupported() {
+
+        class URIConsumer implements Consumer<URI>, Function<URL, File> {
+            @Override
+            public void accept(URI uri) {
+            }
+
+            @Override
+            public File apply(URL url) {
+                return null;
+            }
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Function.class, URIConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(2, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URL.class, interfaceTypes[0]);
+        assertEquals(File.class, interfaceTypes[1]);
+    }
+
+    /**
+     * URIConsumer defines only one of the two type parameters, the other
+     * is left a type variable to be defined by the subclass.
+     *
+     * Verify we can handle resolving the variables
+     */
+    @Test
+    public void mixOfDirectlyAndIndirectlyDefinedParameters() {
+
+        class URIConsumer<I> implements Consumer<URI>, Function<I, File> {
+            @Override
+            public void accept(URI uri) {
+            }
+
+            @Override
+            public File apply(I url) {
+                return null;
+            }
+        }
+
+        class SpecializedURIConsumer extends URIConsumer<URL> {
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Function.class, SpecializedURIConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(2, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URL.class, interfaceTypes[0]);
+        assertEquals(File.class, interfaceTypes[1]);
+    }
 
     /**
      * If the specified class does not implement the interface, null will
