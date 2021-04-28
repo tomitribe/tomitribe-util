@@ -148,6 +148,34 @@ public class InerfaceGenericsTest {
     interface ImprovedConsumer<T> extends Consumer<T>{}
 
 
+    /**
+     * Our parent has a type variable that maps to
+     * a type variable of one of its interfaces that
+     * itself maps to an interface
+     */
+    @Test
+    public void interfaceInheritanceVariable() {
+
+        class URIConsumer<R> implements ImprovedConsumer<R> {
+            @Override
+            public void accept(R uri) {
+
+            }
+        }
+
+        class SpecializedConsumer extends URIConsumer<URI> {
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, SpecializedConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URI.class, interfaceTypes[0]);
+    }
+
+
 
     /**
      * If the specified class does not implement the interface, null will
