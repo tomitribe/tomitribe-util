@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -71,13 +72,14 @@ public class Generics {
             if (types.isPresent()) return types.get();
         }
 
-        // Is our parent java.lang.Object, if so we're done
-        if (Object.class.equals(clazz.getSuperclass())) {
-            return null;
-        }
+        // Look at our parent and interface parents for the type
+        final Type[] types = declaredTypes(clazz)
+                .filter(Objects::nonNull)
+                .map(aClass -> getInterfaceTypes(intrface, aClass))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
-        // Look at our parent for the type
-        final Type[] types = getInterfaceTypes(intrface, clazz.getSuperclass());
         if (types == null) {
             // Our parent does not implement this interface.  We are
             // assignable to this interface, so it must be coming from
@@ -96,6 +98,10 @@ public class Generics {
 
     private static Stream<Type> genericTypes(Class<?> clazz) {
         return Stream.concat(Stream.of(clazz.getGenericSuperclass()), Stream.of(clazz.getGenericInterfaces()));
+    }
+
+    private static Stream<Class<?>> declaredTypes(Class<?> clazz) {
+        return Stream.concat(Stream.of(clazz.getSuperclass()), Stream.of(clazz.getInterfaces()));
     }
 
     private static Type resolveTypeVariable(final Type variable, final Class<?> clazz) {

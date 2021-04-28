@@ -111,7 +111,7 @@ public class InerfaceGenericsTest {
         class SpecializedConsumer<V> extends URIConsumer<V> {
         }
 
-        class VerySpecializedConsumer extends URIConsumer<URI> {
+        class VerySpecializedConsumer extends SpecializedConsumer<URI> {
         }
 
         final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, VerySpecializedConsumer.class);
@@ -122,6 +122,32 @@ public class InerfaceGenericsTest {
         // The type we're expecting is URI
         assertEquals(URI.class, interfaceTypes[0]);
     }
+
+    /**
+     * The interface we are after is coming to us from another
+     * interface we implement.  Let's ensure we can resolve it.
+     */
+    @Test
+    public void interfaceInheritance() {
+
+        class URIConsumer implements ImprovedConsumer<URI> {
+            @Override
+            public void accept(URI uri) {
+                
+            }
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, URIConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertEquals(URI.class, interfaceTypes[0]);
+    }
+    interface ImprovedConsumer<T> extends Consumer<T>{}
+
+
 
     /**
      * If the specified class does not implement the interface, null will
