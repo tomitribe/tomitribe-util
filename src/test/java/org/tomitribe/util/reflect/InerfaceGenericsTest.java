@@ -17,6 +17,7 @@
 package org.tomitribe.util.reflect;
 
 import java.io.File;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
@@ -27,6 +28,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class InerfaceGenericsTest {
@@ -262,6 +264,61 @@ public class InerfaceGenericsTest {
         // The type we're expecting is URI
         assertEquals(URL.class, interfaceTypes[0]);
         assertEquals(File.class, interfaceTypes[1]);
+    }
+
+    @Test
+    public void typeParameterValueHasTypeParameter() {
+
+        class FunctionConsumer implements Consumer<Function<URL, File>> {
+            @Override
+            public void accept(Function<URL, File> urlFileFunction) {
+                
+            }
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, FunctionConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // The type we're expecting is URI
+        assertTrue(interfaceTypes[0] instanceof ParameterizedType);
+
+        final ParameterizedType functionType = (ParameterizedType) interfaceTypes[0];
+
+        assertEquals(Function.class, functionType.getRawType());
+        assertEquals(URL.class, functionType.getActualTypeArguments()[0]);
+        assertEquals(File.class, functionType.getActualTypeArguments()[1]);
+    }
+
+    @Test
+    public void canResolveTypesOfParameterizedType() {
+
+        class FunctionConsumer<V> implements Consumer<Function<V, File>> {
+            @Override
+            public void accept(Function<V, File> urlFileFunction) {
+
+            }
+        }
+
+        class SpecializedFunctionConsumer extends FunctionConsumer<URL> {
+            @Override
+            public void accept(Function<URL, File> urlFileFunction) {
+
+            }
+        }
+
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Consumer.class, SpecializedFunctionConsumer.class);
+
+        // Consumer has only one parameter, so we are expecting one type
+        assertEquals(1, interfaceTypes.length);
+
+        // Function is a parameterized type
+        assertTrue(interfaceTypes[0] instanceof ParameterizedType);
+        final ParameterizedType functionType = (ParameterizedType) interfaceTypes[0];
+        assertEquals(Function.class, functionType.getRawType());
+        assertEquals(URL.class, functionType.getActualTypeArguments()[0]);
+        assertEquals(File.class, functionType.getActualTypeArguments()[1]);
     }
 
     /**

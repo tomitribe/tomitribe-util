@@ -91,17 +91,63 @@ public class Generics {
         // in which case we need resolve them.
         for (int i = 0; i < types.length; i++) {
             types[i] = resolveTypeVariable(types[i], clazz);
+            types[i] = resolveParameterizedTypes(types[i], clazz);
         }
 
         return types;
     }
 
-    private static Stream<Type> genericTypes(Class<?> clazz) {
-        return Stream.concat(Stream.of(clazz.getGenericSuperclass()), Stream.of(clazz.getGenericInterfaces()));
+    private static Type resolveParameterizedTypes(final Type parameterized, final Class<?> clazz) {
+        // If this isn't actually a variable, return what they passed us
+        // as there is nothing to resolve
+        if (!(parameterized instanceof ParameterizedType)) return parameterized;
+        final ParameterizedType parameterizedType = (ParameterizedType) parameterized;
+
+        final Type[] types = parameterizedType.getActualTypeArguments();
+        boolean modified = false;
+        // The types we got back may in fact have variables in them,
+        // in which case we need resolve them.
+        for (int i = 0; i < types.length; i++) {
+            final Type original = types[i];
+            types[i] = resolveTypeVariable(types[i], clazz);
+            types[i] = resolveParameterizedTypes(types[i], clazz);
+            if (!original.equals(types[i])) modified = true;
+        }
+
+        //  We didn't have any work to do
+        if (!modified) return parameterized;
+
+        return new ResolvedParameterizedType(parameterizedType, types);
     }
 
-    private static Stream<Class<?>> declaredTypes(Class<?> clazz) {
-        return Stream.concat(Stream.of(clazz.getSuperclass()), Stream.of(clazz.getInterfaces()));
+    private static class ResolvedParameterizedType implements ParameterizedType {
+        private final ParameterizedType parameterizedType;
+        private final Type[] actualTypesResolved;
+
+        public ResolvedParameterizedType(final ParameterizedType parameterizedType, final Type[] actualTypes) {
+            this.parameterizedType = parameterizedType;
+            this.actualTypesResolved = actualTypes;
+        }
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return actualTypesResolved;
+        }
+
+        @Override
+        public Type getRawType() {
+            return parameterizedType.getRawType();
+        }
+
+        @Override
+        public Type getOwnerType() {
+            return parameterizedType.getOwnerType();
+        }
+
+        @Override
+        public String getTypeName() {
+            return parameterizedType.getTypeName();
+        }
     }
 
     private static Type resolveTypeVariable(final Type variable, final Class<?> clazz) {
@@ -147,6 +193,14 @@ public class Generics {
         final Type resolvedType = actualTypes[typePosition];
 
         return resolvedType;
+    }
+
+    private static Stream<Type> genericTypes(Class<?> clazz) {
+        return Stream.concat(Stream.of(clazz.getGenericSuperclass()), Stream.of(clazz.getGenericInterfaces()));
+    }
+
+    private static Stream<Class<?>> declaredTypes(Class<?> clazz) {
+        return Stream.concat(Stream.of(clazz.getSuperclass()), Stream.of(clazz.getInterfaces()));
     }
 
     private static int positionOf(final Type variable, final TypeVariable<? extends Class<?>>[] typeParameters) {
