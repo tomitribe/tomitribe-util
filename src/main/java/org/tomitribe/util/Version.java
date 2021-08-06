@@ -18,7 +18,9 @@
  */
 package org.tomitribe.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Version implements Comparable<Version> {
     private final String version;
@@ -66,10 +68,22 @@ public class Version implements Comparable<Version> {
                 .replaceAll("[.+_ a-zA-Z-]+$", ""); // remove split chars from the end
 
         final String[] split = input.split("[.+_ a-zA-Z-]+");
-        final int[] components = new int[split.length];
+
+        final List<Integer> componentList = new ArrayList<>();
+
         for (int i = 0; i < split.length; i++) {
-            components[i] = Integer.parseInt(split[i]);
+            try {
+                componentList.add(Integer.parseInt(split[i]));
+            } catch (NumberFormatException e) {
+                // ignore the component if it isn't a number
+            }
         }
+
+        int[] components = new int[componentList.size()];
+        for (int i = 0; i < componentList.size(); i++) {
+            components[i] = componentList.get(i);
+        }
+        
         return new Version(versionOutput, components);
     }
 
