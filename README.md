@@ -1,4 +1,4 @@
-Tomitribe Util
+Tomitribe Util.
 ==============
 
 A cornucopia of useful utility classes.
