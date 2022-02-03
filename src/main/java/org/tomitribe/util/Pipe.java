@@ -20,6 +20,7 @@ package org.tomitribe.util;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
@@ -33,10 +34,11 @@ public final class Pipe implements Runnable {
         this.out = out;
     }
 
-    public static void pipe(final Process process) {
-        pipe(process.getInputStream(), System.out);
-        pipe(process.getErrorStream(), System.err);
-        //        pipe(System.in, process.getOutputStream());
+    public static Future<List<Pipe>> pipe(final Process process) {
+        return Futures.of(
+                pipe(process.getInputStream(), System.out),
+                pipe(process.getErrorStream(), System.err)
+        );
     }
 
     public static Future<Pipe> pipe(final InputStream in, final OutputStream out) {
