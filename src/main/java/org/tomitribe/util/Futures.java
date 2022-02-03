@@ -25,6 +25,9 @@ import java.util.concurrent.TimeoutException;
 
 public class Futures {
 
+    private Futures() {
+    }
+
     public static <V> Future<List<V>> of(final Future<V>... futures) {
         return new FutureList<V>(Arrays.asList(futures));
     }
