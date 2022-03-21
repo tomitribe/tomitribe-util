@@ -53,6 +53,8 @@ public class ObjectMap extends AbstractMap<String, Object> {
         attributes = new HashMap<String, Entry<String, Object>>();
 
         for (final Field field : clazz.getFields()) {
+            if (field.isEnumConstant()) continue;
+            if (Modifier.isStatic(field.getModifiers())) continue;
             final FieldEntry entry = new FieldEntry(field);
             attributes.put(entry.getKey(), entry);
         }
@@ -73,6 +75,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
 
     private boolean isValidGetter(Method m) {
         if (Modifier.isAbstract(m.getModifiers())) return false;
+        if (Modifier.isStatic(m.getModifiers())) return false;
 
         // Void methods are not valid getters
         if (Void.TYPE.equals(m.getReturnType())) return false;

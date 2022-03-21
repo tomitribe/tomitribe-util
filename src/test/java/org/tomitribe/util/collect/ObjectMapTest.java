@@ -160,6 +160,21 @@ public class ObjectMapTest extends TestCase {
 
     }
 
+    public void testHasStatics() {
+        final HasStatics hasStatics = new HasStatics();
+        hasStatics.setRed("255");
+        hasStatics.setGreen("155");
+        hasStatics.setBlue("0");
+
+        final ObjectMap map = new ObjectMap(hasStatics);
+        assertEquals("255", map.get("red"));
+        assertEquals("155", map.get("green"));
+        assertEquals("0", map.get("blue"));
+
+        final String keys = map.keySet().stream().sorted().reduce((s, s2) -> s + ", " + s2).get();
+        assertEquals("blue, class, green, red", keys);
+    }
+
     public static class BooleanIsGetter {
 
         private boolean orange;
@@ -394,4 +409,49 @@ public class ObjectMapTest extends TestCase {
             this.myboolean = myboolean;
         }
     }
+
+    public static class HasStatics {
+        private static final String IGNORE = "ignore";
+        private static String ALSO_IGNORE = "also ignore";
+        private String red;
+        private String green;
+        private String blue;
+
+        public static String getIgnore() {
+            return IGNORE;
+        }
+
+        public static String getAlsoIgnore() {
+            return ALSO_IGNORE;
+        }
+
+        public static void setAlsoIgnore(final String alsoIgnore) {
+            ALSO_IGNORE = alsoIgnore;
+        }
+
+        public String getRed() {
+            return red;
+        }
+
+        public void setRed(final String red) {
+            this.red = red;
+        }
+
+        public String getGreen() {
+            return green;
+        }
+
+        public void setGreen(final String green) {
+            this.green = green;
+        }
+
+        public String getBlue() {
+            return blue;
+        }
+
+        public void setBlue(final String blue) {
+            this.blue = blue;
+        }
+    }
+
 }
