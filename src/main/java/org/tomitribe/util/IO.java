@@ -235,6 +235,12 @@ public class IO {
         }
     }
 
+    public static void copy(final String contents, final OutputStream to) throws IOException {
+        try (InputStream read = read(contents)) {
+            copy(read, to);
+        }
+    }
+
     public static void copy(final InputStream from, final File to) throws IOException {
         try (OutputStream write = write(to)) {
             copy(from, write);
@@ -250,6 +256,18 @@ public class IO {
     public static void copy(final InputStream from, final File to, final boolean append) throws IOException {
         try (OutputStream write = write(to, append)) {
             copy(from, write);
+        }
+    }
+
+    public static void copy(final String contents, final File to) throws IOException {
+        try (OutputStream write = write(to)) {
+            copy(contents, write);
+        }
+    }
+
+    public static void copy(final String contents, final File to, final boolean append) throws IOException {
+        try (OutputStream write = write(to, append)) {
+            copy(contents, write);
         }
     }
 
