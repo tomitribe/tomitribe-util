@@ -32,8 +32,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class ObjectMap extends AbstractMap<String, Object> {
+    private static final Pattern GETTER_PREFIX = Pattern.compile("(get|is|find)");
+    private static final Method IS_RECORD;
+    static {
+        Method isRecord = null;
+        try {
+            isRecord = Class.class.getMethod("isRecord");
+        } catch (NoSuchMethodException e) {
+            // no-op
+        }
+        IS_RECORD = isRecord;
+    }
 
     private final Object object;
     private final Map<String, Entry<String, Object>> attributes;
@@ -52,6 +64,31 @@ public class ObjectMap extends AbstractMap<String, Object> {
 
         attributes = new HashMap<String, Entry<String, Object>>();
 
+        final boolean record = isRecord(clazz);
+        if (!record) {
+            initPOJO(clazz);
+        } else {
+            initRecord(clazz);
+        }
+
+        entries = Collections.unmodifiableSet(new HashSet<Entry<String, Object>>(attributes.values()));
+    }
+
+    private void initRecord(final Class<?> clazz) {
+        for (final Field field : clazz.getDeclaredFields()) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            try {
+                attributes.put(field.getName(), new MethodEntry(
+                        "set" + field.getName(), clazz.getMethod(field.getName()), null));
+            } catch (final NoSuchMethodException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    private void initPOJO(final Class<?> clazz) {
         for (final Field field : clazz.getFields()) {
             if (field.isEnumConstant()) continue;
             if (Modifier.isStatic(field.getModifiers())) continue;
@@ -62,15 +99,24 @@ public class ObjectMap extends AbstractMap<String, Object> {
         for (final Method getter : clazz.getMethods()) {
             if (!isValidGetter(getter)) continue;
 
-            final String name = getter.getName().replaceFirst("(get|is|find)", "set");
+            final String name = GETTER_PREFIX.matcher(getter.getName()).replaceFirst("set");
             final Method setter = getOptionalMethod(clazz, name, getter.getReturnType());
 
             final MethodEntry entry = new MethodEntry(name, getter, setter);
 
             attributes.put(entry.getKey(), entry);
         }
+    }
 
-        entries = Collections.unmodifiableSet(new HashSet<Entry<String, Object>>(attributes.values()));
+    private boolean isRecord(final Class<?> clazz) {
+        if (IS_RECORD == null) {
+            return false;
+        }
+        try {
+            return Boolean.TRUE.equals(IS_RECORD.invoke(clazz));
+        } catch (final IllegalAccessException | InvocationTargetException e) {
+            return false;
+        }
     }
 
     private boolean isValidGetter(Method m) {
