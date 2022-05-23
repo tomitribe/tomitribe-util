@@ -27,13 +27,14 @@ import java.beans.PropertyEditorManager;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.asList;
@@ -97,6 +98,15 @@ public class ConverterTest extends Assert {
 
         final Object o = Converter.convert("horas", TimeUnit.class, "time");
         assertEquals(TimeUnit.HOURS, o);
+    }
+
+    @Test
+    public void testPathEditor() {
+        final PropertyEditor editor = Editors.get(Path.class);
+        assertNotNull(editor);
+
+        final Object o = Converter.convert("my/path/and/file.txt", Path.class, "foo");
+        assertEquals(Paths.get("my/path/and/file.txt"), o);
     }
 
     public static class ParameterizedTypeImpl implements ParameterizedType {
