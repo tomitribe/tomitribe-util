@@ -23,12 +23,15 @@ import java.beans.PropertyEditor;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +42,9 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Can convert anything with a:
@@ -177,6 +183,34 @@ public class Converter {
             }
         }
 
+        final Function<Executable, Integer> types = method -> {
+            final Class<?> arg = method.getParameterTypes()[0];
+            if (String.class.equals(arg)) return 0;
+            if (CharSequence.class.equals(arg)) return 1;
+            return 2;
+        };
+
+
+        final List<Constructor<?>> constructors = Stream.of(type.getConstructors())
+                .filter(constructor -> constructor.getParameterTypes().length == 1)
+                .filter(constructor -> isStringAssignable(constructor.getParameterTypes()[0]))
+                .sorted(Comparator.comparing(types))
+                .collect(Collectors.toList());
+
+        if (constructors.size() > 0) {
+            try {
+                final Constructor<?> constructor = constructors.get(0);
+                return constructor.newInstance(value);
+            } catch (InvocationTargetException e) {
+                final Throwable cause = e.getCause();
+                final String message = String.format("Cannot convert string '%s' to %s. Cause: %s", value, type, cause.getMessage());
+                throw new IllegalArgumentException(message, cause);
+            } catch (Exception e) {
+                final String message = String.format("Cannot convert string '%s' to %s. Cause: %s", value, type, e.getMessage());
+                throw new IllegalArgumentException(message, e);
+            }
+        }
+
         try {
             final Constructor<?> constructor = type.getConstructor(String.class);
             return constructor.newInstance(value);
@@ -187,13 +221,28 @@ public class Converter {
             throw new IllegalArgumentException(message, e);
         }
 
-        for (final Method method : type.getMethods()) {
-            if (!Modifier.isStatic(method.getModifiers())) continue;
-            if (!Modifier.isPublic(method.getModifiers())) continue;
-            if (!method.getReturnType().equals(type)) continue;
-            if (method.getParameterTypes().length != 1) continue;
-            if (!method.getParameterTypes()[0].equals(String.class)) continue;
+        try {
+            final Constructor<?> constructor = type.getConstructor(CharSequence.class);
+            return constructor.newInstance(value);
+        } catch (final NoSuchMethodException e) {
+            // fine
+        } catch (final Exception e) {
+            final String message = String.format("Cannot convert string '%s' to %s.", value, type);
+            throw new IllegalArgumentException(message, e);
+        }
 
+        final List<Method> methods = Stream.of(type.getMethods())
+                .filter(method -> Modifier.isStatic(method.getModifiers()))
+                .filter(method -> Modifier.isPublic(method.getModifiers()))
+                .filter(method -> method.getParameterTypes().length == 1)
+                .filter(method -> method.getReturnType().equals(type))
+                .filter(method -> isStringAssignable(method.getParameterTypes()[0]))
+                .sorted(Comparator.comparing(Method::getName))
+                .sorted(Comparator.comparing(types))
+                .collect(Collectors.toList());
+
+        if (methods.size() > 0) {
+            final Method method = methods.get(0);
             try {
                 return method.invoke(null, value);
             } catch (final Exception e) {
@@ -203,6 +252,12 @@ public class Converter {
         }
 
         return null;
+    }
+
+    private static boolean isStringAssignable(final Class<?> t) {
+        if (String.class.equals(t)) return true;
+        if (CharSequence.class.equals(t)) return true;
+        return false;
     }
 
     private static Class<?> boxPrimitive(final Class<?> targetType) {

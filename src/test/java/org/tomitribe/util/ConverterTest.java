@@ -29,6 +29,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,6 +92,12 @@ public class ConverterTest extends Assert {
     }
 
     @Test
+    public void testLocalDate() throws Exception {
+        final Object o = Converter.convert("1976-03-30", LocalDate.class, "time");
+        assertEquals(LocalDate.of(1976, 3, 30), o);
+    }
+
+    @Test
     public void testEnumEditor() throws Exception {
         PropertyEditorManager.registerEditor(TimeUnit.class, TimeUnitEditor.class);
         final PropertyEditor editor = Editors.get(TimeUnit.class);
@@ -107,6 +114,51 @@ public class ConverterTest extends Assert {
 
         final Object o = Converter.convert("my/path/and/file.txt", Path.class, "foo");
         assertEquals(Paths.get("my/path/and/file.txt"), o);
+    }
+
+    /**
+     * Ensure string constructors are favored over charsequence
+     */
+    @Test
+    public void charSequenceConstructor() {
+        final Object o = Converter.convert("value", Purple.class, "foo");
+        assertEquals("Purple{value='CharSequence: value'}", o.toString());
+    }
+
+    /**
+     * Ensure string constructors are favored over charsequence
+     */
+    @Test
+    public void charSequenceFactory() {
+        final Object o = Converter.convert("value", Brown.class, "foo");
+        assertEquals("Brown{value='CharSequence: value'}", o.toString());
+    }
+
+    /**
+     * Ensure string constructors are favored over charsequence
+     */
+    @Test
+    public void stringConstructorWins() {
+        final Object o = Converter.convert("value", Orange.class, "foo");
+        assertEquals("Orange{value='String: value'}", o.toString());
+    }
+
+    /**
+     * Ensure string constructors are favored over charsequence
+     */
+    @Test
+    public void stringFactoryWins() {
+        final Object o = Converter.convert("value", Red.class, "foo");
+        assertEquals("Red{value='String: value'}", o.toString());
+    }
+
+    /**
+     * Ensure factories are sorted alphabetically
+     */
+    @Test
+    public void sortedFactories() {
+        final Object o = Converter.convert("abc", Blue.class, "foo");
+        assertEquals("Blue{value='one: abc'}", o.toString());
     }
 
     public static class ParameterizedTypeImpl implements ParameterizedType {
@@ -239,4 +291,122 @@ public class ConverterTest extends Assert {
             return TimeUnit.valueOf(text);
         }
     }
+
+    public static class Orange {
+        private final String value;
+
+        public Orange(final CharSequence charSequence) {
+            this.value = "CharSequence: " + charSequence.toString();
+        }
+
+        public Orange(final String string) {
+            this.value = "String: " + string;
+        }
+
+        @Override
+        public String toString() {
+            return "Orange{" +
+                    "value='" + value + '\'' +
+                    '}';
+        }
+    }
+
+
+    public static class Red {
+        private final String value;
+
+        private Red(final String value) {
+            this.value = value;
+        }
+
+        public static Red parse(final CharSequence charSequence) {
+            return new Red("CharSequence: " + charSequence.toString());
+        }
+
+        public static Red parse(final String string) {
+            return new Red("String: " + string);
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "Red{" +
+                    "value='" + value + '\'' +
+                    '}';
+        }
+    }
+
+    public static class Blue {
+        private final String value;
+
+        private Blue(final String value) {
+            this.value = value;
+        }
+
+        public static Blue two(final String string) {
+            return new Blue("two: " + string);
+        }
+
+        public static Blue one(final String string) {
+            return new Blue("one: " + string);
+        }
+
+        public static Blue three(final String string) {
+            return new Blue("three: " + string);
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "Blue{" +
+                    "value='" + value + '\'' +
+                    '}';
+        }
+    }
+
+    public static class Purple {
+        private final String value;
+
+        public Purple(final CharSequence charSequence) {
+            this.value = "CharSequence: " + charSequence.toString();
+        }
+
+        @Override
+        public String toString() {
+            return "Purple{" +
+                    "value='" + value + '\'' +
+                    '}';
+        }
+    }
+
+    public static class Brown {
+        private final String value;
+
+        private Brown(final String value) {
+            this.value = value;
+        }
+
+        public static Brown parse(final CharSequence charSequence) {
+            return new Brown("CharSequence: " + charSequence.toString());
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "Brown{" +
+                    "value='" + value + '\'' +
+                    '}';
+        }
+    }
+
+
 }
