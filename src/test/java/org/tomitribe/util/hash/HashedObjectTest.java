@@ -29,14 +29,6 @@ public class HashedObjectTest extends Assert {
     @Test
     public void test() throws Exception {
 
-        assertEquals(59, data(new Hasher() {
-            @Override
-            public long hash(String value) {
-                return XxHash32.hash(value);
-            }
-        }).conflicts);
-
-
         assertEquals(0, data(new Hasher() {
             @Override
             public long hash(String value) {

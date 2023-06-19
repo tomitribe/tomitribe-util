@@ -15,12 +15,9 @@ package org.tomitribe.util.hash;
 
 import sun.misc.Unsafe;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
+import java.nio.Buffer;
+import java.nio.ByteOrder;
 
 import static sun.misc.Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
 import static sun.misc.Unsafe.ARRAY_BYTE_INDEX_SCALE;
@@ -32,9 +29,13 @@ import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
 
 final class JvmUtils {
     static final Unsafe unsafe;
-    static final MethodHandle newByteBuffer;
+    private static final long ADDRESS_OFFSET;
 
     static {
+        if (!ByteOrder.LITTLE_ENDIAN.equals(ByteOrder.nativeOrder())) {
+            throw new UnsupportedOperationException("Slice only supports little endian machines.");
+        }
+
         try {
             // fetch theUnsafe object
             Field field = Unsafe.class.getDeclaredField("theUnsafe");
@@ -53,23 +54,25 @@ final class JvmUtils {
             assertArrayIndexScale("Float", ARRAY_FLOAT_INDEX_SCALE, 4);
             assertArrayIndexScale("Double", ARRAY_DOUBLE_INDEX_SCALE, 8);
 
-            // fetch a method handle for the hidden constructor for DirectByteBuffer
-            Class<?> directByteBufferClass = ClassLoader.getSystemClassLoader().loadClass("java.nio.DirectByteBuffer");
-            Constructor<?> constructor = directByteBufferClass.getDeclaredConstructor(long.class, int.class, Object.class);
-            constructor.setAccessible(true);
-            newByteBuffer = MethodHandles.lookup().unreflectConstructor(constructor)
-                    .asType(MethodType.methodType(ByteBuffer.class, long.class, int.class, Object.class));
-        } catch (Exception e) {
+            // fetch the address field for direct buffers
+            ADDRESS_OFFSET = unsafe.objectFieldOffset(Buffer.class.getDeclaredField("address"));
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void assertArrayIndexScale(final String name, int actualIndexScale, int expectedIndexScale) {
+    private static void assertArrayIndexScale(String name, int actualIndexScale, int expectedIndexScale) {
         if (actualIndexScale != expectedIndexScale) {
-            throw new IllegalStateException(name + " array index scale must be " + expectedIndexScale + ", but is " + actualIndexScale);
+            throw new IllegalStateException(
+                name + " array index scale must be " + expectedIndexScale + ", but is " + actualIndexScale);
         }
     }
 
-    private JvmUtils() {
+    static long bufferAddress(Buffer buffer) {
+        Preconditions.checkArgument(buffer.isDirect(), "buffer is not direct");
+
+        return unsafe.getLong(buffer, ADDRESS_OFFSET);
     }
+
+    private JvmUtils() {}
 }
