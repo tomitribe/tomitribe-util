@@ -9,5 +9,5 @@ find . -path "*/src/main/resources/META-INF/services/javax*" | sed -e 'p;s/javax
 mvn -ntp build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.nextMajorVersion}.0.0-SNAPSHOT
 
 # Update javax dependencies to use their jakarta equivalent
-mvn -ntp versions:update-property -Dproperty=jakarta.xml.bind-api.version -DnewVersion=4.0.0
-mvn -ntp versions:update-property -Dproperty=jaxb-runtime.version -DnewVersion=4.0.2
+# mvn -ntp versions:update-property -Dproperty=jakarta.xml.bind-api.version -DnewVersion=4.0.0
+# mvn -ntp versions:update-property -Dproperty=jaxb-runtime.version -DnewVersion=4.0.2
