@@ -196,11 +196,11 @@ public abstract class SliceOutput
         throws IOException;
 
     /**
-     * Fills this buffer with <tt>NUL (0x00)</tt> starting at the current
+     * Fills this buffer with <code>NUL (0x00)</code> starting at the current
      * {@code writerIndex} and increases the {@code writerIndex} by the
      * specified {@code length}.
      *
-     * @param length the number of <tt>NUL</tt>s to write to the buffer
+     * @param length the number of <code>NUL</code>s to write to the buffer
      * @throws IndexOutOfBoundsException if {@code length} is greater than {@code this.writableBytes}
      */
     public void writeZero(int length) {
