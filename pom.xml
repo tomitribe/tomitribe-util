@@ -28,6 +28,10 @@
 
   <artifactId>tomitribe-util</artifactId>
   <packaging>jar</packaging>
+  <properties>
+    <jakarta.xml.bind-api.version>2.3.3</jakarta.xml.bind-api.version>
+    <jaxb-runtime.version>2.3.8</jaxb-runtime.version>
+  </properties>
   <version>1.4.6-SNAPSHOT</version>
   <name>Tomitribe :: Util</name>
 
@@ -42,7 +46,7 @@
     <dependency>
       <groupId>jakarta.xml.bind</groupId>
       <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>2.3.3</version>
+      <version>${jakarta.xml.bind-api.version}</version>
     </dependency>
     <dependency>
       <groupId>org.openjdk.jol</groupId>
@@ -60,7 +64,7 @@
     <dependency>
       <groupId>org.glassfish.jaxb</groupId>
       <artifactId>jaxb-runtime</artifactId>
-      <version>2.3.8</version>
+      <version>${jaxb-runtime.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
