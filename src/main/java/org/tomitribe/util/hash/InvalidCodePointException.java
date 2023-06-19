@@ -1,11 +1,9 @@
 /*
- * Copyright (C) 2007 The Guava Authors
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,19 +13,18 @@
  */
 package org.tomitribe.util.hash;
 
-// forked from com.google.common.base.Preconditions
-final class Preconditions {
-    private Preconditions() {}
+import static java.lang.Integer.toHexString;
 
-    public static void checkArgument(boolean expression, String errorMessage) {
-        if (!expression) {
-            throw new IllegalArgumentException(errorMessage);
-        }
+public class InvalidCodePointException
+    extends IllegalArgumentException {
+    private final int codePoint;
+
+    public InvalidCodePointException(int codePoint) {
+        super("Invalid code point 0x" + toHexString(codePoint).toUpperCase());
+        this.codePoint = codePoint;
     }
 
-    public static void verify(boolean condition) {
-        if (!condition) {
-            throw new AssertionError();
-        }
+    public int getCodePoint() {
+        return codePoint;
     }
 }

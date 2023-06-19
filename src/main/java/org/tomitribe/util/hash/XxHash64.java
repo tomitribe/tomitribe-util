@@ -16,25 +16,20 @@ package org.tomitribe.util.hash;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static org.tomitribe.util.hash.JvmUtils.unsafe;
 import static java.lang.Long.rotateLeft;
 import static java.lang.Math.min;
-import static org.tomitribe.util.hash.JvmUtils.unsafe;
-import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
+import static java.util.Objects.checkFromIndexSize;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
-/**
- * Lifted from Airlift Slice
- *
- * @author Martin Traverso
- */
-public class XxHash64 {
-    private final static long PRIME64_1 = 0x9E3779B185EBCA87L;
-    private final static long PRIME64_2 = 0xC2B2AE3D27D4EB4FL;
-    private final static long PRIME64_3 = 0x165667B19E3779F9L;
-    private final static long PRIME64_4 = 0x85EBCA77C2b2AE63L;
-    private final static long PRIME64_5 = 0x27D4EB2F165667C5L;
+public final class XxHash64 {
+    private static final long PRIME64_1 = 0x9E3779B185EBCA87L;
+    private static final long PRIME64_2 = 0xC2B2AE3D27D4EB4FL;
+    private static final long PRIME64_3 = 0x165667B19E3779F9L;
+    private static final long PRIME64_4 = 0x85EBCA77C2b2AE63L;
+    private static final long PRIME64_5 = 0x27D4EB2F165667C5L;
 
-    private final static long DEFAULT_SEED = 0;
+    private static final long DEFAULT_SEED = 0;
 
     private final long seed;
 
@@ -66,7 +61,7 @@ public class XxHash64 {
     }
 
     public XxHash64 update(byte[] data, int offset, int length) {
-        checkPositionIndexes(offset, offset + length, data.length);
+        checkFromIndexSize(offset, length, data.length);
         updateHash(data, ARRAY_BYTE_BASE_OFFSET + offset, length);
         return this;
     }
@@ -76,7 +71,7 @@ public class XxHash64 {
     }
 
     public XxHash64 update(Slice data, int offset, int length) {
-        checkPositionIndexes(0, offset + length, data.length());
+        checkFromIndexSize(offset, length, data.length());
         updateHash(data.getBase(), data.getAddress() + offset, length);
         return this;
     }
@@ -151,7 +146,11 @@ public class XxHash64 {
     }
 
     public static long hash(long value) {
-        long hash = DEFAULT_SEED + PRIME64_5 + SizeOf.SIZE_OF_LONG;
+        return hash(DEFAULT_SEED, value);
+    }
+
+    public static long hash(long seed, long value) {
+        long hash = seed + PRIME64_5 + SizeOf.SIZE_OF_LONG;
         hash = updateTail(hash, value);
         hash = finalShuffle(hash);
 
@@ -162,12 +161,13 @@ public class XxHash64 {
         return hash(Slices.utf8Slice(data));
     }
 
-    public static long hash(InputStream in) throws IOException {
+    public static long hash(InputStream in)
+        throws IOException {
         return hash(DEFAULT_SEED, in);
     }
 
     public static long hash(long seed, InputStream in)
-            throws IOException {
+        throws IOException {
         XxHash64 hash = new XxHash64(seed);
         byte[] buffer = new byte[8192];
         while (true) {
@@ -193,13 +193,12 @@ public class XxHash64 {
     }
 
     public static long hash(long seed, Slice data, int offset, int length) {
-        checkPositionIndexes(0, offset + length, data.length());
+        checkFromIndexSize(offset, length, data.length());
 
         Object base = data.getBase();
         final long address = data.getAddress() + offset;
 
         long hash;
-
         if (length >= 32) {
             hash = updateBody(seed, base, address, length);
         } else {
@@ -278,7 +277,7 @@ public class XxHash64 {
     }
 
     private static long updateTail(long hash, int value) {
-        long unsigned = value & 0xFFFFFFFFL;
+        long unsigned = value & 0xFFFF_FFFFL;
         long temp = hash ^ (unsigned * PRIME64_1);
         return rotateLeft(temp, 23) * PRIME64_2 + PRIME64_3;
     }
