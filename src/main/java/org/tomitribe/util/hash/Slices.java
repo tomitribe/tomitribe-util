@@ -23,11 +23,11 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.Charset;
 
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.tomitribe.util.hash.JvmUtils.getAddress;
-import static org.tomitribe.util.hash.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
+import static org.tomitribe.util.hash.JvmUtils.bufferAddress;
 import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
-import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
 public final class Slices {
     /**
@@ -35,8 +35,11 @@ public final class Slices {
      */
     public static final Slice EMPTY_SLICE = new Slice();
 
-    private static final int SLICE_ALLOC_THRESHOLD = 524_288; // 2^19
-    private static final double SLICE_ALLOW_SKEW = 1.25; // must be > 1!
+    // see java.util.ArrayList for an explanation
+    static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+    static final int SLICE_ALLOC_THRESHOLD = 524_288; // 2^19
+    static final double SLICE_ALLOW_SKEW = 1.25; // must be > 1!
 
     private Slices() {
     }
@@ -56,12 +59,14 @@ public final class Slices {
         } else {
             newCapacity = existingSlice.length();
         }
-        int minNewCapacity = minWritableBytes;
-        while (newCapacity < minNewCapacity) {
+        while (newCapacity < minWritableBytes) {
             if (newCapacity < SLICE_ALLOC_THRESHOLD) {
                 newCapacity <<= 1;
             } else {
-                newCapacity *= SLICE_ALLOW_SKEW;
+                newCapacity *= SLICE_ALLOW_SKEW; // double to int cast is saturating
+                if (newCapacity > MAX_ARRAY_SIZE && minWritableBytes <= MAX_ARRAY_SIZE) {
+                    newCapacity = MAX_ARRAY_SIZE;
+                }
             }
         }
 
@@ -73,6 +78,9 @@ public final class Slices {
     public static Slice allocate(int capacity) {
         if (capacity == 0) {
             return EMPTY_SLICE;
+        }
+        if (capacity > MAX_ARRAY_SIZE) {
+            throw new SliceTooLargeException(format("Cannot allocate slice larger than %s bytes", MAX_ARRAY_SIZE));
         }
         return new Slice(new byte[capacity]);
     }
@@ -102,18 +110,20 @@ public final class Slices {
      */
     public static Slice wrappedBuffer(ByteBuffer buffer) {
         if (buffer.isDirect()) {
-            long address = getAddress(buffer);
-            return new Slice(null, address + buffer.position(), buffer.limit() - buffer.position(), buffer.capacity(), buffer);
+            long address = bufferAddress(buffer);
+            return new Slice(null, address + buffer.position(), buffer.remaining(), buffer.capacity(), buffer);
         }
 
         if (buffer.hasArray()) {
-            int address = ARRAY_BYTE_BASE_OFFSET + buffer.arrayOffset() + buffer.position();
-            return new Slice(buffer.array(), address, buffer.limit() - buffer.position(), buffer.array().length, null);
+            return new Slice(buffer.array(), buffer.arrayOffset() + buffer.position(), buffer.remaining());
         }
 
         throw new IllegalArgumentException("cannot wrap " + buffer.getClass().getName());
     }
 
+    /**
+     * Creates a slice over the specified array.
+     */
     public static Slice wrappedBuffer(byte... array) {
         if (array.length == 0) {
             return EMPTY_SLICE;
@@ -121,6 +131,12 @@ public final class Slices {
         return new Slice(array);
     }
 
+    /**
+     * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
+     */
     public static Slice wrappedBuffer(byte[] array, int offset, int length) {
         if (length == 0) {
             return EMPTY_SLICE;
@@ -128,10 +144,19 @@ public final class Slices {
         return new Slice(array, offset, length);
     }
 
+    /**
+     * Creates a slice over the specified array.
+     */
     public static Slice wrappedBooleanArray(boolean... array) {
         return wrappedBooleanArray(array, 0, array.length);
     }
 
+    /**
+     * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
+     */
     public static Slice wrappedBooleanArray(boolean[] array, int offset, int length) {
         if (length == 0) {
             return EMPTY_SLICE;
@@ -139,10 +164,19 @@ public final class Slices {
         return new Slice(array, offset, length);
     }
 
+    /**
+     * Creates a slice over the specified array.
+     */
     public static Slice wrappedShortArray(short... array) {
         return wrappedShortArray(array, 0, array.length);
     }
 
+    /**
+     * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
+     */
     public static Slice wrappedShortArray(short[] array, int offset, int length) {
         if (length == 0) {
             return EMPTY_SLICE;
@@ -150,10 +184,19 @@ public final class Slices {
         return new Slice(array, offset, length);
     }
 
+    /**
+     * Creates a slice over the specified array.
+     */
     public static Slice wrappedIntArray(int... array) {
         return wrappedIntArray(array, 0, array.length);
     }
 
+    /**
+     * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
+     */
     public static Slice wrappedIntArray(int[] array, int offset, int length) {
         if (length == 0) {
             return EMPTY_SLICE;
@@ -161,10 +204,19 @@ public final class Slices {
         return new Slice(array, offset, length);
     }
 
+    /**
+     * Creates a slice over the specified array.
+     */
     public static Slice wrappedLongArray(long... array) {
         return wrappedLongArray(array, 0, array.length);
     }
 
+    /**
+     * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
+     */
     public static Slice wrappedLongArray(long[] array, int offset, int length) {
         if (length == 0) {
             return EMPTY_SLICE;
@@ -172,10 +224,19 @@ public final class Slices {
         return new Slice(array, offset, length);
     }
 
+    /**
+     * Creates a slice over the specified array.
+     */
     public static Slice wrappedFloatArray(float... array) {
         return wrappedFloatArray(array, 0, array.length);
     }
 
+    /**
+     * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
+     */
     public static Slice wrappedFloatArray(float[] array, int offset, int length) {
         if (length == 0) {
             return EMPTY_SLICE;
@@ -183,10 +244,19 @@ public final class Slices {
         return new Slice(array, offset, length);
     }
 
+    /**
+     * Creates a slice over the specified array.
+     */
     public static Slice wrappedDoubleArray(double... array) {
         return wrappedDoubleArray(array, 0, array.length);
     }
 
+    /**
+     * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
+     */
     public static Slice wrappedDoubleArray(double[] array, int offset, int length) {
         if (length == 0) {
             return EMPTY_SLICE;
@@ -195,8 +265,8 @@ public final class Slices {
     }
 
     public static Slice copiedBuffer(String string, Charset charset) {
-        checkNotNull(string, "string is null");
-        checkNotNull(charset, "charset is null");
+        requireNonNull(string, "string is null");
+        requireNonNull(charset, "charset is null");
 
         return wrappedBuffer(string.getBytes(charset));
     }
@@ -207,7 +277,7 @@ public final class Slices {
 
     public static Slice mapFileReadOnly(File file)
             throws IOException {
-        checkNotNull(file, "file is null");
+        requireNonNull(file, "file is null");
 
         if (!file.exists()) {
             throw new FileNotFoundException(file.toString());
@@ -220,3 +290,4 @@ public final class Slices {
         }
     }
 }
+

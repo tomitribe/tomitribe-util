@@ -21,12 +21,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import static java.lang.Math.min;
+import static java.lang.Math.multiplyExact;
+import static java.lang.Math.toIntExact;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.tomitribe.util.hash.JvmUtils.newByteBuffer;
+import static java.util.Objects.requireNonNull;
+import static org.tomitribe.util.hash.JvmUtils.bufferAddress;
 import static org.tomitribe.util.hash.JvmUtils.unsafe;
 import static org.tomitribe.util.hash.Preconditions.checkArgument;
-import static org.tomitribe.util.hash.Preconditions.checkNotNull;
 import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_BYTE;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_DOUBLE;
@@ -34,24 +36,25 @@ import static org.tomitribe.util.hash.SizeOf.SIZE_OF_FLOAT;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_INT;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_LONG;
 import static org.tomitribe.util.hash.SizeOf.SIZE_OF_SHORT;
-import static org.tomitribe.util.hash.StringDecoder.decodeString;
-import static sun.misc.Unsafe.ARRAY_BOOLEAN_BASE_OFFSET;
+import static org.tomitribe.util.hash.SizeOf.sizeOf;
+import static org.tomitribe.util.hash.SizeOf.sizeOfBooleanArray;
+import static org.tomitribe.util.hash.SizeOf.sizeOfDoubleArray;
+import static org.tomitribe.util.hash.SizeOf.sizeOfFloatArray;
+import static org.tomitribe.util.hash.SizeOf.sizeOfIntArray;
+import static org.tomitribe.util.hash.SizeOf.sizeOfLongArray;
+import static org.tomitribe.util.hash.SizeOf.sizeOfShortArray;
 import static sun.misc.Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
-import static sun.misc.Unsafe.ARRAY_DOUBLE_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_DOUBLE_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_FLOAT_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_FLOAT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_INT_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_INT_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_LONG_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_LONG_INDEX_SCALE;
-import static sun.misc.Unsafe.ARRAY_SHORT_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
 
 public final class Slice implements Comparable<Slice> {
-
     private static final int INSTANCE_SIZE = 0;
+    private static final Object COMPACT = new byte[0];
+    private static final Object NOT_COMPACT = null;
 
     /**
      * @deprecated use {@link Slices#wrappedBuffer(java.nio.ByteBuffer)}
@@ -86,12 +89,24 @@ public final class Slice implements Comparable<Slice> {
     /**
      * Bytes retained by the slice
      */
-    private final int retainedSize;
+    private final long retainedSize;
 
     /**
-     * Reference is typically a ByteBuffer object, but can be any object this
-     * slice must hold onto to assure that the underlying memory is not
-     * freed by the garbage collector.
+     * Reference has two use cases:
+     * <p>
+     * 1. It can be an object this slice must hold onto to assure that the
+     * underlying memory is not freed by the garbage collector.
+     * It is typically a ByteBuffer object, but can be any object.
+     * This is not needed for arrays, since the array is referenced by {@code base}.
+     * <p>
+     * 2. If reference is not used to prevent garbage collector from freeing the
+     * underlying memory, it will be used to indicate if the slice is compact.
+     * When {@code reference == COMPACT}, the slice is considered as compact.
+     * Otherwise, it will be null.
+     * <p>
+     * A slice is considered compact if the base object is an heap array and
+     * it contains the whole array.
+     * Thus, for the first use case, the slice is always considered as not compact.
      */
     private final Object reference;
 
@@ -105,123 +120,144 @@ public final class Slice implements Comparable<Slice> {
         this.address = 0;
         this.size = 0;
         this.retainedSize = INSTANCE_SIZE;
-        this.reference = null;
+        this.reference = COMPACT;
     }
 
     /**
      * Creates a slice over the specified array.
      */
     Slice(byte[] base) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         this.base = base;
         this.address = ARRAY_BYTE_BASE_OFFSET;
         this.size = base.length;
-        this.retainedSize = INSTANCE_SIZE + base.length;
-        this.reference = null;
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = COMPACT;
     }
 
     /**
      * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
      */
     Slice(byte[] base, int offset, int length) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         checkPositionIndexes(offset, offset + length, base.length);
 
         this.base = base;
         this.address = ARRAY_BYTE_BASE_OFFSET + offset;
         this.size = length;
-        this.retainedSize = INSTANCE_SIZE + base.length;
-        this.reference = null;
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = (offset == 0 && length == base.length) ? COMPACT : NOT_COMPACT;
     }
 
     /**
      * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
      */
     Slice(boolean[] base, int offset, int length) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         checkPositionIndexes(offset, offset + length, base.length);
 
         this.base = base;
-        this.address = ARRAY_BOOLEAN_BASE_OFFSET + offset;
-        this.size = length * ARRAY_BOOLEAN_INDEX_SCALE;
-        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_BOOLEAN_INDEX_SCALE;
-        this.reference = null;
+        this.address = sizeOfBooleanArray(offset);
+        this.size = multiplyExact(length, ARRAY_BOOLEAN_INDEX_SCALE);
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = (offset == 0 && length == base.length) ? COMPACT : NOT_COMPACT;
     }
 
     /**
      * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
      */
     Slice(short[] base, int offset, int length) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         checkPositionIndexes(offset, offset + length, base.length);
 
         this.base = base;
-        this.address = ARRAY_SHORT_BASE_OFFSET + offset;
-        this.size = length * ARRAY_SHORT_INDEX_SCALE;
-        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_SHORT_INDEX_SCALE;
-        this.reference = null;
+        this.address = sizeOfShortArray(offset);
+        this.size = multiplyExact(length, ARRAY_SHORT_INDEX_SCALE);
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = (offset == 0 && length == base.length) ? COMPACT : NOT_COMPACT;
     }
 
     /**
      * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
      */
     Slice(int[] base, int offset, int length) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         checkPositionIndexes(offset, offset + length, base.length);
 
         this.base = base;
-        this.address = ARRAY_INT_BASE_OFFSET + offset;
-        this.size = length * ARRAY_INT_INDEX_SCALE;
-        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_INT_INDEX_SCALE;
-        this.reference = null;
+        this.address = sizeOfIntArray(offset);
+        this.size = multiplyExact(length, ARRAY_INT_INDEX_SCALE);
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = (offset == 0 && length == base.length) ? COMPACT : NOT_COMPACT;
     }
 
     /**
      * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
      */
     Slice(long[] base, int offset, int length) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         checkPositionIndexes(offset, offset + length, base.length);
 
         this.base = base;
-        this.address = ARRAY_LONG_BASE_OFFSET + offset;
-        this.size = length * ARRAY_LONG_INDEX_SCALE;
-        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_LONG_INDEX_SCALE;
-        this.reference = null;
+        this.address = sizeOfLongArray(offset);
+        this.size = multiplyExact(length, ARRAY_LONG_INDEX_SCALE);
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = (offset == 0 && length == base.length) ? COMPACT : NOT_COMPACT;
     }
 
     /**
      * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
      */
     Slice(float[] base, int offset, int length) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         checkPositionIndexes(offset, offset + length, base.length);
 
         this.base = base;
-        this.address = ARRAY_FLOAT_BASE_OFFSET + offset;
-        this.size = length * ARRAY_FLOAT_INDEX_SCALE;
-        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_FLOAT_INDEX_SCALE;
-        this.reference = null;
+        this.address = sizeOfFloatArray(offset);
+        this.size = multiplyExact(length, ARRAY_FLOAT_INDEX_SCALE);
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = (offset == 0 && length == base.length) ? COMPACT : NOT_COMPACT;
     }
 
     /**
      * Creates a slice over the specified array range.
+     *
+     * @param offset the array position at which the slice begins
+     * @param length the number of array positions to include in the slice
      */
     Slice(double[] base, int offset, int length) {
-        checkNotNull(base, "base is null");
+        requireNonNull(base, "base is null");
         checkPositionIndexes(offset, offset + length, base.length);
 
         this.base = base;
-        this.address = ARRAY_DOUBLE_BASE_OFFSET + offset;
-        this.size = length * ARRAY_DOUBLE_INDEX_SCALE;
-        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_DOUBLE_INDEX_SCALE;
-        this.reference = null;
+        this.address = sizeOfDoubleArray(offset);
+        this.size = multiplyExact(length, ARRAY_DOUBLE_INDEX_SCALE);
+        this.retainedSize = INSTANCE_SIZE + sizeOf(base);
+        this.reference = (offset == 0 && length == base.length) ? COMPACT : NOT_COMPACT;
     }
 
     /**
      * Creates a slice for directly accessing the base object.
      */
-    Slice(Object base, long address, int size, int retainedSize, Object reference) {
+    Slice(Object base, long address, int size, long retainedSize, Object reference) {
         if (address <= 0) {
             throw new IllegalArgumentException(format("Invalid address: %s", address));
         }
@@ -264,8 +300,16 @@ public final class Slice implements Comparable<Slice> {
     /**
      * Approximate number of bytes retained by this slice.
      */
-    public int getRetainedSize() {
+    public long getRetainedSize() {
         return retainedSize;
+    }
+
+    /**
+     * A slice is considered compact if the base object is an array and it contains the whole array.
+     * As a result, it cannot be a view of a bigger slice.
+     */
+    public boolean isCompact() {
+        return reference == COMPACT;
     }
 
     /**
@@ -352,6 +396,17 @@ public final class Slice implements Comparable<Slice> {
     }
 
     /**
+     * Gets an unsigned 16-bit short integer at the specified absolute {@code index}
+     * in this slice.
+     *
+     * @throws IndexOutOfBoundsException if the specified {@code index} is less than {@code 0} or
+     * {@code index + 2} is greater than {@code this.length()}
+     */
+    public int getUnsignedShort(int index) {
+        return getShort(index) & 0xFFFF;
+    }
+
+    /**
      * Gets a 32-bit integer at the specified absolute {@code index} in
      * this buffer.
      *
@@ -365,6 +420,17 @@ public final class Slice implements Comparable<Slice> {
 
     int getIntUnchecked(int index) {
         return unsafe.getInt(base, address + index);
+    }
+
+    /**
+     * Gets an unsigned 32-bit integer at the specified absolute {@code index} in
+     * this buffer.
+     *
+     * @throws IndexOutOfBoundsException if the specified {@code index} is less than {@code 0} or
+     * {@code index + 4} is greater than {@code this.length()}
+     */
+    public long getUnsignedInt(int index) {
+        return getInt(index) & 0xFFFFFFFFL;
     }
 
     /**
@@ -574,6 +640,10 @@ public final class Slice implements Comparable<Slice> {
      */
     public void setLong(int index, long value) {
         checkIndexLength(index, SIZE_OF_LONG);
+        setLongUnchecked(index, value);
+    }
+
+    void setLongUnchecked(int index, long value) {
         unsafe.putLong(base, address + index, value);
     }
 
@@ -654,6 +724,7 @@ public final class Slice implements Comparable<Slice> {
      * if {@code sourceIndex + length} is greater than {@code source.length}
      */
     public void setBytes(int index, byte[] source, int sourceIndex, int length) {
+        checkIndexLength(index, length);
         checkPositionIndexes(sourceIndex, sourceIndex + length, source.length);
         copyMemory(source, (long) ARRAY_BYTE_BASE_OFFSET + sourceIndex, base, address + index, length);
     }
@@ -668,6 +739,20 @@ public final class Slice implements Comparable<Slice> {
     public void setBytes(int index, InputStream in, int length)
             throws IOException {
         checkIndexLength(index, length);
+        if (base instanceof byte[]) {
+            byte[] bytes = (byte[]) base;
+            int offset = (int) ((address - ARRAY_BYTE_BASE_OFFSET) + index);
+            while (length > 0) {
+                int bytesRead = in.read(bytes, offset, length);
+                if (bytesRead < 0) {
+                    throw new IndexOutOfBoundsException("End of stream");
+                }
+                length -= bytesRead;
+                offset += bytesRead;
+            }
+            return;
+        }
+
         byte[] bytes = new byte[4096];
 
         while (length > 0) {
@@ -692,6 +777,10 @@ public final class Slice implements Comparable<Slice> {
         checkIndexLength(index, length);
         if (length == 0) {
             return Slices.EMPTY_SLICE;
+        }
+
+        if (reference == COMPACT) {
+            return new Slice(base, address + index, length, retainedSize, NOT_COMPACT);
         }
         return new Slice(base, address + index, length, retainedSize, reference);
     }
@@ -829,33 +918,33 @@ public final class Slice implements Comparable<Slice> {
         checkIndexLength(offset, length);
         that.checkIndexLength(otherOffset, otherLength);
 
+        long thisAddress = address + offset;
+        long thatAddress = that.address + otherOffset;
+
         int compareLength = min(length, otherLength);
         while (compareLength >= SIZE_OF_LONG) {
-            long thisLong = getLongUnchecked(offset);
-            thisLong = Long.reverseBytes(thisLong);
-            long thatLong = that.getLongUnchecked(otherOffset);
-            thatLong = Long.reverseBytes(thatLong);
+            long thisLong = unsafe.getLong(base, thisAddress);
+            long thatLong = unsafe.getLong(that.base, thatAddress);
 
-            int v = compareUnsignedLongs(thisLong, thatLong);
-            if (v != 0) {
-                return v;
+            if (thisLong != thatLong) {
+                return longBytesToLong(thisLong) < longBytesToLong(thatLong) ? -1 : 1;
             }
 
-            offset += SIZE_OF_LONG;
-            otherOffset += SIZE_OF_LONG;
+            thisAddress += SIZE_OF_LONG;
+            thatAddress += SIZE_OF_LONG;
             compareLength -= SIZE_OF_LONG;
         }
 
         while (compareLength > 0) {
-            byte thisByte = getByteUnchecked(offset);
-            byte thatByte = that.getByteUnchecked(otherOffset);
+            byte thisByte = unsafe.getByte(base, thisAddress);
+            byte thatByte = unsafe.getByte(that.base, thatAddress);
 
             int v = compareUnsignedBytes(thisByte, thatByte);
             if (v != 0) {
                 return v;
             }
-            offset++;
-            otherOffset++;
+            thisAddress++;
+            thatAddress++;
             compareLength--;
         }
 
@@ -880,31 +969,7 @@ public final class Slice implements Comparable<Slice> {
             return false;
         }
 
-        int offset = 0;
-        int length = size;
-        while (length >= SIZE_OF_LONG) {
-            long thisLong = getLongUnchecked(offset);
-            long thatLong = that.getLongUnchecked(offset);
-
-            if (thisLong != thatLong) {
-                return false;
-            }
-
-            offset += SIZE_OF_LONG;
-            length -= SIZE_OF_LONG;
-        }
-
-        while (length > 0) {
-            byte thisByte = getByteUnchecked(offset);
-            byte thatByte = that.getByteUnchecked(offset);
-            if (thisByte != thatByte) {
-                return false;
-            }
-            offset++;
-            length--;
-        }
-
-        return true;
+        return equalsUnchecked(0, that, 0, length());
     }
 
     /**
@@ -939,6 +1004,10 @@ public final class Slice implements Comparable<Slice> {
             return false;
         }
 
+        if ((this == that) && (offset == otherOffset)) {
+            return true;
+        }
+
         checkIndexLength(offset, length);
         that.checkIndexLength(otherOffset, otherLength);
 
@@ -946,31 +1015,30 @@ public final class Slice implements Comparable<Slice> {
     }
 
     boolean equalsUnchecked(int offset, Slice that, int otherOffset, int length) {
-        if ((this == that) && (offset == otherOffset)) {
-            return true;
-        }
+        long thisAddress = address + offset;
+        long thatAddress = that.address + otherOffset;
 
         while (length >= SIZE_OF_LONG) {
-            long thisLong = getLongUnchecked(offset);
-            long thatLong = that.getLongUnchecked(otherOffset);
+            long thisLong = unsafe.getLong(base, thisAddress);
+            long thatLong = unsafe.getLong(that.base, thatAddress);
 
             if (thisLong != thatLong) {
                 return false;
             }
 
-            offset += SIZE_OF_LONG;
-            otherOffset += SIZE_OF_LONG;
+            thisAddress += SIZE_OF_LONG;
+            thatAddress += SIZE_OF_LONG;
             length -= SIZE_OF_LONG;
         }
 
         while (length > 0) {
-            byte thisByte = getByteUnchecked(offset);
-            byte thatByte = that.getByteUnchecked(otherOffset);
+            byte thisByte = unsafe.getByte(base, thisAddress);
+            byte thatByte = unsafe.getByte(that.base, thatAddress);
             if (thisByte != thatByte) {
                 return false;
             }
-            offset++;
-            otherOffset++;
+            thisAddress++;
+            thatAddress++;
             length--;
         }
 
@@ -1031,8 +1099,7 @@ public final class Slice implements Comparable<Slice> {
         if (base instanceof byte[]) {
             return new String((byte[]) base, (int) ((address - ARRAY_BYTE_BASE_OFFSET) + index), length, charset);
         }
-        // direct memory can only be converted to a string using a ByteBuffer
-        return decodeString(toByteBuffer(index, length), charset);
+        return new String(getBytes(index, length), charset);
     }
 
     public ByteBuffer toByteBuffer() {
@@ -1043,23 +1110,19 @@ public final class Slice implements Comparable<Slice> {
         checkIndexLength(index, length);
 
         if (base instanceof byte[]) {
-            return ByteBuffer.wrap((byte[]) base, (int) ((address - ARRAY_BYTE_BASE_OFFSET) + index), length);
+            return ByteBuffer.wrap((byte[]) base, (int) ((address - ARRAY_BYTE_BASE_OFFSET) + index), length).slice();
         }
 
-        try {
-            return (ByteBuffer) newByteBuffer.invokeExact(address + index, length, (Object) reference);
-        } catch (Throwable throwable) {
-            if (throwable instanceof Error) {
-                throw (Error) throwable;
-            }
-            if (throwable instanceof RuntimeException) {
-                throw (RuntimeException) throwable;
-            }
-            if (throwable instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new RuntimeException(throwable);
+        if ((reference instanceof ByteBuffer) && ((ByteBuffer) reference).isDirect()) {
+            ByteBuffer buffer = (ByteBuffer) reference;
+            int position = toIntExact(address - bufferAddress(buffer)) + index;
+            buffer = buffer.duplicate();
+            buffer.position(position);
+            buffer.limit(position + length);
+            return buffer.slice();
         }
+
+        throw new UnsupportedOperationException("Conversion to ByteBuffer not supported for this Slice");
     }
 
     /**
@@ -1120,11 +1183,12 @@ public final class Slice implements Comparable<Slice> {
         return thisByte & 0xFF;
     }
 
-    private static int compareUnsignedLongs(long thisLong, long thatLong) {
-        return Long.compare(flipUnsignedLong(thisLong), flipUnsignedLong(thatLong));
-    }
-
-    private static long flipUnsignedLong(long thisLong) {
-        return thisLong ^ Long.MIN_VALUE;
+    /**
+     * Turns a long representing a sequence of 8 bytes read in little-endian order
+     * into a number that when compared produces the same effect as comparing the
+     * original sequence of bytes lexicographically
+     */
+    private static long longBytesToLong(long bytes) {
+        return Long.reverseBytes(bytes) ^ Long.MIN_VALUE;
     }
 }
