@@ -13,12 +13,14 @@
  */
 package org.tomitribe.util.hash;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.tomitribe.util.hash.JvmUtils.newByteBuffer;
@@ -47,8 +49,10 @@ import static sun.misc.Unsafe.ARRAY_LONG_INDEX_SCALE;
 import static sun.misc.Unsafe.ARRAY_SHORT_BASE_OFFSET;
 import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
 
-public final class Slice
-        implements Comparable<Slice> {
+public final class Slice implements Comparable<Slice> {
+
+    private static final int INSTANCE_SIZE = 0;
+
     /**
      * @deprecated use {@link Slices#wrappedBuffer(java.nio.ByteBuffer)}
      */
@@ -68,7 +72,7 @@ public final class Slice
      * this slice; otherwise, address is the offset from the base object.
      * This base plus relative offset addressing is taken directly from
      * the Unsafe interface.
-     * <p/>
+     * <p>
      * Note: if base object is a byte array, this address ARRAY_BYTE_BASE_OFFSET,
      * since the byte array data starts AFTER the byte array object header.
      */
@@ -78,6 +82,11 @@ public final class Slice
      * Size of the slice
      */
     private final int size;
+
+    /**
+     * Bytes retained by the slice
+     */
+    private final int retainedSize;
 
     /**
      * Reference is typically a ByteBuffer object, but can be any object this
@@ -95,6 +104,7 @@ public final class Slice
         this.base = null;
         this.address = 0;
         this.size = 0;
+        this.retainedSize = INSTANCE_SIZE;
         this.reference = null;
     }
 
@@ -106,6 +116,7 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_BYTE_BASE_OFFSET;
         this.size = base.length;
+        this.retainedSize = INSTANCE_SIZE + base.length;
         this.reference = null;
     }
 
@@ -119,6 +130,7 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_BYTE_BASE_OFFSET + offset;
         this.size = length;
+        this.retainedSize = INSTANCE_SIZE + base.length;
         this.reference = null;
     }
 
@@ -132,6 +144,7 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_BOOLEAN_BASE_OFFSET + offset;
         this.size = length * ARRAY_BOOLEAN_INDEX_SCALE;
+        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_BOOLEAN_INDEX_SCALE;
         this.reference = null;
     }
 
@@ -145,6 +158,7 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_SHORT_BASE_OFFSET + offset;
         this.size = length * ARRAY_SHORT_INDEX_SCALE;
+        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_SHORT_INDEX_SCALE;
         this.reference = null;
     }
 
@@ -158,6 +172,7 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_INT_BASE_OFFSET + offset;
         this.size = length * ARRAY_INT_INDEX_SCALE;
+        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_INT_INDEX_SCALE;
         this.reference = null;
     }
 
@@ -171,6 +186,7 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_LONG_BASE_OFFSET + offset;
         this.size = length * ARRAY_LONG_INDEX_SCALE;
+        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_LONG_INDEX_SCALE;
         this.reference = null;
     }
 
@@ -184,6 +200,7 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_FLOAT_BASE_OFFSET + offset;
         this.size = length * ARRAY_FLOAT_INDEX_SCALE;
+        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_FLOAT_INDEX_SCALE;
         this.reference = null;
     }
 
@@ -197,13 +214,14 @@ public final class Slice
         this.base = base;
         this.address = ARRAY_DOUBLE_BASE_OFFSET + offset;
         this.size = length * ARRAY_DOUBLE_INDEX_SCALE;
+        this.retainedSize = INSTANCE_SIZE + base.length * ARRAY_DOUBLE_INDEX_SCALE;
         this.reference = null;
     }
 
     /**
      * Creates a slice for directly accessing the base object.
      */
-    Slice(Object base, long address, int size, Object reference) {
+    Slice(Object base, long address, int size, int retainedSize, Object reference) {
         if (address <= 0) {
             throw new IllegalArgumentException(format("Invalid address: %s", address));
         }
@@ -216,11 +234,13 @@ public final class Slice
         this.base = base;
         this.address = address;
         this.size = size;
+        // INSTANCE_SIZE is not included, as the caller is responsible for including it.
+        this.retainedSize = retainedSize;
     }
 
     /**
      * Returns the base object of this Slice, or null.  This is appropriate for use
-     * with {@link sun.misc.Unsafe} if you wish to avoid all the safety belts e.g. bounds checks.
+     * with Unsafe if you wish to avoid all the safety belts e.g. bounds checks.
      */
     public Object getBase() {
         return base;
@@ -228,7 +248,7 @@ public final class Slice
 
     /**
      * Return the address offset of this Slice.  This is appropriate for use
-     * with {@link sun.misc.Unsafe} if you wish to avoid all the safety belts e.g. bounds checks.
+     * with Unsafe if you wish to avoid all the safety belts e.g. bounds checks.
      */
     public long getAddress() {
         return address;
@@ -239,6 +259,13 @@ public final class Slice
      */
     public int length() {
         return size;
+    }
+
+    /**
+     * Approximate number of bytes retained by this slice.
+     */
+    public int getRetainedSize() {
+        return retainedSize;
     }
 
     /**
@@ -290,6 +317,10 @@ public final class Slice
      */
     public byte getByte(int index) {
         checkIndexLength(index, SIZE_OF_BYTE);
+        return getByteUnchecked(index);
+    }
+
+    byte getByteUnchecked(int index) {
         return unsafe.getByte(base, address + index);
     }
 
@@ -313,6 +344,10 @@ public final class Slice
      */
     public short getShort(int index) {
         checkIndexLength(index, SIZE_OF_SHORT);
+        return getShortUnchecked(index);
+    }
+
+    short getShortUnchecked(int index) {
         return unsafe.getShort(base, address + index);
     }
 
@@ -325,6 +360,10 @@ public final class Slice
      */
     public int getInt(int index) {
         checkIndexLength(index, SIZE_OF_INT);
+        return getIntUnchecked(index);
+    }
+
+    int getIntUnchecked(int index) {
         return unsafe.getInt(base, address + index);
     }
 
@@ -337,6 +376,10 @@ public final class Slice
      */
     public long getLong(int index) {
         checkIndexLength(index, SIZE_OF_LONG);
+        return getLongUnchecked(index);
+    }
+
+    long getLongUnchecked(int index) {
         return unsafe.getLong(base, address + index);
     }
 
@@ -458,9 +501,14 @@ public final class Slice
             throws IOException {
         checkIndexLength(index, length);
 
+        if (base instanceof byte[]) {
+            out.write((byte[]) base, (int) ((address - ARRAY_BYTE_BASE_OFFSET) + index), length);
+            return;
+        }
+
         byte[] buffer = new byte[4096];
         while (length > 0) {
-            int size = Math.min(buffer.length, length);
+            int size = min(buffer.length, length);
             getBytes(index, buffer, 0, size);
             out.write(buffer, 0, size);
             length -= size;
@@ -477,6 +525,10 @@ public final class Slice
      */
     public void setByte(int index, int value) {
         checkIndexLength(index, SIZE_OF_BYTE);
+        setByteUnchecked(index, value);
+    }
+
+    void setByteUnchecked(int index, int value) {
         unsafe.putByte(base, address + index, (byte) (value & 0xFF));
     }
 
@@ -490,6 +542,10 @@ public final class Slice
      */
     public void setShort(int index, int value) {
         checkIndexLength(index, SIZE_OF_SHORT);
+        setShortUnchecked(index, value);
+    }
+
+    void setShortUnchecked(int index, int value) {
         unsafe.putShort(base, address + index, (short) (value & 0xFFFF));
     }
 
@@ -502,6 +558,10 @@ public final class Slice
      */
     public void setInt(int index, int value) {
         checkIndexLength(index, SIZE_OF_INT);
+        setIntUnchecked(index, value);
+    }
+
+    void setIntUnchecked(int index, int value) {
         unsafe.putInt(base, address + index, value);
     }
 
@@ -601,26 +661,24 @@ public final class Slice
     /**
      * Transfers data from the specified input stream into this slice starting at
      * the specified absolute {@code index}.
+     *
+     * @throws IndexOutOfBoundsException if the specified {@code index} is less than {@code 0}, or
+     * if {@code index + source.length} is greater than {@code this.length()}
      */
-    public int setBytes(int index, InputStream in, int length)
+    public void setBytes(int index, InputStream in, int length)
             throws IOException {
         checkIndexLength(index, length);
         byte[] bytes = new byte[4096];
-        int remaining = length;
-        while (remaining > 0) {
-            int bytesRead = in.read(bytes, 0, Math.min(bytes.length, remaining));
+
+        while (length > 0) {
+            int bytesRead = in.read(bytes, 0, min(bytes.length, length));
             if (bytesRead < 0) {
-                // if we didn't read anything return -1
-                if (remaining == length) {
-                    return -1;
-                }
-                break;
+                throw new IndexOutOfBoundsException("End of stream");
             }
             copyMemory(bytes, ARRAY_BYTE_BASE_OFFSET, base, address + index, bytesRead);
-            remaining -= bytesRead;
+            length -= bytesRead;
             index += bytesRead;
         }
-        return length - remaining;
     }
 
     /**
@@ -635,7 +693,113 @@ public final class Slice
         if (length == 0) {
             return Slices.EMPTY_SLICE;
         }
-        return new Slice(base, address + index, length, reference);
+        return new Slice(base, address + index, length, retainedSize, reference);
+    }
+
+    public int indexOfByte(int b) {
+        b = b & 0xFF;
+        for (int i = 0; i < size; i++) {
+            if (getByteUnchecked(i) == b) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the index of the first occurrence of the pattern with this slice.
+     * If the pattern is not found -1 is returned. If patten is empty, zero is
+     * returned.
+     */
+    public int indexOf(Slice slice) {
+        return indexOf(slice, 0);
+    }
+
+    /**
+     * Returns the index of the first occurrence of the pattern with this slice.
+     * If the pattern is not found -1 is returned If patten is empty, the offset
+     * is returned.
+     */
+    public int indexOf(Slice pattern, int offset) {
+        if (size == 0 || offset >= size) {
+            return -1;
+        }
+
+        if (pattern.length() == 0) {
+            return offset;
+        }
+
+        // Do we have enough characters
+        if (pattern.length() < SIZE_OF_INT || size < SIZE_OF_LONG) {
+            return indexOfBruteForce(pattern, offset);
+        }
+
+        // Using first four bytes for faster search. We are not using eight bytes for long
+        // because we want more strings to get use of fast search.
+        int head = pattern.getIntUnchecked(0);
+
+        // Take the first byte of head for faster skipping
+        int firstByteMask = head & 0xff;
+        firstByteMask |= firstByteMask << 8;
+        firstByteMask |= firstByteMask << 16;
+
+        int lastValidIndex = size - pattern.length();
+        int index = offset;
+        while (index <= lastValidIndex) {
+            // Read four bytes in sequence
+            int value = getIntUnchecked(index);
+
+            // Compare all bytes of value with first byte of search data
+            // see https://graphics.stanford.edu/~seander/bithacks.html#ZeroInWord
+            int valueXor = value ^ firstByteMask;
+            int hasZeroBytes = (valueXor - 0x01010101) & ~valueXor & 0x80808080;
+
+            // If valueXor doesn't not have any zero byte then there is no match and we can advance
+            if (hasZeroBytes == 0) {
+                index += SIZE_OF_INT;
+                continue;
+            }
+
+            // Try fast match of head and the rest
+            if (value == head && equalsUnchecked(index, pattern, 0, pattern.length())) {
+                return index;
+            }
+
+            index++;
+        }
+
+        return -1;
+    }
+
+    int indexOfBruteForce(Slice pattern, int offset) {
+        if (size == 0 || offset >= size) {
+            return -1;
+        }
+
+        if (pattern.length() == 0) {
+            return offset;
+        }
+
+        byte firstByte = pattern.getByteUnchecked(0);
+        int lastValidIndex = size - pattern.length();
+        int index = offset;
+        while (true) {
+            // seek to first byte match
+            while (index < lastValidIndex && getByteUnchecked(index) != firstByte) {
+                index++;
+            }
+            if (index > lastValidIndex) {
+                break;
+            }
+
+            if (equalsUnchecked(index, pattern, 0, pattern.length())) {
+                return index;
+            }
+
+            index++;
+        }
+
+        return -1;
     }
 
     /**
@@ -665,11 +829,11 @@ public final class Slice
         checkIndexLength(offset, length);
         that.checkIndexLength(otherOffset, otherLength);
 
-        int compareLength = Math.min(length, otherLength);
+        int compareLength = min(length, otherLength);
         while (compareLength >= SIZE_OF_LONG) {
-            long thisLong = unsafe.getLong(base, address + offset);
+            long thisLong = getLongUnchecked(offset);
             thisLong = Long.reverseBytes(thisLong);
-            long thatLong = unsafe.getLong(that.base, that.address + otherOffset);
+            long thatLong = that.getLongUnchecked(otherOffset);
             thatLong = Long.reverseBytes(thatLong);
 
             int v = compareUnsignedLongs(thisLong, thatLong);
@@ -683,8 +847,8 @@ public final class Slice
         }
 
         while (compareLength > 0) {
-            byte thisByte = unsafe.getByte(base, address + offset);
-            byte thatByte = unsafe.getByte(that.base, that.address + otherOffset);
+            byte thisByte = getByteUnchecked(offset);
+            byte thatByte = that.getByteUnchecked(otherOffset);
 
             int v = compareUnsignedBytes(thisByte, thatByte);
             if (v != 0) {
@@ -719,8 +883,8 @@ public final class Slice
         int offset = 0;
         int length = size;
         while (length >= SIZE_OF_LONG) {
-            long thisLong = unsafe.getLong(base, address + offset);
-            long thatLong = unsafe.getLong(that.base, that.address + offset);
+            long thisLong = getLongUnchecked(offset);
+            long thatLong = that.getLongUnchecked(offset);
 
             if (thisLong != thatLong) {
                 return false;
@@ -731,8 +895,8 @@ public final class Slice
         }
 
         while (length > 0) {
-            byte thisByte = unsafe.getByte(base, address + offset);
-            byte thatByte = unsafe.getByte(that.base, that.address + offset);
+            byte thisByte = getByteUnchecked(offset);
+            byte thatByte = that.getByteUnchecked(offset);
             if (thisByte != thatByte) {
                 return false;
             }
@@ -775,16 +939,20 @@ public final class Slice
             return false;
         }
 
+        checkIndexLength(offset, length);
+        that.checkIndexLength(otherOffset, otherLength);
+
+        return equalsUnchecked(offset, that, otherOffset, length);
+    }
+
+    boolean equalsUnchecked(int offset, Slice that, int otherOffset, int length) {
         if ((this == that) && (offset == otherOffset)) {
             return true;
         }
 
-        checkIndexLength(offset, length);
-        that.checkIndexLength(otherOffset, otherLength);
-
         while (length >= SIZE_OF_LONG) {
-            long thisLong = unsafe.getLong(base, address + offset);
-            long thatLong = unsafe.getLong(that.base, that.address + otherOffset);
+            long thisLong = getLongUnchecked(offset);
+            long thatLong = that.getLongUnchecked(otherOffset);
 
             if (thisLong != thatLong) {
                 return false;
@@ -796,8 +964,8 @@ public final class Slice
         }
 
         while (length > 0) {
-            byte thisByte = unsafe.getByte(base, address + offset);
-            byte thatByte = unsafe.getByte(that.base, that.address + otherOffset);
+            byte thisByte = getByteUnchecked(offset);
+            byte thatByte = that.getByteUnchecked(otherOffset);
             if (thisByte != thatByte) {
                 return false;
             }
@@ -823,6 +991,33 @@ public final class Slice
      */
     public String toStringUtf8() {
         return toString(UTF_8);
+    }
+
+    /**
+     * Decodes the contents of this slice into a string using the US_ASCII
+     * character set.  The low order 7 bits if each byte are converted directly
+     * into a code point for the string.
+     */
+    public String toStringAscii() {
+        return toStringAscii(0, size);
+    }
+
+    public String toStringAscii(int index, int length) {
+        checkIndexLength(index, length);
+        if (length == 0) {
+            return "";
+        }
+
+        if (base instanceof byte[]) {
+            //noinspection deprecation
+            return new String((byte[]) base, 0, (int) ((address - ARRAY_BYTE_BASE_OFFSET) + index), length);
+        }
+
+        char[] chars = new char[length];
+        for (int pos = index; pos < length; pos++) {
+            chars[pos] = (char) (getByteUnchecked(pos) & 0x7F);
+        }
+        return new String(chars);
     }
 
     /**
@@ -852,8 +1047,7 @@ public final class Slice
         }
 
         try {
-            final Object[] args = {address + index, length, (Object) reference};
-            return (ByteBuffer) newByteBuffer.invokeExact(args);
+            return (ByteBuffer) newByteBuffer.invokeExact(address + index, length, (Object) reference);
         } catch (Throwable throwable) {
             if (throwable instanceof Error) {
                 throw (Error) throwable;

@@ -20,6 +20,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import static sun.misc.Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
@@ -33,6 +34,8 @@ import static sun.misc.Unsafe.ARRAY_SHORT_INDEX_SCALE;
 final class JvmUtils {
     static final Unsafe unsafe;
     static final MethodHandle newByteBuffer;
+
+    private static final Field ADDRESS_ACCESSOR;
 
     static {
         try {
@@ -59,6 +62,9 @@ final class JvmUtils {
             constructor.setAccessible(true);
             newByteBuffer = MethodHandles.lookup().unreflectConstructor(constructor)
                     .asType(MethodType.methodType(ByteBuffer.class, long.class, int.class, Object.class));
+
+            ADDRESS_ACCESSOR = Buffer.class.getDeclaredField("address");
+            ADDRESS_ACCESSOR.setAccessible(true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -67,6 +73,14 @@ final class JvmUtils {
     private static void assertArrayIndexScale(final String name, int actualIndexScale, int expectedIndexScale) {
         if (actualIndexScale != expectedIndexScale) {
             throw new IllegalStateException(name + " array index scale must be " + expectedIndexScale + ", but is " + actualIndexScale);
+        }
+    }
+
+    public static long getAddress(Buffer buffer) {
+        try {
+            return (long) ADDRESS_ACCESSOR.get(buffer);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 

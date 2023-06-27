@@ -13,9 +13,6 @@
  */
 package org.tomitribe.util.hash;
 
-import org.tomitribe.util.IO;
-import sun.nio.ch.DirectBuffer;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,18 +24,18 @@ import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.Charset;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.tomitribe.util.hash.JvmUtils.getAddress;
 import static org.tomitribe.util.hash.Preconditions.checkNotNull;
 import static org.tomitribe.util.hash.Preconditions.checkPositionIndexes;
 import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
-@SuppressWarnings("PMD.IllegalImport")
 public final class Slices {
     /**
      * A slice with size {@code 0}.
      */
     public static final Slice EMPTY_SLICE = new Slice();
 
-    private static final int SLICE_ALLOC_THRESHOLD = 524288; // 2^19
+    private static final int SLICE_ALLOC_THRESHOLD = 524_288; // 2^19
     private static final double SLICE_ALLOW_SKEW = 1.25; // must be > 1!
 
     private Slices() {
@@ -59,7 +56,7 @@ public final class Slices {
         } else {
             newCapacity = existingSlice.length();
         }
-        int minNewCapacity = existingSlice.length() + minWritableBytes;
+        int minNewCapacity = minWritableBytes;
         while (newCapacity < minNewCapacity) {
             if (newCapacity < SLICE_ALLOC_THRESHOLD) {
                 newCapacity <<= 1;
@@ -68,7 +65,7 @@ public final class Slices {
             }
         }
 
-        Slice newSlice = Slices.allocate(newCapacity);
+        Slice newSlice = allocate(newCapacity);
         newSlice.setBytes(0, existingSlice, 0, existingSlice.length());
         return newSlice;
     }
@@ -101,23 +98,23 @@ public final class Slices {
     }
 
     /**
-     * Wrap the entire capacity of a {@link java.nio.ByteBuffer}.
+     * Wrap the visible portion of a {@link java.nio.ByteBuffer}.
      */
     public static Slice wrappedBuffer(ByteBuffer buffer) {
-        if (buffer instanceof DirectBuffer) {
-            DirectBuffer direct = (DirectBuffer) buffer;
-            return new Slice(null, direct.address(), buffer.capacity(), direct);
+        if (buffer.isDirect()) {
+            long address = getAddress(buffer);
+            return new Slice(null, address + buffer.position(), buffer.limit() - buffer.position(), buffer.capacity(), buffer);
         }
 
         if (buffer.hasArray()) {
-            int address = ARRAY_BYTE_BASE_OFFSET + buffer.arrayOffset();
-            return new Slice(buffer.array(), address, buffer.capacity(), null);
+            int address = ARRAY_BYTE_BASE_OFFSET + buffer.arrayOffset() + buffer.position();
+            return new Slice(buffer.array(), address, buffer.limit() - buffer.position(), buffer.array().length, null);
         }
 
         throw new IllegalArgumentException("cannot wrap " + buffer.getClass().getName());
     }
 
-    public static Slice wrappedBuffer(byte[] array) {
+    public static Slice wrappedBuffer(byte... array) {
         if (array.length == 0) {
             return EMPTY_SLICE;
         }
@@ -216,15 +213,10 @@ public final class Slices {
             throw new FileNotFoundException(file.toString());
         }
 
-        final RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-        final FileChannel channel = randomAccessFile.getChannel();
-
-        try {
-            final MappedByteBuffer byteBuffer = channel.map(MapMode.READ_ONLY, 0, file.length());
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+             FileChannel channel = randomAccessFile.getChannel()) {
+            MappedByteBuffer byteBuffer = channel.map(MapMode.READ_ONLY, 0, file.length());
             return wrappedBuffer(byteBuffer);
-        } finally {
-            IO.close(randomAccessFile);
-            IO.close(channel);
         }
     }
 }
