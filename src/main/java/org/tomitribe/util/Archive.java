@@ -24,7 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -48,8 +48,8 @@ import java.util.zip.ZipOutputStream;
  */
 public class Archive {
 
-    private final Map<String, String> manifest = new HashMap<>();
-    private final Map<String, Supplier<byte[]>> entries = new HashMap<>();
+    private final Map<String, String> manifest = new LinkedHashMap<>();
+    private final Map<String, Supplier<byte[]>> entries = new LinkedHashMap<>();
 
     public static Archive archive() {
         return new Archive();
@@ -240,8 +240,8 @@ public class Archive {
         }
     }
 
-    private HashMap<String, Supplier<byte[]>> entries() {
-        final HashMap<String, Supplier<byte[]>> entries = new HashMap<>(this.entries);
+    private Map<String, Supplier<byte[]>> entries() {
+        final Map<String, Supplier<byte[]>> entries = new LinkedHashMap<>(this.entries);
         if (manifest.size() > 0) {
             entries.put("META-INF/MANIFEST.MF", buildManifest()::getBytes);
         }
