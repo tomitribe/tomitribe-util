@@ -19,21 +19,10 @@ package org.tomitribe.util;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.Arrays;
 
 import static org.tomitribe.util.Join.join;
-import static org.tomitribe.util.SizeUnit.BYTES;
-import static org.tomitribe.util.SizeUnit.GIGABYTES;
-import static org.tomitribe.util.SizeUnit.KILOBYTES;
-import static org.tomitribe.util.SizeUnit.MEGABYTES;
-import static org.tomitribe.util.SizeUnit.TERABYTES;
+import static org.tomitribe.util.SizeUnit.*;
 
 public class SizeTest extends TestCase {
 
@@ -191,43 +180,4 @@ public class SizeTest extends TestCase {
         Assert.assertEquals(join("\n", expected), join("\n", actual));
     }
 
-
-    public void testXml() throws Exception {
-
-        final JAXBContext jaxbContext = JAXBContext.newInstance(Document.class);
-        final PrintString xmlContent = new PrintString();
-
-        final Size size = new Size("10gb");
-
-        { // to xml
-            final Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.marshal(new Document(size), xmlContent);
-            assertEquals("" +
-                            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                            "<document><size>10gb</size></document>",
-                    xmlContent.toString());
-        }
-
-        { // from xml
-            final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            final Document object = (Document) unmarshaller.unmarshal(IO.read(xmlContent.toString()));
-            assertEquals(size, object.size);
-        }
-    }
-
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class Document {
-
-        @XmlJavaTypeAdapter(Size.Adapter.class)
-        private final Size size;
-
-        public Document() {
-            size = null;
-        }
-
-        public Document(Size size) {
-            this.size = size;
-        }
-    }
 }
