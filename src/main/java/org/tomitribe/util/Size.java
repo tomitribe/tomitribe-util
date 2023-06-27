@@ -21,13 +21,10 @@ package org.tomitribe.util;
 
 import org.tomitribe.util.editor.Editors;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.beans.PropertyEditorManager;
 import java.util.ArrayList;
 import java.util.List;
 
-@XmlJavaTypeAdapter(Size.Adapter.class)
 public class Size implements Comparable<Size> {
 
     private long size;
@@ -284,18 +281,5 @@ public class Size implements Comparable<Size> {
     static {
         PropertyEditorManager.registerEditor(Size.class, SizeEditor.class);
         Editors.get(Size.class);
-    }
-
-    public static class Adapter extends XmlAdapter<String, Size> {
-
-        @Override
-        public Size unmarshal(String v) throws Exception {
-            return new Size(v);
-        }
-
-        @Override
-        public String marshal(Size v) throws Exception {
-            return v.toString();
-        }
     }
 }
