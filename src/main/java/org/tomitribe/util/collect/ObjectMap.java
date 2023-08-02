@@ -22,6 +22,7 @@ package org.tomitribe.util.collect;
 import org.tomitribe.util.editor.Converter;
 import org.tomitribe.util.reflect.SetAccessible;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -221,9 +222,25 @@ public class ObjectMap extends AbstractMap<String, Object> {
         public boolean isReadOnly() {
             return false;
         }
+
+        @Override
+        public <T extends Annotation> T getAnnotation(final Class<T> annotationClass) {
+            return field.getAnnotation(annotationClass);
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            return field.getAnnotations();
+        }
+
+        @Override
+        public Annotation[] getDeclaredAnnotations() {
+            return field.getDeclaredAnnotations();
+        }
+
     }
 
-    public interface Member extends Entry<String, Object> {
+    public interface Member extends Entry<String, Object>, java.lang.reflect.AnnotatedElement {
         Class<?> getType();
 
         boolean isReadOnly();
@@ -287,6 +304,21 @@ public class ObjectMap extends AbstractMap<String, Object> {
         @Override
         public boolean isReadOnly() {
             return setter != null;
+        }
+
+        @Override
+        public <T extends Annotation> T getAnnotation(final Class<T> annotationClass) {
+            return getter.getAnnotation(annotationClass);
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            return getter.getAnnotations();
+        }
+
+        @Override
+        public Annotation[] getDeclaredAnnotations() {
+            return getter.getDeclaredAnnotations();
         }
     }
 
