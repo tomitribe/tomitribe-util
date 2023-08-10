@@ -202,7 +202,7 @@ public interface Dir {
                 throw new IllegalStateException("Unknown method " + method);
             }
 
-            final File file = new File(dir, name(method));
+            final File file = getFile(method);
             final Function<File, File> action = action(method);
 
             final Class<?> returnType = method.getReturnType();
@@ -228,6 +228,20 @@ public interface Dir {
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        private File getFile(final Method method) {
+            final Parent parent = method.getAnnotation(Parent.class);
+            if (parent != null) {
+                File parentFile = dir;
+                for (int depth = parent.value(); depth > 0; depth--) {
+                    parentFile = parentFile.getParentFile();
+                }
+
+                return parentFile;
+            }
+
+            return new File(dir, name(method));
         }
 
         private Object dir(final Object[] args) {
