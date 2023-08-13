@@ -29,10 +29,13 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -219,6 +222,11 @@ public interface Dir {
                 return returnFile(method, action.apply(file));
             }
 
+            final FileWrapper wrapper = new FileWrapper(returnType);
+            if (wrapper.isWrapper()) {
+                return returnFileWrapper(method, wrapper, action.apply(file));
+            }
+
             if (returnType.isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
                 return Dir.of(returnType, action.apply(new File(dir, (String) args[0])));
             }
@@ -304,14 +312,23 @@ public interface Dir {
             final Class returnType = (Class) Generics.getReturnType(method);
             final Predicate<File> filter = getFilter(method);
 
+            if (File.class.equals(returnType)) {
+                return stream(dir, method)
+                        .filter(filter);
+            }
+
+            final FileWrapper wrapper = new FileWrapper(returnType);
+            if (wrapper.isWrapper()) {
+                return stream(dir, method)
+                        .filter(filter)
+                        .map(wrapper::wrap)
+                        ;
+            }
+
             if (returnType.isInterface()) {
                 return stream(dir, method)
                         .filter(filter)
                         .map(child -> Dir.of(returnType, child));
-            }
-            if (File.class.equals(returnType)) {
-                return stream(dir, method)
-                        .filter(filter);
             }
             throw new UnsupportedOperationException(method.toGenericString());
         }
@@ -325,6 +342,15 @@ public interface Dir {
             return file;
         }
 
+        private Object returnFileWrapper(final Method method, final FileWrapper wrapper, final File file) throws FileNotFoundException {
+            // They want an exception if the file isn't found
+            if (exceptions(method).contains(FileNotFoundException.class) && !file.exists()) {
+                throw new FileNotFoundException(file.getAbsolutePath());
+            }
+
+            return wrapper.wrap(file);
+        }
+
         private Object returnArray(final Method method) {
             final Predicate<File> filter = getFilter(method);
 
@@ -336,7 +362,29 @@ public interface Dir {
                         .filter(filter)
                         .toArray(File[]::new);
 
-            } else if (arrayType.isInterface()) {
+            }
+
+            final FileWrapper wrapper = new FileWrapper(arrayType);
+            if (wrapper.isWrapper()) {
+
+                /*
+                 * This array is of type Object, not what we need
+                 */
+                final Object[] src = stream(dir, method)
+                        .filter(filter)
+                        .map(wrapper::wrap)
+                        .toArray();
+
+                /*
+                 * Create a new array of the proper type and populate it
+                 */
+                final Object[] dest = (Object[]) Array.newInstance(arrayType, src.length);
+                System.arraycopy(src, 0, dest, 0, src.length);
+
+                return dest;
+            }
+
+            if (arrayType.isInterface()) {
 
                 // will be an array of type Object[]
                 final Object[] src = stream(dir, method)
@@ -511,6 +559,56 @@ public interface Dir {
         }
     }
 
+    class FileWrapper {
+
+        private final Constructor<?> constructor;
+        private final Method factory;
+        private Class<?> type;
+
+        public FileWrapper(final Class<?> type) {
+            this.type = type;
+            this.constructor = Arrays.stream(type.getConstructors())
+                    .filter(constructor -> constructor.getParameterTypes().length == 1)
+                    .filter(constructor -> constructor.getParameterTypes()[0].equals(File.class))
+                    .findFirst().orElse(null);
+
+            factory = Arrays.stream(type.getMethods())
+                    .filter(method -> Modifier.isStatic(method.getModifiers()))
+                    .filter(constructor -> constructor.getParameterTypes().length == 1)
+                    .filter(constructor -> constructor.getParameterTypes()[0].equals(File.class))
+                    .filter(constructor -> constructor.getReturnType().equals(type))
+                    .min(Comparator.comparing(Method::getName))
+                    .orElse(null);
+        }
+
+        public boolean isWrapper() {
+            return constructor != null || factory != null;
+        }
+
+        public Object wrap(final File file) {
+            if (constructor != null) {
+                try {
+                    return constructor.newInstance(file);
+                } catch (final InvocationTargetException e) {
+                    throw new ConstructorFailedException(type, constructor, file, e.getCause());
+                } catch (final Exception e) {
+                    throw new ConstructorFailedException(type, constructor, file, e);
+                }
+            }
+
+            if (factory != null) {
+                try {
+                    return factory.invoke(null, file);
+                } catch (final InvocationTargetException e) {
+                    throw new FactoryMethodFailedException(type, factory, file, e.getCause());
+                } catch (final Exception e) {
+                    throw new FactoryMethodFailedException(type, factory, file, e);
+                }
+            }
+
+            return new InvalidFileWrapperException(type);
+        }
+    }
 
     class MkdirFailedException extends RuntimeException {
         public MkdirFailedException(final Method method, final File dir, final Throwable t) {
@@ -521,6 +619,27 @@ public interface Dir {
     class MkdirsFailedException extends RuntimeException {
         public MkdirsFailedException(final Method method, final File dir, final Throwable t) {
             super(String.format("@Mkdirs failed%n method: %s%n path: %s", method, dir.getAbsolutePath()), t);
+        }
+    }
+
+    class ConstructorFailedException extends RuntimeException {
+        public ConstructorFailedException(final Class<?> clazz, final Constructor<?> constructor, final File dir, final Throwable t) {
+            super(String.format("%s construction failed%n constructor: %s%n path: %s", clazz.getSimpleName(), constructor, dir.getAbsolutePath()), t);
+        }
+    }
+
+    class FactoryMethodFailedException extends RuntimeException {
+        public FactoryMethodFailedException(final Class<?> clazz, final Method factory, final File dir, final Throwable t) {
+            super(String.format("%s factory method failed%n method: %s%n path: %s", clazz.getSimpleName(), factory, dir.getAbsolutePath()), t);
+        }
+    }
+
+    class InvalidFileWrapperException extends RuntimeException {
+        public InvalidFileWrapperException(final Class<?> clazz) {
+            super(String.format("Type '%s' cannot be constructed.  Add a constructor or factory method similar to the following:%n" +
+                            "public %s(final File file){...}%n" +
+                            "public static %s from(final File file){...}",
+                    clazz.getSimpleName(), clazz.getSimpleName(), clazz.getSimpleName()));
         }
     }
 }
