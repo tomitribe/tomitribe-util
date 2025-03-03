@@ -97,6 +97,14 @@ public class ObjectMap extends AbstractMap<String, Object> {
             attributes.put(entry.getKey(), entry);
         }
 
+        methodAccessors(clazz);
+
+        for (final Class<?> intrface : clazz.getInterfaces()) {
+            methodAccessors(intrface);
+        }
+    }
+
+    private void methodAccessors(final Class<?> clazz) {
         for (final Method getter : clazz.getMethods()) {
             if (!isValidGetter(getter)) continue;
 
@@ -121,7 +129,7 @@ public class ObjectMap extends AbstractMap<String, Object> {
     }
 
     private boolean isValidGetter(Method m) {
-        if (Modifier.isAbstract(m.getModifiers())) return false;
+        if (!m.getDeclaringClass().isInterface() && Modifier.isAbstract(m.getModifiers())) return false;
         if (Modifier.isStatic(m.getModifiers())) return false;
 
         // Void methods are not valid getters
@@ -266,7 +274,9 @@ public class ObjectMap extends AbstractMap<String, Object> {
         }
 
         protected Object invoke(final Method method, final Object... args) {
-            SetAccessible.on(method);
+            if (!Modifier.isPublic(method.getModifiers())) {
+                SetAccessible.on(method);
+            }
 
             try {
                 return method.invoke(object, args);

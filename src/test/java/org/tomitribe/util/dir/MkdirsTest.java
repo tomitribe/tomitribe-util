@@ -26,7 +26,6 @@ import java.io.File;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class MkdirsTest {
     @Test
@@ -69,7 +68,7 @@ public class MkdirsTest {
         File pomXml();
     }
 
-    public interface Src  {
+    public interface Src {
         Section main();
 
         Section test();
@@ -77,7 +76,7 @@ public class MkdirsTest {
         Section section(final String name);
     }
 
-    public interface Section extends Dir{
+    public interface Section extends Dir {
         @Mkdirs
         File java();
 

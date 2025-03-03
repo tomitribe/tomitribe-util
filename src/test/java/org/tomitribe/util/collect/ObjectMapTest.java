@@ -104,6 +104,17 @@ public class ObjectMapTest extends TestCase {
         assertEquals(true, map.get("myboolean").isReadOnly());
     }
 
+    public void testHashMap() throws Exception {
+        final HashMap<Object, Object> hashMap = new HashMap<>();
+        hashMap.put("one", "uno");
+
+        final Map<String, ObjectMap.Member> map = members(new ObjectMap(hashMap.entrySet().iterator().next()));
+        final ObjectMap.Member key = map.get("key");
+        assertEquals("one", key.getValue());
+
+        final ObjectMap.Member value = map.get("value");
+        assertEquals("uno", value.getValue());
+    }
     private Map<String, ObjectMap.Member> members(final ObjectMap objectMap) {
         final Map<String, ObjectMap.Member> map = new HashMap<String, ObjectMap.Member>();
         for (final Map.Entry<String, Object> entry : objectMap.entrySet()) {
