@@ -18,12 +18,14 @@ package org.tomitribe.util.reflect;
 
 import junit.framework.TestCase;
 
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Function;
 
 public class GenericsTest extends TestCase {
 
@@ -45,6 +47,13 @@ public class GenericsTest extends TestCase {
         assertEquals(URL.class, Generics.getReturnType(Orange.class.getMethod("urls")));
     }
 
+    public void testInterfaceTypes() throws Exception {
+        final Type[] interfaceTypes = Generics.getInterfaceTypes(Function.class, DooHickey.class);
+        assertEquals(URI.class, interfaceTypes[0]);
+        assertEquals(URL.class, interfaceTypes[1]);
+        assertEquals(2, interfaceTypes.length);
+    }
+
     public static class Orange {
 
         public Collection<URI> uris;
@@ -58,6 +67,13 @@ public class GenericsTest extends TestCase {
         }
 
         public void set(final List<Integer> integers) {
+        }
+    }
+
+    public static class DooHickey implements Function<URI, URL> {
+        @Override
+        public URL apply(final URI uri) {
+            return null;
         }
     }
 }
