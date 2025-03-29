@@ -16,10 +16,12 @@
  */
 package org.tomitribe.util.collect;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -32,6 +34,10 @@ public class Suppliers {
         return asStream(asIterator(supplier));
     }
 
+    public static <T, I> Stream<I> asStream(final Supplier<T> supplier, final Function<T, Collection<I>> getItems) {
+        return asStream(asIterator(supplier)).map(getItems).flatMap(Collection::stream);
+    }
+
     public static <T> Iterator<T> asIterator(final Supplier<T> supplier) {
         return new SupplierIterator<>(supplier);
     }
@@ -42,13 +48,36 @@ public class Suppliers {
                 false);
     }
 
+    public static <T, I> Stream<I> asStream(final Function<T, T> function, final Function<T, Collection<I>> getItems) {
+        return asStream(asIterator(asSupplier(function))).map(getItems).flatMap(Collection::stream);
+    }
+
+
+    public static <T> Supplier<T> asSupplier(final Function<T, T> function) {
+        return new RecursiveSupplier<>(function);
+    }
+
+    public static class RecursiveSupplier<T> implements Supplier<T> {
+        private final Function<T, T> function;
+        private T previous;
+
+        public RecursiveSupplier(final Function<T, T> function) {
+            this.function = function;
+        }
+
+        @Override
+        public T get() {
+            previous = function.apply(previous);
+            return previous;
+        }
+    }
 
     private static class SupplierIterator<T> implements Iterator<T> {
         private final Supplier<T> supplier;
         private T next;
 
         public SupplierIterator(final Supplier<T> supplier) {
-            this.supplier = wrap(supplier);
+            this.supplier = supplier;
             this.next = this.supplier.get();
         }
 
@@ -66,17 +95,6 @@ public class Suppliers {
             } finally {
                 this.next = supplier.get();
             }
-        }
-
-        private Supplier<T> wrap(final Supplier<T> supplier) {
-            return () -> {
-                try {
-                    return supplier.get();
-                } catch (RuntimeException e) {
-                    e.printStackTrace();
-                    throw e;
-                }
-            };
         }
     }
 }
