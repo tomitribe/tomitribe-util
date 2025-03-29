@@ -20,10 +20,12 @@ import org.junit.Test;
 import org.tomitribe.util.Join;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -110,4 +112,123 @@ public class SuppliersTest {
                 "count-9", Join.join("\n", strings));
 
     }
+
+    @Test
+    public void testAsStreamWithSupplierAndMapper() {
+
+        final Supplier<Page> supplier = new Supplier<Page>() {
+            private Page previous;
+
+            @Override
+            public Page get() {
+                int count = previous != null ? previous.getCount() : 0;
+                if (count > 10) return null;
+                return previous = new Page(count, Arrays.asList(
+                        "item" + count++,
+                        "item" + count++,
+                        "item" + count++
+                ));
+            }
+        };
+
+        final List<String> result = Suppliers.asStream(supplier, Page::getStrings)
+                .collect(Collectors.toList());
+
+        assertEquals("" +
+                "item0\n" +
+                "item1\n" +
+                "item2\n" +
+                "item3\n" +
+                "item4\n" +
+                "item5\n" +
+                "item6\n" +
+                "item7\n" +
+                "item8\n" +
+                "item9\n" +
+                "item10\n" +
+                "item11", Join.join("\n", result));
+    }
+
+    @Test
+    public void testAsStreamWithFunctionAndMapper() {
+
+        final Function<Page, Page> function = previous -> {
+            int count = previous != null ? previous.getCount() : 0;
+            if (count > 10) return null;
+            return new Page(count, Arrays.asList(
+                    "item" + count++,
+                    "item" + count++,
+                    "item" + count++
+            ));
+        };
+
+        final List<String> result = Suppliers.asStream(function, Page::getStrings)
+                .collect(Collectors.toList());
+
+        assertEquals("" +
+                "item0\n" +
+                "item1\n" +
+                "item2\n" +
+                "item3\n" +
+                "item4\n" +
+                "item5\n" +
+                "item6\n" +
+                "item7\n" +
+                "item8\n" +
+                "item9\n" +
+                "item10\n" +
+                "item11", Join.join("\n", result));
+    }
+
+    @Test
+    public void testAsSupplierFunction() {
+        final Function<Integer, Integer> incrementer = previous -> {
+            if (previous == null) return 0;
+            return previous + 1;
+        };
+
+        final Supplier<Integer> supplier = Suppliers.asSupplier(incrementer);
+
+        assertEquals((Integer) 0, supplier.get());
+        assertEquals((Integer) 1, supplier.get());
+        assertEquals((Integer) 2, supplier.get());
+    }
+
+    @Test
+    public void testRecursiveSupplier() {
+        final Function<String, String> repeater = previous -> {
+            if (previous == null) return "a";
+            if (previous.length() > 3) return null;
+            return previous + "a";
+        };
+
+        final Suppliers.RecursiveSupplier<String> supplier = new Suppliers.RecursiveSupplier<>(repeater);
+        final List<String> results = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            final String next = supplier.get();
+            if (next == null) break;
+            results.add(next);
+        }
+
+        assertEquals(Arrays.asList("a", "aa", "aaa", "aaaa"), results);
+    }
+
+    public static class Page {
+        private final List<String> strings;
+        private final int count;
+
+        public Page(final int count, final List<String> strings) {
+            this.strings = strings;
+            this.count = count + strings.size();
+        }
+
+        public List<String> getStrings() {
+            return strings;
+        }
+
+        public int getCount() {
+            return count;
+        }
+    }
+
 }
