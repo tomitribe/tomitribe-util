@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class SuppliersTest {
@@ -211,6 +213,40 @@ public class SuppliersTest {
         }
 
         assertEquals(Arrays.asList("a", "aa", "aaa", "aaaa"), results);
+    }
+
+    @Test
+    public void singleton() throws InterruptedException {
+        final AtomicInteger calls = new AtomicInteger();
+        final Supplier<Integer> singleton = Suppliers.singleton(calls::incrementAndGet);
+
+        final int threadCount = 1000;
+        final CountDownLatch start = new CountDownLatch(1);
+        final CountDownLatch ready = new CountDownLatch(threadCount);
+        final CountDownLatch finished = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            final Thread thread = new Thread(() -> {
+                ready.countDown();
+                try {
+                    start.await();
+                    singleton.get();
+                } catch (final InterruptedException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    finished.countDown();
+                }
+            });
+            thread.start();
+        }
+
+        assertEquals(0, calls.get());
+        ready.await();
+        assertEquals(0, calls.get());
+        start.countDown();
+        finished.await();
+
+        assertEquals(1, calls.get());
     }
 
     public static class Page {

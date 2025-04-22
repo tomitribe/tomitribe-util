@@ -111,6 +111,11 @@ public class Suppliers {
         return new RecursiveSupplier<>(function);
     }
 
+
+    public static <T> Supplier<T> singleton(final Supplier<T> supplier) {
+        return new SingletonSupplier<>(supplier);
+    }
+
     /**
      * A {@link Supplier} that repeatedly applies a function to the previous result.
      * Starts with {@code null} and returns each result of {@code function.apply(previous)}.
@@ -160,4 +165,27 @@ public class Suppliers {
             return result;
         }
     }
+
+    public static class SingletonSupplier<T> implements Supplier<T> {
+
+        private final Supplier<T> supplier;
+        private volatile T instance;
+
+        public SingletonSupplier(final Supplier<T> supplier) {
+            this.supplier = supplier;
+        }
+
+        @Override
+        public T get() {
+            if (instance == null) {
+                synchronized (this) {
+                    if (instance == null) {
+                        instance = supplier.get();
+                    }
+                }
+            }
+            return instance;
+        }
+    }
+
 }
