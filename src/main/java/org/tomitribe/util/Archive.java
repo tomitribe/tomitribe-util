@@ -138,6 +138,16 @@ public class Archive {
         }
     }
 
+    public Archive add(final File file) {
+        if (file.isDirectory()) {
+            return addDir(file);
+        } else if (file.isFile()) {
+            return addJar(file);
+        } else {
+            throw new IllegalArgumentException("File must be a directory or a jar: " + file);
+        }
+    }
+
     public Archive addDir(final File dir) {
         return addDir(null, dir);
     }
