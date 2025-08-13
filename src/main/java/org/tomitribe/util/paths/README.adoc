@@ -1,0 +1,355 @@
+= Strongly typed filesystem manipulation
+
+Efforts to create strongly-typed code are often poisoned by string file path references spread all over the same codebase.
+
+We constantly see code like this refering to file paths with strings.  This one has to have a typo in it.  Which is correct, `resource` or `resources`?
+
+[source,java]
+----
+final File moduleDir = ...
+final File srcMainResources = new File(moduleDir, "src/main/resources");
+final File srcTestResources = new File(moduleDir, "src/test/resource");
+----
+
+What if you could have typo-proof, compile-time checked and code-completable paths like this?  Perhaps DSL-style approach to file paths, like so:
+
+----
+final File moduleDir = ...
+final Module module = Dir.of(Module.class, moduleDir);
+final File srcMainResources = module.src().main().resources();
+final File srcTestResources = module.src().test().resources();
+----
+
+This utility was born out of a desire that all path references could be compile-time checked and code completed.
+
+== Step 1 Create an interface matching a directory
+
+For example, a directory structure like this:
+
+[source,java]
+----
+ project/
+   - src/
+   - target/
+   - .git/
+   - pom.xml
+----
+
+Could be handled with the following interface:
+
+[source,java]
+----
+ public interface Project {
+     File src();
+     File target();
+     @Name(".git")
+     File git();
+     @Name("pom.xml")
+     File pomXml();
+ }
+----
+
+== Step 2 Get a proxied reference to that directory
+
+
+[source,java]
+----
+import org.tomitribe.util.dir.Dir;
+
+File mydir = new File("/some/path/to/a/project");
+Project project = Dir.of(Project.class,  mydir);
+----
+
+Under the covers the interface is implemented as a dynamic proxy whose InvocationHandler is
+ holding the actual File object.
+
+== Returning Another Interface
+
+Instead of `src()` returning a `Path`, it could return another similar interface. For example
+
+[source,java]
+----
+ public interface Src {
+     File main();
+     File test();
+ } 
+----
+
+And now we update `Project` so the `src()` method will return `Src`
+
+[source,java]
+----
+ public interface Project {
+     Src src();
+     File target();
+     @Name(".git")
+     File git();
+     @Name("pom.xml")
+     File pomXml();
+ } 
+----
+
+Now we have a strongly-typed directory structure that also supports code completion in the IDE.
+
+== Passing a Subdirectory Name
+
+There may be times when you don't know the exact subdirectory name, but you know that it will use a specific
+ directory structure.  Here's how you might reference a nested Maven module structure:
+
+[source,java]
+----
+ public interface Module {
+     @Name("pom.xml")
+     File pomXml();
+     File src();
+     File target();
+     Module submodule(String name);
+ } 
+----
+
+
+== `@Name` for indicating file names
+
+By default file names are derived from the method name.  The following would indicate a directory or file named `src` under the module directory.
+
+[source,java]
+----
+public interface Module {
+
+    File src();
+}
+----
+
+But what if you had a filename with a dot or other illegal java character for method name?  Just use `@Name` to indicate the expected file name:
+
+[source,java]
+----
+public interface Module {
+    File src();
+
+    @Name("pom.xml")
+    File pomXml();
+}
+----
+
+This can also be useful for files that are otherwise hidden, such as `.gitignore`
+
+
+[source,java]
+----
+public interface Module {
+    File src();
+
+    @Name("pom.xml")
+    File pomXml();
+    
+    @Name(".gitignore")
+    File gitignore();
+}
+----
+
+== Listing Files
+
+Let's imagine we have a Maven project structure with many submodules.  How do we list the `cheese` and `pepperoni` submodules?
+
+----
+pizza/
+   pom.xml
+   cheese/
+      pom.xml
+      src/
+   pepperoni/
+      pom.xml
+      src/
+   target/
+----
+
+=== Array of `File`
+
+The simplest way is to return an array of `java.io.File` such as:
+
+[source,java]
+----
+public interface Project {
+    File[] modules();
+}
+----
+
+This is close, but we haven't given any way for unwanted directories such as `target` to be filtered out.
+
+=== `@Filter` Array of `File`
+
+To get just `Path` instances that are directories and contain a `pom.xml` we can create a simple `FileFilter`, like so:
+
+[source,java]
+----
+import java.io.FileFilter;
+
+public static class HasPomXml implements FileFilter {
+    @Override
+    public boolean accept(final File pathname) {
+        final File pom = new File(pathname, "pom.xml");
+        return pom.exists();
+    }
+}
+----
+
+Then we can use it to filter out anything not accepted by our `HasPomXml` filter
+
+[source,java]
+----
+import  org.tomitribe.util.dir.Filter;
+
+public interface Project {
+
+    @Filter(HasPomXml.class)
+    File[] modules();
+}
+----
+
+=== Array of `interface`
+
+Of course, the main goal of the `Dir` utility is to elimnate `Path` references where possible.  So let's put our `Module` interface back like so:
+
+[source,java]
+----
+public interface Project {
+
+    @Filter(HasPomXml.class)
+    Module[] modules();
+}
+----
+
+[source,java]
+----
+public interface Module {
+
+    @Name("pom.xml")
+    File pomXml();
+
+    Src src();
+}
+----
+
+=== `Stream` of an `interface`
+
+Arrays are fine, but often it's far more fun to use `java.util.stream.Stream`
+
+[source,java]
+----
+import java.util.stream.Stream;
+
+public interface Project {
+    @Filter(HasPomXml.class)
+    Stream<Module> modules();
+}
+----
+
+[source,java]
+----
+public interface Module {
+
+    @Name("pom.xml")
+    File pomXml();
+
+    Src src();
+}
+----
+
+=== `@Walk` to recursively `Stream` all matches
+
+What if your Maven project structure is fairly deep and has modules inside modules?  By default, returning a `Stream` or array will only the matches immediately under the current directory, in our case the `Project` directory.
+
+If we want to do a recursive walk by adding the `@Walk` annotation.
+
+[source,java]
+----
+import java.util.stream.Stream;
+import org.tomitribe.util.dir.Filter;
+import org.tomitribe.util.dir.Walk;
+
+public interface Project {
+    @Walk
+    @Filter(HasPomXml.class)
+    Stream<Module> modules();
+}
+----
+
+NOTE: The `@Walk` only works when returning a `java.util.stream.Stream`
+
+=== `@Walk` to recursively `Stream` matches N levels deep
+
+Under the covers `java.nio.file.Files.walk` is used to traverse, filter each matching file, and return it as a `Stream`.  If happen to know your modules are not more than say 2 or 3 directories deep, you can specify a `maxDepth` to speed up the walk.
+
+[source,java]
+----
+import java.util.stream.Stream;
+import org.tomitribe.util.dir.Filter;
+import org.tomitribe.util.dir.Walk;
+
+public interface Project {
+    @Walk(maxDepth = 3)
+    @Filter(HasPomXml.class)
+    Stream<Module> modules();
+}
+----
+
+== `@Mkdir` 
+
+To force a directory to be created simply annotate it with `@Mkdir` as follows.  When the `target()` method is invoked a check will be done and the directory created lazily if it needed.
+
+[source,java]
+----
+public interface Project {
+    Src src();
+
+    @Mkdir
+    File target();
+
+    @Name("pom.xml")
+    File pomXml();
+}
+----
+
+== `@Mkdirs`
+
+The above `@Mkdir` instruction will still fail if the path leading up to `target` does not exist.  It's possible to create all parent directories via `@Mkdirs`
+
+[source,java]
+----
+public interface Project {
+    Src src();
+}
+----
+
+[source,java]
+----
+public interface Src  {
+    Section main();
+    Section test();
+}
+----
+
+[source,java]
+----
+public interface Section {
+    @Mkdirs
+    File java();
+
+    @Mkdir
+    File resources();
+}
+----
+
+In this example if the path `src/main/java` would be created if we invoke code like this:
+
+[source,java]
+----
+Project project = ...
+
+final File srcMainJava = project.src().main().java();
+----
+
+Here we could safely write files into the `srcMainJava` reference as the directory and any parents would have been automatically created the moment `java()` was called.
+
+NOTE: The path `src/test/java` would still not exist unless `project.src().test().java()` is also called.

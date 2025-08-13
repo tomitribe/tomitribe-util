@@ -332,6 +332,22 @@ public class Paths {
         }
     }
 
+    public static Path mkdirs(final Path dir, final String... parts) {
+        final Path path = path(dir, parts);
+
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (final IOException e) {
+                throw new RuntimeException("Cannot mkdirs: " + path.toAbsolutePath(), e);
+            }
+        } else {
+            dir(path);
+        }
+
+        return path;
+    }
+
     public static Path mkparent(final Path path) {
         mkdirs(path.getParent());
         return path;
