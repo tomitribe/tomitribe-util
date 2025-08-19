@@ -30,6 +30,7 @@ public class Escapes {
      *  - https://stackoverflow.com/users/471272/tchrist
      *
      */
+    // CHECKSTYLE:OFF
     public static String unescape(String oldstr) {
 
         final StringBuilder newString = new StringBuilder(oldstr.length());
@@ -287,5 +288,6 @@ public class Escapes {
 
         return newString.toString();
     }
+    // CHECKSTYLE:ON
 
 }
