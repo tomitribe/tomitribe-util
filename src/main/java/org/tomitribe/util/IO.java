@@ -37,12 +37,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.DirectoryStream;
+import java.nio.file.LinkOption;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -85,6 +91,16 @@ public class IO {
         }
     }
 
+    public static Properties readProperties(final Path resource) throws IOException {
+        return readProperties(resource, new Properties());
+    }
+
+    public static Properties readProperties(final Path resource, final Properties properties) throws IOException {
+        try (final InputStream read = read(resource)) {
+            return readProperties(read, properties);
+        }
+    }
+
     /**
      * Reads and closes the input stream
      */
@@ -120,6 +136,18 @@ public class IO {
         }
     }
 
+    public static String readString(final Path file) throws IOException {
+        try (BufferedReader reader = java.nio.file.Files.newBufferedReader((file))) {
+            return reader.readLine();
+        }
+    }
+
+    public static byte[] readBytes(final Path file) throws IOException {
+        try (InputStream in = read(file)) {
+            return readBytes(in);
+        }
+    }
+
     public static byte[] readBytes(final URL url) throws IOException {
         try (InputStream in = read(url)) {
             return readBytes(in);
@@ -138,6 +166,11 @@ public class IO {
         }
     }
 
+    public static String slurp(final Path file) throws IOException {
+        try (InputStream read = read(file)) {
+            return slurp(read);
+        }
+    }
 
     public static String slurp(final URL url) throws IOException {
         try (InputStream in = url.openStream()) {
@@ -158,10 +191,27 @@ public class IO {
         }
     }
 
+    public static void writeString(final Path path, final String string) throws IOException {
+        try (final BufferedWriter writer = java.nio.file.Files.newBufferedWriter(path)) {
+            writer.write(string);
+            writer.newLine();
+        }
+    }
+
     public static void copy(final File from, final File to) throws IOException {
         if (!from.isDirectory()) {
             try (FileOutputStream fos = new FileOutputStream(to)) {
                 copy(from, fos);
+            }
+        } else {
+            copyDirectory(from, to);
+        }
+    }
+
+    public static void copy(final Path from, final Path to) throws IOException {
+        if (!java.nio.file.Files.isDirectory(from)) {
+            try (OutputStream out = java.nio.file.Files.newOutputStream(to)) {
+                copy(from, out);
             }
         } else {
             copyDirectory(from, to);
@@ -223,7 +273,75 @@ public class IO {
         }
     }
 
+    public static void copyDirectory(final Path srcDir, final Path destDir) throws IOException {
+        if (srcDir == null) throw new NullPointerException("Source must not be null");
+        if (destDir == null) throw new NullPointerException("Destination must not be null");
+        if (!java.nio.file.Files.exists(srcDir))
+            throw new FileNotFoundException("Source '" + srcDir + "' does not exist");
+        if (!java.nio.file.Files.isDirectory(srcDir))
+            throw new IOException("Source '" + srcDir + "' exists but is not a directory");
+        if (java.nio.file.Files.isSameFile(srcDir, destDir)) {
+            throw new IOException("Source '" + srcDir + "' and destination '" + destDir + "' are the same");
+        }
+
+        List<Path> exclusionList = null;
+        final Path canonicalSrc = srcDir.toRealPath();
+        final Path canonicalDest = destDir.toRealPath(LinkOption.NOFOLLOW_LINKS);
+
+        if (canonicalDest.startsWith(canonicalSrc)) {
+            try (DirectoryStream<Path> stream = java.nio.file.Files.newDirectoryStream(srcDir)) {
+                exclusionList = new ArrayList<>();
+                for (final Path entry : stream) {
+                    exclusionList.add(canonicalDest.resolve(entry.getFileName()).toRealPath());
+                }
+            }
+        }
+
+        doCopyDirectory(srcDir, destDir, exclusionList);
+    }
+
+    private static void doCopyDirectory(final Path srcDir, final Path destDir, final List<Path> exclusionList)
+            throws IOException {
+
+        if (!java.nio.file.Files.exists(destDir)) {
+            java.nio.file.Files.createDirectories(destDir);
+        } else if (!java.nio.file.Files.isDirectory(destDir)) {
+            throw new IOException("Destination '" + destDir + "' exists but is not a directory");
+        }
+
+        if (!java.nio.file.Files.isWritable(destDir)) {
+            throw new IOException("Destination '" + destDir + "' cannot be written to");
+        }
+
+        try (DirectoryStream<Path> stream = java.nio.file.Files.newDirectoryStream(srcDir)) {
+            for (final Path entry : stream) {
+                final Path copied = destDir.resolve(entry.getFileName());
+                final Path canonicalEntry = entry.toRealPath(LinkOption.NOFOLLOW_LINKS);
+
+                if (exclusionList == null || exclusionList.stream().noneMatch(e -> {
+                    try {
+                        return java.nio.file.Files.isSameFile(e, canonicalEntry);
+                    } catch (final IOException ex) {
+                        throw new UncheckedIOException(ex);
+                    }
+                })) {
+                    if (java.nio.file.Files.isDirectory(entry)) {
+                        doCopyDirectory(entry, copied, exclusionList);
+                    } else {
+                        copy(entry, copied);
+                    }
+                }
+            }
+        }
+    }
+
     public static void copy(final File from, final OutputStream to) throws IOException {
+        try (InputStream read = read(from)) {
+            copy(read, to);
+        }
+    }
+
+    public static void copy(final Path from, final OutputStream to) throws IOException {
         try (InputStream read = read(from)) {
             copy(read, to);
         }
@@ -271,6 +389,36 @@ public class IO {
         }
     }
 
+    public static void copy(final InputStream from, final Path to) throws IOException {
+        try (OutputStream write = write(to)) {
+            copy(from, write);
+        }
+    }
+
+    public static void copy(final URL from, final Path to) throws IOException {
+        try (OutputStream write = write(to)) {
+            copy(from, write);
+        }
+    }
+
+    public static void copy(final InputStream from, final Path to, final boolean append) throws IOException {
+        try (OutputStream write = write(to, append)) {
+            copy(from, write);
+        }
+    }
+
+    public static void copy(final String contents, final Path to) throws IOException {
+        try (OutputStream write = write(to)) {
+            copy(contents, write);
+        }
+    }
+
+    public static void copy(final String contents, final Path to, final boolean append) throws IOException {
+        try (OutputStream write = write(to, append)) {
+            copy(contents, write);
+        }
+    }
+
     public static void copy(final InputStream from, final OutputStream to) throws IOException {
         final byte[] buffer = new byte[1024];
         int length;
@@ -297,6 +445,21 @@ public class IO {
         final InputStream read = read(file);
         return new ZipInputStream(read);
     }
+
+    public static void copy(final byte[] from, final Path to) throws IOException {
+        copy(new ByteArrayInputStream(from), to);
+    }
+
+    public static ZipOutputStream zip(final Path file) throws IOException {
+        final OutputStream write = write(file);
+        return new ZipOutputStream(write);
+    }
+
+    public static ZipInputStream unzip(final Path file) throws IOException {
+        final InputStream read = read(file);
+        return new ZipInputStream(read);
+    }
+
 
     public static void close(final Closeable closeable) {
         if (closeable == null) return;
@@ -326,6 +489,22 @@ public class IO {
         return true;
     }
 
+    public static boolean delete(final Path path) {
+        if (path == null) return false;
+
+        try {
+            return java.nio.file.Files.deleteIfExists(path);
+        } catch (final IOException e) {
+            Logger.getLogger(IO.class.getName()).log(Level.WARNING, "Delete failed on: " + path.toAbsolutePath(), e);
+            return false;
+        }
+    }
+
+    public static OutputStream write(final Path destination) throws IOException {
+        final OutputStream out = java.nio.file.Files.newOutputStream(destination);
+        return new BufferedOutputStream(out, 32_768);
+    }
+
     public static OutputStream write(final File destination) throws FileNotFoundException {
         final OutputStream out = new FileOutputStream(destination);
         return new BufferedOutputStream(out, 32768);
@@ -336,11 +515,28 @@ public class IO {
         return new BufferedOutputStream(out, 32768);
     }
 
+    public static OutputStream write(final Path destination, final boolean append) throws IOException {
+        final OpenOption[] options = append
+                ? new OpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND}
+                : new OpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING};
+
+        final OutputStream out = java.nio.file.Files.newOutputStream(destination, options);
+        return new BufferedOutputStream(out, 32_768);
+    }
+
     public static PrintStream print(final File destination, final boolean append) throws FileNotFoundException {
         return print(write(destination, append));
     }
 
     public static PrintStream print(final File destination) throws FileNotFoundException {
+        return print(write(destination));
+    }
+
+    public static PrintStream print(final Path destination, final boolean append) throws IOException {
+        return print(write(destination, append));
+    }
+
+    public static PrintStream print(final Path destination) throws IOException {
         return print(write(destination));
     }
 
@@ -350,6 +546,11 @@ public class IO {
 
     public static InputStream read(final File source) throws FileNotFoundException {
         final InputStream in = new FileInputStream(source);
+        return new BufferedInputStream(in, 32768);
+    }
+
+    public static InputStream read(final Path source) throws IOException {
+        final InputStream in = java.nio.file.Files.newInputStream(source);
         return new BufferedInputStream(in, 32768);
     }
 
@@ -370,6 +571,10 @@ public class IO {
     }
 
     public static Iterable<String> readLines(final File file) throws FileNotFoundException {
+        return readLines(read(file));
+    }
+
+    public static Iterable<String> readLines(final Path file) throws IOException {
         return readLines(read(file));
     }
 
