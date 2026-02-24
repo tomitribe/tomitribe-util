@@ -14,6 +14,7 @@
 
 package org.tomitribe.util;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -25,9 +26,26 @@ public class StringTemplate {
 
     public static final Pattern PATTERN = Pattern.compile("(\\{)((\\.|\\w)+)(})");
     private final String template;
+    private final Pattern pattern;
 
     public StringTemplate(final String template) {
         this.template = template;
+        this.pattern = PATTERN;
+    }
+
+    public StringTemplate(final String template, final String startDelimiter, final String endDelimiter) {
+        this.template = template;
+        this.pattern = Pattern.compile(
+                "(" + Pattern.quote(startDelimiter) + ")((\\.|\\w)+)(" + Pattern.quote(endDelimiter) + ")"
+        );
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public Applier applier() {
+        return new Applier(this);
     }
 
     public String format(final Map<String, Object> map) {
@@ -42,7 +60,7 @@ public class StringTemplate {
     }
 
     public String apply(final Function<String, String> map) {
-        final Matcher matcher = PATTERN.matcher(template);
+        final Matcher matcher = pattern.matcher(template);
         final StringBuffer buf = new StringBuffer();
 
         while (matcher.find()) {
@@ -79,7 +97,7 @@ public class StringTemplate {
     }
 
     public String apply(final Map<String, Object> map) {
-        final Matcher matcher = PATTERN.matcher(template);
+        final Matcher matcher = pattern.matcher(template);
         final StringBuffer buf = new StringBuffer();
 
         while (matcher.find()) {
@@ -119,7 +137,7 @@ public class StringTemplate {
 
     public Set<String> keys() {
         final Set<String> keys = new TreeSet<String>();
-        final Matcher matcher = PATTERN.matcher(template);
+        final Matcher matcher = pattern.matcher(template);
 
         while (matcher.find()) {
             String key = matcher.group(2);
@@ -132,6 +150,45 @@ public class StringTemplate {
         }
 
         return keys;
+    }
+
+    public static class Builder {
+        private String template;
+        private String startDelimiter = "{";
+        private String endDelimiter = "}";
+
+        public Builder template(final String template) {
+            this.template = template;
+            return this;
+        }
+
+        public Builder delimiters(final String start, final String end) {
+            this.startDelimiter = start;
+            this.endDelimiter = end;
+            return this;
+        }
+
+        public StringTemplate build() {
+            return new StringTemplate(template, startDelimiter, endDelimiter);
+        }
+    }
+
+    public static class Applier {
+        private final StringTemplate stringTemplate;
+        private final Map<String, Object> map = new LinkedHashMap<>();
+
+        private Applier(final StringTemplate stringTemplate) {
+            this.stringTemplate = stringTemplate;
+        }
+
+        public Applier set(final String key, final Object value) {
+            this.map.put(key, value);
+            return this;
+        }
+
+        public String apply() {
+            return stringTemplate.apply(map);
+        }
     }
 
 }

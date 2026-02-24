@@ -48,4 +48,86 @@ public class StringTemplateTest extends TestCase {
         assertEquals("port", iterator.next());
     }
 
+    public void testCustomDelimiters() throws Exception {
+        final StringTemplate template = new StringTemplate("http://{{host}}:{{port}}/{{path}}", "{{", "}}");
+
+        final Map<String, Object> params = new HashMap<String, Object>();
+        params.put("host", "localhost");
+        params.put("port", 90);
+        params.put("path", new StringBuffer("one/two/three"));
+
+        final String string = template.apply(params);
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testCustomDelimitersKeys() throws Exception {
+        final StringTemplate template = new StringTemplate("http://{{host}}:{{port}}/{{path}}", "{{", "}}");
+
+        final Set<String> keys = template.keys();
+        assertEquals(3, keys.size());
+
+        final Iterator<String> iterator = keys.iterator();
+        assertEquals("host", iterator.next());
+        assertEquals("path", iterator.next());
+        assertEquals("port", iterator.next());
+    }
+
+    public void testBuilder() throws Exception {
+        final StringTemplate template = StringTemplate.builder()
+                .template("http://{{host}}:{{port}}/{{path}}")
+                .delimiters("{{", "}}")
+                .build();
+
+        final Map<String, Object> params = new HashMap<String, Object>();
+        params.put("host", "localhost");
+        params.put("port", 90);
+        params.put("path", new StringBuffer("one/two/three"));
+
+        final String string = template.apply(params);
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testBuilderDefaultDelimiters() throws Exception {
+        final StringTemplate template = StringTemplate.builder()
+                .template("http://{host}:{port}/{path}")
+                .build();
+
+        final Map<String, Object> params = new HashMap<String, Object>();
+        params.put("host", "localhost");
+        params.put("port", 90);
+        params.put("path", new StringBuffer("one/two/three"));
+
+        final String string = template.apply(params);
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testApplier() throws Exception {
+        final StringTemplate template = new StringTemplate("http://{host}:{port}/{path}");
+
+        final String string = template.applier()
+                .set("host", "localhost")
+                .set("port", 90)
+                .set("path", new StringBuffer("one/two/three"))
+                .apply();
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testBuilderWithApplier() throws Exception {
+        final String string = StringTemplate.builder()
+                .template("http://{{host}}:{{port}}/{{path}}")
+                .delimiters("{{", "}}")
+                .build()
+                .applier()
+                .set("host", "localhost")
+                .set("port", 90)
+                .set("path", "one/two/three")
+                .apply();
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
 }
