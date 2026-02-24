@@ -14,28 +14,40 @@
 
 package org.tomitribe.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StringTemplate {
 
     public static final Pattern PATTERN = Pattern.compile("(\\{)((\\.|\\w)+)(})");
-    private final String template;
+    private final Supplier<String> template;
     private final Pattern pattern;
 
     public StringTemplate(final String template) {
-        this.template = template;
-        this.pattern = PATTERN;
+        this(() -> template, PATTERN);
     }
 
     public StringTemplate(final String template, final String startDelimiter, final String endDelimiter) {
+        this(() -> template, buildPattern(startDelimiter, endDelimiter));
+    }
+
+    private StringTemplate(final Supplier<String> template, final Pattern pattern) {
         this.template = template;
-        this.pattern = Pattern.compile(
+        this.pattern = pattern;
+    }
+
+    private static Pattern buildPattern(final String startDelimiter, final String endDelimiter) {
+        return Pattern.compile(
                 "(" + Pattern.quote(startDelimiter) + ")((\\.|\\w)+)(" + Pattern.quote(endDelimiter) + ")"
         );
     }
@@ -60,14 +72,15 @@ public class StringTemplate {
     }
 
     public String apply(final Function<String, String> map) {
-        final Matcher matcher = pattern.matcher(template);
+        final String string = template.get();
+        final Matcher matcher = pattern.matcher(string);
         final StringBuffer buf = new StringBuffer();
 
         while (matcher.find()) {
             final String key = matcher.group(2);
 
             if (key == null) {
-                throw new IllegalStateException("Key is null. Template '" + template + "'");
+                throw new IllegalStateException("Key is null. Template '" + string + "'");
             }
 
             final String value;
@@ -86,7 +99,7 @@ public class StringTemplate {
             }
 
             if (value == null) {
-                throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + template + "'.");
+                throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + string + "'.");
             }
 
             matcher.appendReplacement(buf, value);
@@ -97,14 +110,14 @@ public class StringTemplate {
     }
 
     public String apply(final Map<String, Object> map) {
-        final Matcher matcher = pattern.matcher(template);
+        final Matcher matcher = pattern.matcher(template.get());
         final StringBuffer buf = new StringBuffer();
 
         while (matcher.find()) {
             final String key = matcher.group(2);
 
             if (key == null) {
-                throw new IllegalStateException("Key is null. Template '" + template + "'");
+                throw new IllegalStateException("Key is null. Template '" + template.get() + "'");
             }
 
             String value = value(map, key);
@@ -118,7 +131,7 @@ public class StringTemplate {
             }
 
             if (value == null) {
-                throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + template + "'. " +
+                throw new IllegalStateException("Value is null for key '" + key + "'. Template '" + template.get() + "'. " +
                         "Keys: " + Join.join(", ", map.keySet()));
             }
             matcher.appendReplacement(buf, value);
@@ -137,7 +150,7 @@ public class StringTemplate {
 
     public Set<String> keys() {
         final Set<String> keys = new TreeSet<String>();
-        final Matcher matcher = pattern.matcher(template);
+        final Matcher matcher = pattern.matcher(template.get());
 
         while (matcher.find()) {
             String key = matcher.group(2);
@@ -153,11 +166,35 @@ public class StringTemplate {
     }
 
     public static class Builder {
-        private String template;
+        private Supplier<String> template;
         private String startDelimiter = "{";
         private String endDelimiter = "}";
 
         public Builder template(final String template) {
+            return template(() -> template);
+        }
+
+        public Builder template(final File file) {
+            return template(() -> {
+                try {
+                    return IO.slurp(file);
+                } catch (final IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        }
+
+        public Builder template(final URL url) {
+            return template(() -> {
+                try {
+                    return IO.slurp(url);
+                } catch (final IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        }
+
+        public Builder template(final Supplier<String> template) {
             this.template = template;
             return this;
         }
@@ -169,7 +206,7 @@ public class StringTemplate {
         }
 
         public StringTemplate build() {
-            return new StringTemplate(template, startDelimiter, endDelimiter);
+            return new StringTemplate(template, buildPattern(startDelimiter, endDelimiter));
         }
     }
 

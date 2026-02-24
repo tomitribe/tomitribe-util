@@ -16,6 +16,8 @@ package org.tomitribe.util;
 
 import junit.framework.TestCase;
 
+import java.io.File;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -111,6 +113,93 @@ public class StringTemplateTest extends TestCase {
                 .set("host", "localhost")
                 .set("port", 90)
                 .set("path", new StringBuffer("one/two/three"))
+                .apply();
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testBuilderTemplateFile() throws Exception {
+        final File file = File.createTempFile("template", ".txt");
+        file.deleteOnExit();
+        IO.copy("http://{host}:{port}/{path}", file);
+
+        final String string = StringTemplate.builder()
+                .template(file)
+                .build()
+                .applier()
+                .set("host", "localhost")
+                .set("port", 90)
+                .set("path", "one/two/three")
+                .apply();
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testBuilderTemplateFileCustomDelimiters() throws Exception {
+        final File file = File.createTempFile("template", ".txt");
+        file.deleteOnExit();
+        IO.copy("http://{{host}}:{{port}}/{{path}}", file);
+
+        final String string = StringTemplate.builder()
+                .template(file)
+                .delimiters("{{", "}}")
+                .build()
+                .applier()
+                .set("host", "localhost")
+                .set("port", 90)
+                .set("path", "one/two/three")
+                .apply();
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testBuilderTemplateSupplier() throws Exception {
+        final String string = StringTemplate.builder()
+                .template(() -> "http://{host}:{port}/{path}")
+                .build()
+                .applier()
+                .set("host", "localhost")
+                .set("port", 90)
+                .set("path", "one/two/three")
+                .apply();
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testBuilderTemplateURL() throws Exception {
+        final File file = File.createTempFile("template", ".txt");
+        file.deleteOnExit();
+        IO.copy("http://{host}:{port}/{path}", file);
+
+        final URL url = file.toURI().toURL();
+
+        final String string = StringTemplate.builder()
+                .template(url)
+                .build()
+                .applier()
+                .set("host", "localhost")
+                .set("port", 90)
+                .set("path", "one/two/three")
+                .apply();
+
+        assertEquals("http://localhost:90/one/two/three", string);
+    }
+
+    public void testBuilderTemplateURLCustomDelimiters() throws Exception {
+        final File file = File.createTempFile("template", ".txt");
+        file.deleteOnExit();
+        IO.copy("http://{{host}}:{{port}}/{{path}}", file);
+
+        final URL url = file.toURI().toURL();
+
+        final String string = StringTemplate.builder()
+                .template(url)
+                .delimiters("{{", "}}")
+                .build()
+                .applier()
+                .set("host", "localhost")
+                .set("port", 90)
+                .set("path", "one/two/three")
                 .apply();
 
         assertEquals("http://localhost:90/one/two/three", string);
