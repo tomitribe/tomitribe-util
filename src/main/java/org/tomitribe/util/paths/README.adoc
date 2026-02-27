@@ -6,18 +6,18 @@ We constantly see code like this refering to file paths with strings.  This one 
 
 [source,java]
 ----
-final File moduleDir = ...
-final File srcMainResources = new File(moduleDir, "src/main/resources");
-final File srcTestResources = new File(moduleDir, "src/test/resource");
+final Path moduleDir = ...
+final Path srcMainResources = moduleDir.resolve("src/main/resources");
+final Path srcTestResources = moduleDir.resolve("src/test/resource");
 ----
 
 What if you could have typo-proof, compile-time checked and code-completable paths like this?  Perhaps DSL-style approach to file paths, like so:
 
 ----
-final File moduleDir = ...
+final Path moduleDir = ...
 final Module module = Dir.of(Module.class, moduleDir);
-final File srcMainResources = module.src().main().resources();
-final File srcTestResources = module.src().test().resources();
+final Path srcMainResources = module.src().main().resources();
+final Path srcTestResources = module.src().test().resources();
 ----
 
 This utility was born out of a desire that all path references could be compile-time checked and code completed.
@@ -26,7 +26,7 @@ This utility was born out of a desire that all path references could be compile-
 
 For example, a directory structure like this:
 
-[source,java]
+[source]
 ----
  project/
    - src/
@@ -40,28 +40,27 @@ Could be handled with the following interface:
 [source,java]
 ----
  public interface Project {
-     File src();
-     File target();
+     Path src();
+     Path target();
      @Name(".git")
-     File git();
+     Path git();
      @Name("pom.xml")
-     File pomXml();
+     Path pomXml();
  }
 ----
 
 == Step 2 Get a proxied reference to that directory
 
-
 [source,java]
 ----
-import org.tomitribe.util.dir.Dir;
+import org.tomitribe.util.paths.Dir;
 
-File mydir = new File("/some/path/to/a/project");
+Path mydir = java.nio.file.Paths.get("/some/path/to/a/project");
 Project project = Dir.of(Project.class,  mydir);
 ----
 
 Under the covers the interface is implemented as a dynamic proxy whose InvocationHandler is
- holding the actual File object.
+ holding the actual `Path` object.
 
 == Returning Another Interface
 
@@ -70,9 +69,9 @@ Instead of `src()` returning a `Path`, it could return another similar interface
 [source,java]
 ----
  public interface Src {
-     File main();
-     File test();
- } 
+     Path main();
+     Path test();
+ }
 ----
 
 And now we update `Project` so the `src()` method will return `Src`
@@ -81,12 +80,12 @@ And now we update `Project` so the `src()` method will return `Src`
 ----
  public interface Project {
      Src src();
-     File target();
+     Path target();
      @Name(".git")
-     File git();
+     Path git();
      @Name("pom.xml")
-     File pomXml();
- } 
+     Path pomXml();
+ }
 ----
 
 Now we have a strongly-typed directory structure that also supports code completion in the IDE.
@@ -100,11 +99,11 @@ There may be times when you don't know the exact subdirectory name, but you know
 ----
  public interface Module {
      @Name("pom.xml")
-     File pomXml();
-     File src();
-     File target();
+     Path pomXml();
+     Path src();
+     Path target();
      Module submodule(String name);
- } 
+ }
 ----
 
 
@@ -116,7 +115,7 @@ By default file names are derived from the method name.  The following would ind
 ----
 public interface Module {
 
-    File src();
+    Path src();
 }
 ----
 
@@ -125,10 +124,10 @@ But what if you had a filename with a dot or other illegal java character for me
 [source,java]
 ----
 public interface Module {
-    File src();
+    Path src();
 
     @Name("pom.xml")
-    File pomXml();
+    Path pomXml();
 }
 ----
 
@@ -138,13 +137,13 @@ This can also be useful for files that are otherwise hidden, such as `.gitignore
 [source,java]
 ----
 public interface Module {
-    File src();
+    Path src();
 
     @Name("pom.xml")
-    File pomXml();
-    
+    Path pomXml();
+
     @Name(".gitignore")
-    File gitignore();
+    Path gitignore();
 }
 ----
 
@@ -164,32 +163,32 @@ pizza/
    target/
 ----
 
-=== Array of `File`
+=== Array of `Path`
 
-The simplest way is to return an array of `java.io.File` such as:
+The simplest way is to return an array of `java.nio.file.Path` such as:
 
 [source,java]
 ----
 public interface Project {
-    File[] modules();
+    Path[] modules();
 }
 ----
 
 This is close, but we haven't given any way for unwanted directories such as `target` to be filtered out.
 
-=== `@Filter` Array of `File`
+=== `@Filter` Array of `Path`
 
-To get just `Path` instances that are directories and contain a `pom.xml` we can create a simple `FileFilter`, like so:
+To get just `Path` instances that are directories and contain a `pom.xml` we can create a simple `Predicate<Path>`, like so:
 
 [source,java]
 ----
-import java.io.FileFilter;
+import java.nio.file.Path;
+import java.util.function.Predicate;
 
-public static class HasPomXml implements FileFilter {
+public static class HasPomXml implements Predicate<Path> {
     @Override
-    public boolean accept(final File pathname) {
-        final File pom = new File(pathname, "pom.xml");
-        return pom.exists();
+    public boolean test(final Path path) {
+        return java.nio.file.Files.exists(path.resolve("pom.xml"));
     }
 }
 ----
@@ -198,12 +197,12 @@ Then we can use it to filter out anything not accepted by our `HasPomXml` filter
 
 [source,java]
 ----
-import  org.tomitribe.util.dir.Filter;
+import  org.tomitribe.util.paths.Filter;
 
 public interface Project {
 
     @Filter(HasPomXml.class)
-    File[] modules();
+    Path[] modules();
 }
 ----
 
@@ -225,7 +224,7 @@ public interface Project {
 public interface Module {
 
     @Name("pom.xml")
-    File pomXml();
+    Path pomXml();
 
     Src src();
 }
@@ -250,9 +249,23 @@ public interface Project {
 public interface Module {
 
     @Name("pom.xml")
-    File pomXml();
+    Path pomXml();
 
     Src src();
+}
+----
+
+=== Repeatable `@Filter` annotations
+
+The `@Filter` annotation is repeatable, so you can stack multiple filters on a single method.  All filters must pass for a path to be included.
+
+[source,java]
+----
+public interface Work extends Dir {
+    @Walk
+    @Filter(IsJunit.class)
+    @Filter(IsTxt.class)
+    Stream<Path> junitTxtFiles();
 }
 ----
 
@@ -265,8 +278,8 @@ If we want to do a recursive walk by adding the `@Walk` annotation.
 [source,java]
 ----
 import java.util.stream.Stream;
-import org.tomitribe.util.dir.Filter;
-import org.tomitribe.util.dir.Walk;
+import org.tomitribe.util.paths.Filter;
+import org.tomitribe.util.paths.Walk;
 
 public interface Project {
     @Walk
@@ -275,17 +288,15 @@ public interface Project {
 }
 ----
 
-NOTE: The `@Walk` only works when returning a `java.util.stream.Stream`
-
-=== `@Walk` to recursively `Stream` matches N levels deep
+=== `@Walk` with `maxDepth` to limit recursion depth
 
 Under the covers `java.nio.file.Files.walk` is used to traverse, filter each matching file, and return it as a `Stream`.  If happen to know your modules are not more than say 2 or 3 directories deep, you can specify a `maxDepth` to speed up the walk.
 
 [source,java]
 ----
 import java.util.stream.Stream;
-import org.tomitribe.util.dir.Filter;
-import org.tomitribe.util.dir.Walk;
+import org.tomitribe.util.paths.Filter;
+import org.tomitribe.util.paths.Walk;
 
 public interface Project {
     @Walk(maxDepth = 3)
@@ -294,7 +305,29 @@ public interface Project {
 }
 ----
 
-== `@Mkdir` 
+=== `@Walk` with `minDepth` to skip shallow results
+
+You can also specify a `minDepth` to skip results that are too close to the root.  For example, to exclude the root directory itself and only include paths that are at least 1 level deep:
+
+[source,java]
+----
+public interface Work extends Dir {
+    @Walk(minDepth = 1)
+    Stream<Path> minOne();
+}
+----
+
+The `minDepth` and `maxDepth` can be combined to window into a specific range of the tree:
+
+[source,java]
+----
+public interface Work extends Dir {
+    @Walk(minDepth = 2, maxDepth = 2)
+    Stream<Path> exactlyTwoDeep();
+}
+----
+
+== `@Mkdir`
 
 To force a directory to be created simply annotate it with `@Mkdir` as follows.  When the `target()` method is invoked a check will be done and the directory created lazily if it needed.
 
@@ -304,10 +337,10 @@ public interface Project {
     Src src();
 
     @Mkdir
-    File target();
+    Path target();
 
     @Name("pom.xml")
-    File pomXml();
+    Path pomXml();
 }
 ----
 
@@ -334,22 +367,175 @@ public interface Src  {
 ----
 public interface Section {
     @Mkdirs
-    File java();
+    Path java();
 
     @Mkdir
-    File resources();
+    Path resources();
 }
 ----
 
-In this example if the path `src/main/java` would be created if we invoke code like this:
+In this example the path `src/main/java` would be created if we invoke code like this:
 
 [source,java]
 ----
 Project project = ...
 
-final File srcMainJava = project.src().main().java();
+final Path srcMainJava = project.src().main().java();
 ----
 
 Here we could safely write files into the `srcMainJava` reference as the directory and any parents would have been automatically created the moment `java()` was called.
 
 NOTE: The path `src/test/java` would still not exist unless `project.src().test().java()` is also called.
+
+== `@Parent` for navigating up the tree
+
+Sometimes when you're deep in a directory tree you want to navigate back up to a parent directory.  The `@Parent` annotation lets you do this.
+
+[source,java]
+----
+public interface Module extends Dir {
+    @Name("pom.xml")
+    Path pomXml();
+
+    Src src();
+}
+
+public interface Src {
+    @Parent
+    Module module();
+
+    Section main();
+    Section test();
+}
+----
+
+With `@Parent` the `Src.module()` method navigates one level up -- the equivalent of `..` in a file path -- and returns a `Module` proxy for the parent directory.
+
+By default `@Parent` goes up one level.  You can specify a depth to go further up:
+
+[source,java]
+----
+public interface Section {
+    @Parent(2)
+    Module module();
+
+    Java java();
+    Path resources();
+}
+
+public interface Java extends Dir {
+    @Parent(3)
+    Module module();
+}
+----
+
+Here `Section.module()` navigates 2 levels up (from `src/main` back to the project root) and `Java.module()` navigates 3 levels up (from `src/main/java` back to the project root).
+
+== Extending the `Dir` interface
+
+Interfaces can optionally extend `Dir` to gain several built-in convenience methods:
+
+[source,java]
+----
+public interface Module extends Dir {
+    @Name("pom.xml")
+    Path pomXml();
+
+    Src src();
+}
+----
+
+The `Dir` interface provides:
+
+ - `dir()` -- returns the `Path` for this directory
+ - `get()` -- synonym for `dir()`
+ - `dir(String name)` -- returns a `Dir` wrapping a named subdirectory
+ - `file(String name)` -- returns the `Path` for a named file or subdirectory
+ - `parent()` -- returns the parent `Path`
+ - `mkdir()` -- creates this directory (fails if parent doesn't exist)
+ - `mkdirs()` -- creates this directory and any missing parents
+ - `delete()` -- recursively deletes this directory and all contents
+ - `walk()` -- returns a `Stream<Path>` of all files and directories recursively
+ - `walk(int depth)` -- same as `walk()` but limited to a given depth
+ - `files()` -- returns a `Stream<Path>` of only files (no directories) recursively
+ - `files(int depth)` -- same as `files()` but limited to a given depth
+
+== Custom wrapper objects
+
+Instead of returning `Path` or another interface, methods can return custom classes that wrap a `Path`.  The class must either have a public constructor taking a single `Path` argument or a public static factory method taking a single `Path` argument and returning the class type.
+
+=== Constructor-based wrapper
+
+[source,java]
+----
+public static class Pom {
+    private final Path file;
+
+    public Pom(final Path file) {
+        this.file = file;
+    }
+
+    public Path getFile() {
+        return file;
+    }
+}
+
+public interface Module extends Dir {
+    @Name("pom.xml")
+    Pom pomXml();
+}
+----
+
+=== Factory method-based wrapper
+
+[source,java]
+----
+public static class Archivo {
+    private final Path path;
+
+    private Archivo(final Path path) {
+        this.path = path;
+    }
+
+    public static Archivo from(final Path path) {
+        return new Archivo(path);
+    }
+}
+
+public interface Module extends Dir {
+    @Walk
+    @Filter(IsJava.class)
+    Stream<Archivo> streamOfFiles();
+
+    @Walk
+    @Filter(IsJava.class)
+    Archivo[] arrayOfFiles();
+}
+----
+
+Custom wrappers work with all return types: single values, arrays, and streams.
+
+== Default methods
+
+Interfaces can include default methods for custom logic.  The proxy will delegate to the default implementation.
+
+[source,java]
+----
+public interface Repository extends Dir {
+    default Group group(final String name) {
+        final String path = name.replace(".", "/");
+        final Group group = Dir.of(Group.class, dir().resolve(path));
+        group.mkdirs();
+        return group;
+    }
+}
+
+public interface Group extends Dir {
+}
+----
+
+[source,java]
+----
+Repository repo = Dir.of(Repository.class, someDir);
+Group group = repo.group("org.color");
+----
