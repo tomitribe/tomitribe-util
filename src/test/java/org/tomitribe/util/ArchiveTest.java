@@ -180,6 +180,19 @@ public class ArchiveTest {
     }
 
     @Test
+    public void toPath() throws IOException {
+        final Archive archive = new Archive()
+                .add("colors/red.txt", "crimson")
+                .add("colors/green/emerald.txt", "#50c878");
+
+        final Path dir = archive.toPath();
+
+        assertTrue(java.nio.file.Files.isDirectory(dir));
+        assertFile(dir, "colors/red.txt", "crimson");
+        assertFile(dir, "colors/green/emerald.txt", "#50c878");
+    }
+
+    @Test
     public void toPathAddString() throws IOException {
         final Archive archive = new Archive()
                 .add("colors/red.txt", "crimson")

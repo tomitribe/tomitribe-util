@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Enumeration;
+import org.tomitribe.util.paths.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -200,15 +201,10 @@ public class Archive {
     }
 
     public File toDir() throws IOException {
-
-        final File classpath = Files.tmpdir();
-
-        toDir(classpath);
-
-        return classpath;
+        return toDir(Files.tmpdir());
     }
 
-    public void toDir(final File dir) throws IOException {
+    public File toDir(final File dir) throws IOException {
         Files.exists(dir);
         Files.dir(dir);
         Files.writable(dir);
@@ -227,9 +223,15 @@ public class Archive {
                 throw new IllegalStateException("Cannot write entry " + entry.getKey(), e);
             }
         }
+
+        return dir;
     }
 
-    public void toPath(final Path dir) throws IOException {
+    public Path toPath() throws IOException {
+        return toPath(Paths.tmpdir());
+    }
+
+    public Path toPath(final Path dir) throws IOException {
         if (!java.nio.file.Files.exists(dir)) {
             throw new java.io.FileNotFoundException(dir.toAbsolutePath().toString());
         }
@@ -255,6 +257,7 @@ public class Archive {
                 throw new IllegalStateException("Cannot write entry " + entry.getKey(), e);
             }
         }
+        return dir;
     }
 
     public File asDir() {
