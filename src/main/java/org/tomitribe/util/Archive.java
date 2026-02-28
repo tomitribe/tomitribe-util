@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -219,6 +220,34 @@ public class Archive {
             final File file = new File(dir, key);
 
             Files.mkparent(file);
+
+            try {
+                IO.copy(entry.getValue().get(), file);
+            } catch (Exception e) {
+                throw new IllegalStateException("Cannot write entry " + entry.getKey(), e);
+            }
+        }
+    }
+
+    public void toPath(final Path dir) throws IOException {
+        if (!java.nio.file.Files.exists(dir)) {
+            throw new java.io.FileNotFoundException(dir.toAbsolutePath().toString());
+        }
+        if (!java.nio.file.Files.isDirectory(dir)) {
+            throw new java.io.FileNotFoundException("Not a directory: " + dir.toAbsolutePath());
+        }
+        if (!java.nio.file.Files.isWritable(dir)) {
+            throw new java.io.FileNotFoundException("Not writable: " + dir.toAbsolutePath());
+        }
+
+        for (final Map.Entry<String, Supplier<byte[]>> entry : entries().entrySet()) {
+
+            final Path file = dir.resolve(entry.getKey());
+
+            final Path parent = file.getParent();
+            if (parent != null) {
+                java.nio.file.Files.createDirectories(parent);
+            }
 
             try {
                 IO.copy(entry.getValue().get(), file);
