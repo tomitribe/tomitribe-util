@@ -28,7 +28,7 @@
 
   <artifactId>tomitribe-util</artifactId>
   <packaging>jar</packaging>
-  <version>1.5.12</version>
+  <version>1.5.13-SNAPSHOT</version>
   <name>Tomitribe :: Util</name>
 
   <scm>
