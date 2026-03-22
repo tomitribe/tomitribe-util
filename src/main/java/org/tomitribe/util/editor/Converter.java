@@ -130,6 +130,13 @@ public class Converter {
         if (targetType.isAssignableFrom(actualType)) return value;
 
         if (Number.class.isAssignableFrom(actualType) && Number.class.isAssignableFrom(targetType)) {
+            final Number number = (Number) value;
+            if (targetType == Byte.class) return number.byteValue();
+            if (targetType == Short.class) return number.shortValue();
+            if (targetType == Integer.class) return number.intValue();
+            if (targetType == Long.class) return number.longValue();
+            if (targetType == Float.class) return number.floatValue();
+            if (targetType == Double.class) return number.doubleValue();
             return value;
         }
 

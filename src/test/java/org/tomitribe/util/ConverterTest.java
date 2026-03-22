@@ -90,6 +90,29 @@ public class ConverterTest extends Assert {
     }
 
     @Test
+    public void convertNumberTypes() {
+        // Long to other types
+        assertEquals((byte) 42, Converter.convert(42L, Byte.class, "n"));
+        assertEquals((short) 42, Converter.convert(42L, Short.class, "n"));
+        assertEquals(42, Converter.convert(42L, Integer.class, "n"));
+        assertEquals(42f, Converter.convert(42L, Float.class, "n"));
+        assertEquals(42d, Converter.convert(42L, Double.class, "n"));
+
+        // Double to other types
+        assertEquals(42, Converter.convert(42.9, Integer.class, "n"));
+        assertEquals(42L, Converter.convert(42.9, Long.class, "n"));
+
+        // Integer to other types
+        assertEquals(42L, Converter.convert(42, Long.class, "n"));
+        assertEquals(42d, Converter.convert(42, Double.class, "n"));
+        assertEquals(42f, Converter.convert(42, Float.class, "n"));
+
+        // Primitives (boxed via boxPrimitive)
+        assertEquals(42L, Converter.convert(42, long.class, "n"));
+        assertEquals(42d, Converter.convert(42, double.class, "n"));
+    }
+
+    @Test
     public void testLocalDate() throws Exception {
         final Object o = Converter.convert("1976-03-30", LocalDate.class, "time");
         assertEquals(LocalDate.of(1976, 3, 30), o);
