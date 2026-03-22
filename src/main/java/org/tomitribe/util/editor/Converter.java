@@ -72,10 +72,12 @@ public class Converter {
                 final String[] split = value.split(" *, *");
 
                 final Collection values;
-                if (Collection.class == raw || List.class == raw) {
+                if (Collection.class == raw || List.class == raw || ArrayList.class == raw) {
                     values = new ArrayList(split.length);
-                } else if (Set.class == raw) {
-                    values = SortedSet.class == raw ? new TreeSet() : new HashSet(split.length);
+                } else if (SortedSet.class == raw || TreeSet.class == raw) {
+                    values = new TreeSet();
+                } else if (Set.class == raw || HashSet.class == raw) {
+                    values = new HashSet(split.length);
                 } else {
                     throw new IllegalArgumentException(targetType + " collection type not supported");
                 }

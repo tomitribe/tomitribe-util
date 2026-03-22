@@ -28,12 +28,15 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.asList;
@@ -68,6 +71,26 @@ public class ConverterTest extends Assert {
         assertEquals(
                 new HashSet<String>(asList("a", "b", "c")),
                 Converter.convertString("a, b, c", new ParameterizedTypeImpl(Set.class, String.class), "foo"));
+        {
+            final Object result = Converter.convertString("a, b, c", new ParameterizedTypeImpl(SortedSet.class, String.class), "foo");
+            assertTrue(result instanceof TreeSet);
+            assertEquals(new TreeSet<>(asList("a", "b", "c")), result);
+        }
+        {
+            final Object result = Converter.convertString("a, b, c", new ParameterizedTypeImpl(TreeSet.class, String.class), "foo");
+            assertTrue(result instanceof TreeSet);
+            assertEquals(new TreeSet<>(asList("a", "b", "c")), result);
+        }
+        {
+            final Object result = Converter.convertString("a, b, c", new ParameterizedTypeImpl(HashSet.class, String.class), "foo");
+            assertTrue(result instanceof HashSet);
+            assertEquals(new HashSet<>(asList("a", "b", "c")), result);
+        }
+        {
+            final Object result = Converter.convertString("a, b, c", new ParameterizedTypeImpl(ArrayList.class, String.class), "foo");
+            assertTrue(result instanceof ArrayList);
+            assertEquals(asList("a", "b", "c"), result);
+        }
         assertEquals(
                 asList(1, 2, 3),
                 Converter.convertString("1, 2, 3", new ParameterizedTypeImpl(Collection.class, Integer.class), "foo"));
