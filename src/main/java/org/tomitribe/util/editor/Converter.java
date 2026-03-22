@@ -89,7 +89,7 @@ public class Converter {
                 return values;
             } else if (Map.class.isAssignableFrom(rawClass)) {
                 final Map map;
-                if (SortedMap.class == raw) {
+                if (SortedMap.class == raw || TreeMap.class == raw) {
                     map = new TreeMap();
                 } else {
                     map = new HashMap();
@@ -216,29 +216,8 @@ public class Converter {
             }
         }
 
-        try {
-            final Constructor<?> constructor = type.getConstructor(String.class);
-            return constructor.newInstance(value);
-        } catch (final NoSuchMethodException e) {
-            // fine
-        } catch (final Exception e) {
-            final String message = String.format("Cannot convert string '%s' to %s.", value, type);
-            throw new IllegalArgumentException(message, e);
-        }
-
-        try {
-            final Constructor<?> constructor = type.getConstructor(CharSequence.class);
-            return constructor.newInstance(value);
-        } catch (final NoSuchMethodException e) {
-            // fine
-        } catch (final Exception e) {
-            final String message = String.format("Cannot convert string '%s' to %s.", value, type);
-            throw new IllegalArgumentException(message, e);
-        }
-
         final List<Method> methods = Stream.of(type.getMethods())
                 .filter(method -> Modifier.isStatic(method.getModifiers()))
-                .filter(method -> Modifier.isPublic(method.getModifiers()))
                 .filter(method -> method.getParameterTypes().length == 1)
                 .filter(method -> method.getReturnType().equals(type))
                 .filter(method -> isStringAssignable(method.getParameterTypes()[0]))

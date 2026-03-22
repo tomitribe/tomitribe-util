@@ -35,7 +35,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
@@ -109,6 +111,23 @@ public class ConverterTest extends Assert {
                 }},
                 Converter.convertString("__=5s\n%&$=4s\n---=3 seconds",
                         ConverterTest.class.getDeclaredField("durationsMap").getGenericType(), "reflection map"));
+        {
+            final Object result = Converter.convertString("1=a\n2=b\n3=c\n", new ParameterizedTypeImpl(SortedMap.class, Integer.class, String.class), "foo");
+            assertTrue(result instanceof TreeMap);
+            assertEquals(new TreeMap<Integer, String>() {{
+                put(1, "a");
+                put(2, "b");
+                put(3, "c");
+            }}, result);
+        }
+        {
+            final Object result = Converter.convertString("1=a\n2=b\n3=c\n", new ParameterizedTypeImpl(TreeMap.class, Integer.class, String.class), "foo");
+            assertTrue(result instanceof TreeMap);
+        }
+        {
+            final Object result = Converter.convertString("1=a\n2=b\n3=c\n", new ParameterizedTypeImpl(HashMap.class, Integer.class, String.class), "foo");
+            assertTrue(result instanceof HashMap);
+        }
 
     }
 
@@ -452,5 +471,83 @@ public class ConverterTest extends Assert {
         }
     }
 
+    /**
+     * Constructor that throws should unwrap InvocationTargetException
+     * and propagate the underlying cause directly
+     */
+    @Test
+    public void constructorThrowsException() {
+        try {
+            Converter.convert("boom", Explosive.class, "field");
+            fail("Expected IllegalArgumentException");
+        } catch (final IllegalArgumentException e) {
+            // Message should include the cause detail
+            assertEquals("Cannot convert string 'boom' to class org.tomitribe.util.ConverterTest$Explosive. Cause: boom", e.getMessage());
+
+            // Cause should be the original exception, not wrapped in InvocationTargetException
+            assertFalse(e.getCause() instanceof java.lang.reflect.InvocationTargetException);
+            assertTrue(e.getCause() instanceof IllegalStateException);
+            assertEquals("boom", e.getCause().getMessage());
+        }
+    }
+
+    /**
+     * Static factory method that throws should propagate as IllegalStateException
+     */
+    @Test
+    public void factoryMethodThrowsException() {
+        try {
+            Converter.convert("boom", ExplosiveFactory.class, "field");
+            fail("Expected IllegalStateException");
+        } catch (final IllegalStateException e) {
+            assertEquals("Cannot convert string 'boom' to class org.tomitribe.util.ConverterTest$ExplosiveFactory.", e.getMessage());
+        }
+    }
+
+    /**
+     * Non-string, non-number value for a type that expects a string should fail
+     */
+    @Test
+    public void nonStringValueThrows() {
+        try {
+            Converter.convert(new Object(), URI.class, "myField");
+            fail("Expected IllegalArgumentException");
+        } catch (final IllegalArgumentException e) {
+            assertEquals("Expected type 'java.net.URI' for 'myField'. Found 'java.lang.Object'", e.getMessage());
+        }
+    }
+
+    /**
+     * Unconvertible type with no constructor, factory, or editor should fail
+     */
+    @Test
+    public void noEditorNoConstructorNoFactory() {
+        try {
+            Converter.convert("value", Unconvertible.class, "myField");
+            fail("Expected IllegalArgumentException");
+        } catch (final IllegalArgumentException e) {
+            assertEquals("Cannot convert to 'org.tomitribe.util.ConverterTest$Unconvertible' for 'myField'. No PropertyEditor", e.getMessage());
+        }
+    }
+
+    public static class Explosive {
+        public Explosive(final String value) {
+            throw new IllegalStateException(value);
+        }
+    }
+
+    public static class ExplosiveFactory {
+        private ExplosiveFactory() {
+        }
+
+        public static ExplosiveFactory parse(final String value) {
+            throw new IllegalStateException(value);
+        }
+    }
+
+    public static class Unconvertible {
+        private Unconvertible() {
+        }
+    }
 
 }
