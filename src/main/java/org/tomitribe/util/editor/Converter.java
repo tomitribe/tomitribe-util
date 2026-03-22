@@ -43,10 +43,55 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Can convert anything with a:
- * - PropertyEditor
- * - Constructor that accepts String
- * - public static method that returns itself and takes a String
+ * Converts values between Java types using several strategies, tried in order:
+ *
+ * <h3>String to Java type</h3>
+ * <ol>
+ *   <li><strong>PropertyEditor</strong> — uses a registered {@link java.beans.PropertyEditor}
+ *       for the target type, if one exists. Custom editors can be registered via
+ *       {@link java.beans.PropertyEditorManager#registerEditor}.</li>
+ *   <li><strong>Enum</strong> — matches by {@link Enum#valueOf}, falling back to
+ *       uppercase then lowercase if the exact case does not match.</li>
+ *   <li><strong>Constructor</strong> — a public constructor accepting a single
+ *       {@code String} or {@code CharSequence} parameter. {@code String} is preferred
+ *       over {@code CharSequence} when both exist.</li>
+ *   <li><strong>Static factory method</strong> — a public static method accepting a
+ *       single {@code String} or {@code CharSequence} and returning the target type.
+ *       {@code String} is preferred over {@code CharSequence}; methods are then
+ *       sorted alphabetically by name.</li>
+ * </ol>
+ *
+ * <h3>Java type to String</h3>
+ * <ol>
+ *   <li><strong>PropertyEditor</strong> — uses {@link java.beans.PropertyEditor#getAsText()}
+ *       if an editor is registered for the type.</li>
+ *   <li><strong>Enum</strong> — uses {@link Enum#name()} rather than {@code toString()}
+ *       to ensure round-trip fidelity with {@code Enum.valueOf}.</li>
+ *   <li><strong>{@code toString()}</strong> — falls back to {@link Object#toString()}.
+ *       Types that convert from String via a constructor should ensure their
+ *       {@code toString()} produces a value that constructor can accept.</li>
+ * </ol>
+ *
+ * <h3>Number to Number</h3>
+ * Numeric values are converted between {@code Byte}, {@code Short}, {@code Integer},
+ * {@code Long}, {@code Float}, and {@code Double} using the corresponding
+ * {@link Number} methods (e.g. {@link Number#intValue()}).
+ *
+ * <h3>Parameterized Collections and Maps</h3>
+ * The {@link #convertString} method supports parameterized types:
+ * <ul>
+ *   <li><strong>Collection/List/Set</strong> — splits comma-separated values and
+ *       converts each element to the specified generic type.</li>
+ *   <li><strong>Map</strong> — parses {@code key=value} lines (properties format)
+ *       and converts keys and values independently.</li>
+ * </ul>
+ *
+ * <h3>Error handling</h3>
+ * All conversion failures throw {@link IllegalArgumentException} with a message
+ * that includes the source value, target type, and the {@code name} parameter
+ * when provided. The {@code name} serves as diagnostic context — for example,
+ * a field name, column header, or parameter name — so that errors can be traced
+ * back to the specific value that failed.
  */
 public class Converter {
 
@@ -54,6 +99,22 @@ public class Converter {
         // no-op
     }
 
+    /**
+     * Converts a comma-separated or properties-formatted string into a parameterized
+     * Collection or Map type.
+     *
+     * <p>For collections, values are split on commas and each element is converted
+     * to the collection's generic type. For maps, the string is parsed as
+     * {@code key=value} lines and both keys and values are converted.
+     *
+     * @param value      the string to convert
+     * @param targetType the parameterized target type (e.g. {@code List<Integer>},
+     *                   {@code Map<String, Duration>})
+     * @param name       diagnostic context included in error messages, such as a
+     *                   field or parameter name; may be {@code null}
+     * @return the converted collection or map
+     * @throws IllegalArgumentException if the type is not supported or conversion fails
+     */
     public static Object convertString(final String value, final Type targetType, final String name) {
         if (Class.class.isInstance(targetType)) {
             return convert(value, Class.class.cast(targetType), name);
@@ -119,14 +180,50 @@ public class Converter {
         }
     }
 
+    /**
+     * Converts a value to its String representation.
+     *
+     * <p>Equivalent to {@code convert(value, String.class, null)}. When diagnostic
+     * context is available, prefer {@link #convert(Object, Class, String)} with
+     * {@code String.class} as the target type.
+     *
+     * @param value the object to convert; may be {@code null}
+     * @return the string representation, or {@code null} if value is {@code null}
+     * @throws IllegalArgumentException if the conversion fails
+     */
     public static String convert(final Object value) {
         return (String) convert(value, String.class, null);
     }
 
+    /**
+     * Converts a value to the specified target type.
+     *
+     * <p>Equivalent to {@code convert(value, targetType, null)}. When diagnostic
+     * context is available, prefer {@link #convert(Object, Class, String)}.
+     *
+     * @param value      the value to convert; may be {@code null}
+     * @param targetType the desired target type
+     * @return the converted value, or {@code null} if value is {@code null}
+     * @throws IllegalArgumentException if the conversion fails
+     */
     public static Object convert(final Object value, final Class<?> targetType) {
         return convert(value, targetType, null);
     }
 
+    /**
+     * Converts a value to the specified target type.
+     *
+     * <p>This is the primary conversion method. All other {@code convert} overloads
+     * delegate to this method.
+     *
+     * @param value      the value to convert; may be {@code null}
+     * @param targetType the desired target type
+     * @param name       diagnostic context included in error messages, such as a
+     *                   field name, column header, or parameter name; may be {@code null}
+     * @return the converted value, or {@code null} if value is {@code null}
+     *         (except for {@code boolean}/{@code Boolean}, which returns {@code false})
+     * @throws IllegalArgumentException if the conversion fails
+     */
     public static Object convert(final Object value, Class<?> targetType, final String name) {
         if (value == null) {
             if (targetType.equals(Boolean.TYPE)) return false;
