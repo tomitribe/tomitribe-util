@@ -119,6 +119,14 @@ public class Converter {
         }
     }
 
+    public static String convert(final Object value) {
+        return (String) convert(value, String.class, null);
+    }
+
+    public static Object convert(final Object value, final Class<?> targetType) {
+        return convert(value, targetType, null);
+    }
+
     public static Object convert(final Object value, Class<?> targetType, final String name) {
         if (value == null) {
             if (targetType.equals(Boolean.TYPE)) return false;
@@ -130,6 +138,8 @@ public class Converter {
         if (targetType.isPrimitive()) targetType = boxPrimitive(targetType);
 
         if (targetType.isAssignableFrom(actualType)) return value;
+
+        if (targetType == String.class) return convertToString(value, name);
 
         if (Number.class.isAssignableFrom(actualType) && Number.class.isAssignableFrom(targetType)) {
             final Number number = (Number) value;
@@ -236,6 +246,29 @@ public class Converter {
         }
 
         return null;
+    }
+
+    private static String convertToString(final Object value, final String name) {
+        final Class<?> type = value.getClass();
+
+        try {
+            final PropertyEditor editor = Editors.get(type);
+            if (editor != null) {
+                editor.setValue(value);
+                return editor.getAsText();
+            }
+
+            if (value instanceof Enum) {
+                return ((Enum<?>) value).name();
+            }
+
+            return value.toString();
+        } catch (final Exception e) {
+            final String message = name != null
+                    ? String.format("Cannot convert %s to String for '%s'. Cause: %s", type.getName(), name, e.getMessage())
+                    : String.format("Cannot convert %s to String. Cause: %s", type.getName(), e.getMessage());
+            throw new IllegalArgumentException(message, e);
+        }
     }
 
     private static boolean isStringAssignable(final Class<?> t) {

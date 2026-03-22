@@ -155,6 +155,70 @@ public class ConverterTest extends Assert {
     }
 
     @Test
+    public void convertToString() {
+        assertEquals("http://example.com", Converter.convert(URI.create("http://example.com"), String.class, "uri"));
+        assertEquals("foo", Converter.convert(new Green("foo"), String.class, "green"));
+        assertEquals("RED", Converter.convert(Color.RED, String.class, "color"));
+        assertEquals("my/path/and/file.txt", Converter.convert(Paths.get("my/path/and/file.txt"), String.class, "path"));
+    }
+
+    @Test
+    public void convertToStringPassthrough() {
+        assertEquals("hello", Converter.convert("hello", String.class, "val"));
+    }
+
+    @Test
+    public void toStringNull() {
+        assertNull(Converter.convert(null));
+    }
+
+    @Test
+    public void toStringEnum() {
+        assertEquals("RED", Converter.convert(Color.RED));
+        assertEquals("GREEN", Converter.convert(Color.GREEN));
+    }
+
+    @Test
+    public void toStringPropertyEditor() {
+        final Path path = Paths.get("my/path/and/file.txt");
+        assertEquals("my/path/and/file.txt", Converter.convert(path));
+    }
+
+    @Test
+    public void toStringFallback() {
+        final URI uri = URI.create("http://example.com");
+        assertEquals("http://example.com", Converter.convert(uri));
+    }
+
+    @Test
+    public void toStringRoundTripConstructor() {
+        final String original = "foo";
+        final Green green = (Green) Converter.convert(original, Green.class, null);
+        assertEquals(original, Converter.convert(green));
+    }
+
+    @Test
+    public void toStringRoundTripEnum() {
+        final String original = "GREEN";
+        final Color color = (Color) Converter.convert(original, Color.class, null);
+        assertEquals(original, Converter.convert(color));
+    }
+
+    @Test
+    public void toStringRoundTripPath() {
+        final String original = "my/path/and/file.txt";
+        final Path path = (Path) Converter.convert(original, Path.class, null);
+        assertEquals(original, Converter.convert(path));
+    }
+
+    @Test
+    public void toStringRoundTripURI() {
+        final String original = "http://example.com";
+        final URI uri = (URI) Converter.convert(original, URI.class, null);
+        assertEquals(original, Converter.convert(uri));
+    }
+
+    @Test
     public void testLocalDate() throws Exception {
         final Object o = Converter.convert("1976-03-30", LocalDate.class, "time");
         assertEquals(LocalDate.of(1976, 3, 30), o);
@@ -168,6 +232,24 @@ public class ConverterTest extends Assert {
 
         final Object o = Converter.convert("horas", TimeUnit.class, "time");
         assertEquals(TimeUnit.HOURS, o);
+    }
+
+    @Test
+    public void toStringEnumEditor() {
+        PropertyEditorManager.registerEditor(TimeUnit.class, TimeUnitEditor.class);
+
+        // Editor should be used, not Enum.name()
+        assertEquals("horas", Converter.convert(TimeUnit.HOURS));
+        assertEquals("dias", Converter.convert(TimeUnit.DAYS));
+    }
+
+    @Test
+    public void toStringRoundTripEnumEditor() {
+        PropertyEditorManager.registerEditor(TimeUnit.class, TimeUnitEditor.class);
+
+        final String original = "horas";
+        final TimeUnit unit = (TimeUnit) Converter.convert(original, TimeUnit.class, "time");
+        assertEquals(original, Converter.convert(unit));
     }
 
     @Test
@@ -255,6 +337,11 @@ public class ConverterTest extends Assert {
 
         public Green(final String value) {
             this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
         }
 
         @Override
@@ -348,10 +435,18 @@ public class ConverterTest extends Assert {
 
     public static class TimeUnitEditor extends AbstractConverter {
         @Override
-        protected Object toObjectImpl(String text) {
+        protected Object toObjectImpl(final String text) {
             if ("horas".equals(text)) return TimeUnit.HOURS;
             if ("dias".equals(text)) return TimeUnit.DAYS;
             return TimeUnit.valueOf(text);
+        }
+
+        @Override
+        public String getAsText() {
+            final TimeUnit unit = (TimeUnit) getValue();
+            if (unit == TimeUnit.HOURS) return "horas";
+            if (unit == TimeUnit.DAYS) return "dias";
+            return unit.name();
         }
     }
 
@@ -547,6 +642,39 @@ public class ConverterTest extends Assert {
 
     public static class Unconvertible {
         private Unconvertible() {
+        }
+    }
+
+    public enum Color {
+        RED, GREEN, BLUE
+    }
+
+    public static class BrokenToString {
+        @Override
+        public String toString() {
+            throw new NullPointerException("oops");
+        }
+    }
+
+    @Test
+    public void convertToStringFailsWithName() {
+        try {
+            Converter.convert(new BrokenToString(), String.class, "column");
+            fail("Expected IllegalArgumentException");
+        } catch (final IllegalArgumentException e) {
+            assertEquals("Cannot convert org.tomitribe.util.ConverterTest$BrokenToString to String for 'column'. Cause: oops", e.getMessage());
+            assertTrue(e.getCause() instanceof NullPointerException);
+        }
+    }
+
+    @Test
+    public void convertToStringFailsWithoutName() {
+        try {
+            Converter.convert(new BrokenToString());
+            fail("Expected IllegalArgumentException");
+        } catch (final IllegalArgumentException e) {
+            assertEquals("Cannot convert org.tomitribe.util.ConverterTest$BrokenToString to String. Cause: oops", e.getMessage());
+            assertTrue(e.getCause() instanceof NullPointerException);
         }
     }
 
