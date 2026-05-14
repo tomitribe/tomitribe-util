@@ -16,8 +16,23 @@ package org.tomitribe.util.editor;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Editors {
+
+    private static final Map<Class<?>, Class<? extends PropertyEditor>> BUILTIN;
+
+    static {
+        final Map<Class<?>, Class<? extends PropertyEditor>> map = new HashMap<>();
+        map.put(Path.class, PathEditor.class);
+        map.put(Date.class, DateEditor.class);
+        map.put(Character.class, CharacterEditor.class);
+        BUILTIN = Collections.unmodifiableMap(map);
+    }
 
     private Editors() {
         // no-op
@@ -28,18 +43,10 @@ public class Editors {
 
         if (editor != null) return editor;
 
-        final Class<Editors> c = Editors.class;
+        final Class<? extends PropertyEditor> editorClass = BUILTIN.get(type);
+        if (editorClass == null) return null;
 
-        try {
-            final Class<?> editorClass = c.getClassLoader().loadClass(c.getName().replace("Editors", type.getSimpleName() + "Editor"));
-
-            PropertyEditorManager.registerEditor(type, editorClass);
-
-            return PropertyEditorManager.findEditor(type);
-        } catch (final ClassNotFoundException e) {
-            return null;
-        }
+        PropertyEditorManager.registerEditor(type, editorClass);
+        return PropertyEditorManager.findEditor(type);
     }
-
-
 }

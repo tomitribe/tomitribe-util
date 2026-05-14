@@ -180,7 +180,7 @@ public class ConverterTest extends Assert {
 
     @Test
     public void toStringPropertyEditor() {
-        final Path path = Paths.get("my/path/and/file.txt");
+        final java.nio.file.Path path = Paths.get("my/path/and/file.txt");
         assertEquals("my/path/and/file.txt", Converter.convert(path));
     }
 
@@ -207,7 +207,7 @@ public class ConverterTest extends Assert {
     @Test
     public void toStringRoundTripPath() {
         final String original = "my/path/and/file.txt";
-        final Path path = (Path) Converter.convert(original, Path.class, null);
+        final java.nio.file.Path path = (java.nio.file.Path) Converter.convert(original, java.nio.file.Path.class, null);
         assertEquals(original, Converter.convert(path));
     }
 
@@ -222,6 +222,96 @@ public class ConverterTest extends Assert {
     public void testLocalDate() throws Exception {
         final Object o = Converter.convert("1976-03-30", LocalDate.class, "time");
         assertEquals(LocalDate.of(1976, 3, 30), o);
+    }
+
+    @Test
+    public void testLocalTime() {
+        assertEquals(java.time.LocalTime.of(14, 30, 15),
+                Converter.convert("14:30:15", java.time.LocalTime.class, "t"));
+    }
+
+    @Test
+    public void testLocalDateTime() {
+        assertEquals(java.time.LocalDateTime.of(1976, 3, 30, 14, 30, 15),
+                Converter.convert("1976-03-30T14:30:15", java.time.LocalDateTime.class, "t"));
+    }
+
+    @Test
+    public void testInstant() {
+        assertEquals(java.time.Instant.parse("2007-12-03T10:15:30.00Z"),
+                Converter.convert("2007-12-03T10:15:30.00Z", java.time.Instant.class, "t"));
+    }
+
+    @Test
+    public void testZonedDateTime() {
+        assertEquals(java.time.ZonedDateTime.parse("2007-12-03T10:15:30+01:00[Europe/Paris]"),
+                Converter.convert("2007-12-03T10:15:30+01:00[Europe/Paris]", java.time.ZonedDateTime.class, "t"));
+    }
+
+    @Test
+    public void testOffsetDateTime() {
+        assertEquals(java.time.OffsetDateTime.parse("2007-12-03T10:15:30+01:00"),
+                Converter.convert("2007-12-03T10:15:30+01:00", java.time.OffsetDateTime.class, "t"));
+    }
+
+    @Test
+    public void testOffsetTime() {
+        assertEquals(java.time.OffsetTime.parse("10:15:30+01:00"),
+                Converter.convert("10:15:30+01:00", java.time.OffsetTime.class, "t"));
+    }
+
+    @Test
+    public void testYear() {
+        assertEquals(java.time.Year.of(2026),
+                Converter.convert("2026", java.time.Year.class, "t"));
+    }
+
+    @Test
+    public void testYearMonth() {
+        assertEquals(java.time.YearMonth.of(2026, 5),
+                Converter.convert("2026-05", java.time.YearMonth.class, "t"));
+    }
+
+    @Test
+    public void testMonthDay() {
+        assertEquals(java.time.MonthDay.of(5, 13),
+                Converter.convert("--05-13", java.time.MonthDay.class, "t"));
+    }
+
+    @Test
+    public void testJavaTimeDuration() {
+        assertEquals(java.time.Duration.ofSeconds(90),
+                Converter.convert("PT1M30S", java.time.Duration.class, "t"));
+    }
+
+    @Test
+    public void testPeriod() {
+        assertEquals(java.time.Period.of(1, 2, 3),
+                Converter.convert("P1Y2M3D", java.time.Period.class, "t"));
+    }
+
+    @Test
+    public void testZoneId() {
+        assertEquals(java.time.ZoneId.of("Europe/Paris"),
+                Converter.convert("Europe/Paris", java.time.ZoneId.class, "t"));
+    }
+
+    @Test
+    public void testZoneOffset() {
+        assertEquals(java.time.ZoneOffset.of("+02:00"),
+                Converter.convert("+02:00", java.time.ZoneOffset.class, "t"));
+    }
+
+    @Test
+    public void testDayOfWeek() {
+        assertEquals(java.time.DayOfWeek.WEDNESDAY,
+                Converter.convert("WEDNESDAY", java.time.DayOfWeek.class, "t"));
+    }
+
+    @Test
+    public void testMonth() {
+        assertEquals(java.time.Month.MAY,
+                Converter.convert("MAY", java.time.Month.class, "t"));
     }
 
     @Test
@@ -254,10 +344,10 @@ public class ConverterTest extends Assert {
 
     @Test
     public void testPathEditor() {
-        final PropertyEditor editor = Editors.get(Path.class);
+        final PropertyEditor editor = Editors.get(java.nio.file.Path.class);
         assertNotNull(editor);
 
-        final Object o = Converter.convert("my/path/and/file.txt", Path.class, "foo");
+        final Object o = Converter.convert("my/path/and/file.txt", java.nio.file.Path.class, "foo");
         assertEquals(Paths.get("my/path/and/file.txt"), o);
     }
 
@@ -675,6 +765,65 @@ public class ConverterTest extends Assert {
         } catch (final IllegalArgumentException e) {
             assertEquals("Cannot convert org.tomitribe.util.ConverterTest$BrokenToString to String. Cause: oops", e.getMessage());
             assertTrue(e.getCause() instanceof NullPointerException);
+        }
+    }
+
+    /**
+     * A user-defined type whose simple name happens to be {@code Path} must not be
+     * intercepted by {@link org.tomitribe.util.editor.PathEditor}, which only knows
+     * how to produce {@code java.nio.file.Path} instances.
+     */
+    public static class Path {
+        private final String value;
+
+        public Path(final String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Path)) return false;
+            final Path path = (Path) o;
+            return value.equals(path.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return value.hashCode();
+        }
+    }
+
+    @Test
+    public void simpleNameCollisionWithBuiltInEditor() {
+        final Object result = Converter.convert("hello", Path.class, "myField");
+        assertEquals(new Path("hello"), result);
+    }
+
+    public static class CustomPathEditor extends AbstractConverter {
+        @Override
+        protected Object toObjectImpl(final String text) {
+            return Paths.get("custom:" + text);
+        }
+    }
+
+    /**
+     * A user-registered PropertyEditor for {@link java.nio.file.Path} must take
+     * precedence over the built-in {@link org.tomitribe.util.editor.PathEditor}.
+     */
+    @Test
+    public void userRegisteredEditorWinsOverBuiltIn() {
+        try {
+            PropertyEditorManager.registerEditor(java.nio.file.Path.class, CustomPathEditor.class);
+
+            final Object result = Converter.convert("hello", java.nio.file.Path.class, "myField");
+            assertEquals(Paths.get("custom:hello"), result);
+        } finally {
+            PropertyEditorManager.registerEditor(java.nio.file.Path.class, null);
         }
     }
 
