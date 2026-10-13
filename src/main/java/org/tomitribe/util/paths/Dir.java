@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -451,21 +452,33 @@ public interface Dir {
         }
 
         private Predicate<Path> getFilter(final Method method) {
-            if (method.isAnnotationPresent(Filter.class)) {
-                final Filter filter = method.getAnnotation(Filter.class);
-                return asPredicate(filter);
+            Predicate<Path> predicate = path -> true;
+
+            // 1. @Match includes
+            for (final Match match : method.getAnnotationsByType(Match.class)) {
+                if (match.exclude()) continue;
+                final Pattern pattern = Pattern.compile(match.value());
+                predicate = predicate.and(path -> matches(pattern, path));
             }
 
-            if (method.isAnnotationPresent(Filters.class)) {
-                final Filters filters = method.getAnnotation(Filters.class);
-                Predicate<Path> predicate = path -> true;
-                for (final Filter filter : filters.value()) {
-                    predicate = predicate.and(asPredicate(filter));
-                }
-                return predicate;
+            // 2. @Match excludes
+            for (final Match match : method.getAnnotationsByType(Match.class)) {
+                if (!match.exclude()) continue;
+                final Pattern pattern = Pattern.compile(match.value());
+                predicate = predicate.and(path -> !matches(pattern, path));
             }
 
-            return pathname -> true;
+            // 3. @Filter
+            for (final Filter filter : method.getAnnotationsByType(Filter.class)) {
+                predicate = predicate.and(asPredicate(filter));
+            }
+
+            return predicate;
+        }
+
+        private static boolean matches(final Pattern pattern, final Path path) {
+            final Path name = path.getFileName();
+            return name != null && pattern.matcher(name.toString()).matches();
         }
 
         private Predicate<Path> asPredicate(final Filter filter) {

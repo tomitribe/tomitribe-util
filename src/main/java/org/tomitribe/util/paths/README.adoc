@@ -269,6 +269,39 @@ public interface Work extends Dir {
 }
 ----
 
+=== `@Match` by regular expression
+
+For the common case of matching on file name, `@Match` saves you writing a filter class.  The value is a regular expression and the *entire* file name must match, as with `java.util.regex.Matcher.matches()`.
+
+[source,java]
+----
+import org.tomitribe.util.paths.Match;
+
+public interface Reports extends Dir {
+    @Match("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
+    Stream<Path> dailyReports();
+
+    @Match(".*\\.(jpg|png)")
+    Stream<Path> images();
+}
+----
+
+=== Repeatable `@Match` with `exclude`
+
+`@Match` is repeatable.  Setting `exclude = true` removes entries matching the pattern instead of keeping them.  Includes are applied before excludes, so the two can be combined.
+
+[source,java]
+----
+public interface Assets extends Dir {
+    // All CSS files except reset.css
+    @Match(".*\\.css")
+    @Match(value = "reset\\.css", exclude = true)
+    Stream<Path> cssExceptReset();
+}
+----
+
+When `@Match` and `@Filter` are both present, `@Match` includes are applied first, then `@Match` excludes, then `@Filter`.  Each only sees the entries that passed the previous one.
+
 === `@Walk` to recursively `Stream` all matches
 
 What if your Maven project structure is fairly deep and has modules inside modules?  By default, returning a `Stream` or array will only the matches immediately under the current directory, in our case the `Project` directory.

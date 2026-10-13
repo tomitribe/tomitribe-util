@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -450,21 +451,28 @@ public interface Dir {
         }
 
         private Predicate<File> getFilter(final Method method) {
-            if (method.isAnnotationPresent(Filter.class)) {
-                final Filter filter = method.getAnnotation(Filter.class);
-                return asPredicate(filter);
+            Predicate<File> predicate = file -> true;
+
+            // 1. @Match includes
+            for (final Match match : method.getAnnotationsByType(Match.class)) {
+                if (match.exclude()) continue;
+                final Pattern pattern = Pattern.compile(match.value());
+                predicate = predicate.and(file -> pattern.matcher(file.getName()).matches());
             }
 
-            if (method.isAnnotationPresent(Filters.class)) {
-                final Filters filters = method.getAnnotation(Filters.class);
-                Predicate<File> predicate = file -> true;
-                for (final Filter filter : filters.value()) {
-                    predicate = predicate.and(asPredicate(filter));
-                }
-                return predicate;
+            // 2. @Match excludes
+            for (final Match match : method.getAnnotationsByType(Match.class)) {
+                if (!match.exclude()) continue;
+                final Pattern pattern = Pattern.compile(match.value());
+                predicate = predicate.and(file -> !pattern.matcher(file.getName()).matches());
             }
 
-            return pathname -> true;
+            // 3. @Filter
+            for (final Filter filter : method.getAnnotationsByType(Filter.class)) {
+                predicate = predicate.and(asPredicate(filter));
+            }
+
+            return predicate;
         }
 
         private Predicate<File> asPredicate(final Filter filter) {
