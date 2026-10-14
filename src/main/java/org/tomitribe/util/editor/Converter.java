@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 /**
  * Converts values between Java types using several strategies, tried in order:
  *
- * <h3>String to Java type</h3>
+ * <h2>String to Java type</h2>
  * <ol>
  *   <li><strong>PropertyEditor</strong> — uses a registered {@link java.beans.PropertyEditor}
  *       for the target type, if one exists. Custom editors can be registered via
@@ -61,7 +61,7 @@ import java.util.stream.Stream;
  *       sorted alphabetically by name.</li>
  * </ol>
  *
- * <h3>Java type to String</h3>
+ * <h2>Java type to String</h2>
  * <ol>
  *   <li><strong>PropertyEditor</strong> — uses {@link java.beans.PropertyEditor#getAsText()}
  *       if an editor is registered for the type.</li>
@@ -72,12 +72,12 @@ import java.util.stream.Stream;
  *       {@code toString()} produces a value that constructor can accept.</li>
  * </ol>
  *
- * <h3>Number to Number</h3>
+ * <h2>Number to Number</h2>
  * Numeric values are converted between {@code Byte}, {@code Short}, {@code Integer},
  * {@code Long}, {@code Float}, and {@code Double} using the corresponding
  * {@link Number} methods (e.g. {@link Number#intValue()}).
  *
- * <h3>Parameterized Collections and Maps</h3>
+ * <h2>Parameterized Collections and Maps</h2>
  * The {@link #convertString} method supports parameterized types:
  * <ul>
  *   <li><strong>Collection/List/Set</strong> — splits comma-separated values and
@@ -86,7 +86,7 @@ import java.util.stream.Stream;
  *       and converts keys and values independently.</li>
  * </ul>
  *
- * <h3>Error handling</h3>
+ * <h2>Error handling</h2>
  * All conversion failures throw {@link IllegalArgumentException} with a message
  * that includes the source value, target type, and the {@code name} parameter
  * when provided. The {@code name} serves as diagnostic context — for example,

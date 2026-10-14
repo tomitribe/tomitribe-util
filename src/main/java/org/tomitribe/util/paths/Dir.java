@@ -48,7 +48,7 @@ import java.util.stream.Stream;
  *
  * <p>This utility was born out of a desire that all path references could be compile-time checked and code completed.</p>
  *
- * <h3>Step 1 Create an interface matching a directory</h3>
+ * <h2>Step 1 Create an interface matching a directory</h2>
  *
  * <p>For example, a directory structure like this:</p>
  *
@@ -71,7 +71,7 @@ import java.util.stream.Stream;
  *     File pomXml();
  * }</pre>
  *
- * <h3>Step 2 Get a proxied reference to that directory</h3>
+ * <h2>Step 2 Get a proxied reference to that directory</h2>
  *
  * <pre>
  *     File mydir = new File("/some/path/to/a/project");
@@ -80,7 +80,7 @@ import java.util.stream.Stream;
  * <p>Under the covers the interface is implemented as a dynamic proxy whose InvocationHandler is
  * holding the actual File object.</p>
  *
- * <h3>Returning Another Interface</h3>
+ * <h2>Returning Another Interface</h2>
  *
  * <p>Instead of <code>src()</code> returning a <code>File</code>, it could return another similar interface. For example</p>
  *
@@ -104,7 +104,7 @@ import java.util.stream.Stream;
  *
  * <p>Now we have a strongly-typed directory structure that also supports code completion in the IDE.</p>
  *
- * <h3>Passing a Subdirectory Name</h3>
+ * <h2>Passing a Subdirectory Name</h2>
  *
  * <p>There may be times when you don't know the exact subdirectory name, but you know that it will use a specific
  * directory structure.  Here's how you might reference a nested Maven module structure:</p>

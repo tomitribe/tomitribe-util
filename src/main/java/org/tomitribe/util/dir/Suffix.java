@@ -50,7 +50,7 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * <h3>Evaluation order</h3>
+ * <h2>Evaluation order</h2>
  *
  * <p>Within one annotation kind, all includes are OR'd together, all
  * excludes are OR'd together, and an entry passes if it matches an
