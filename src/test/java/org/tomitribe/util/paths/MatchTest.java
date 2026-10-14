@@ -82,6 +82,35 @@ public class MatchTest {
                 "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths(dir, list)));
     }
 
+    /**
+     * Repeated includes are OR'd, same as alternation in one pattern
+     */
+    @Test
+    public void stackedIncludes() throws Exception {
+        final File dir = dir();
+        final Work work = Dir.of(Work.class, dir.toPath());
+        final List<Path> list = work.txtOrCsvStacked().collect(Collectors.toList());
+
+        assertEquals("" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
+                "/repository/io.tomitribe/crest/5/5.4.1.2/notes.csv\n" +
+                "/repository/junit/junit/4/4.12/bar.txt\n" +
+                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
+                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths(dir, list)));
+    }
+
+    /**
+     * Repeated excludes are OR'd
+     */
+    @Test
+    public void stackedExcludes() throws Exception {
+        final File dir = dir();
+        final Work work = Dir.of(Work.class, dir.toPath());
+        final List<Path> list = work.txtExceptFooAndBar().collect(Collectors.toList());
+
+        assertEquals("/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", Join.join("\n", paths(dir, list)));
+    }
+
     @Test
     public void exclude() throws Exception {
         final File dir = dir();
@@ -182,6 +211,17 @@ public class MatchTest {
         @Walk
         @Match(".*\\.(txt|csv)")
         Stream<Path> txtOrCsv();
+
+        @Walk
+        @Match(".*\\.txt")
+        @Match(".*\\.csv")
+        Stream<Path> txtOrCsvStacked();
+
+        @Walk
+        @Match(".*\\.txt")
+        @Match(value = "foo\\.txt", exclude = true)
+        @Match(value = "bar\\.txt", exclude = true)
+        Stream<Path> txtExceptFooAndBar();
 
         @Walk
         @Filter(IsFile.class)

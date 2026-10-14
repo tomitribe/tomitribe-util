@@ -256,6 +256,71 @@ public interface Module {
 }
 ----
 
+=== `@Prefix` by name start
+
+`@Prefix` keeps only the entries whose file name starts with one of the given values.  It is tested against the name only, not the full path.  Multiple values are OR'd.
+
+[source,java]
+----
+import org.tomitribe.util.dir.Prefix;
+
+public interface Tomcat extends Dir {
+    // Only version directories starting with "10."
+    // Matches 10.1.18/, 10.1.19/, etc.
+    // Skips 9.0.85/, 11.0.0/, etc.
+    @Prefix("10.")
+    Stream<File> version10();
+
+    @Prefix({"10.", "11."})
+    Stream<File> modern();
+}
+----
+
+=== Repeatable `@Prefix` with `exclude`
+
+`@Prefix` is repeatable.  Setting `exclude = true` removes entries matching any of its values instead of keeping them.  All includes are OR'd together, all excludes are OR'd together, and an entry must match an include and not match an exclude.
+
+[source,java]
+----
+public interface Tomcat extends Dir {
+    // All 10.x versions except milestones
+    @Prefix("10.")
+    @Prefix(value = "10.1.0-M", exclude = true)
+    Stream<File> version10Releases();
+}
+----
+
+=== `@Suffix` by name end
+
+`@Suffix` keeps only the entries whose file name ends with one of the given values.  Multiple values are OR'd, so it is a convenient shorthand for filtering by extension.
+
+[source,java]
+----
+import org.tomitribe.util.dir.Suffix;
+
+public interface Assets extends Dir {
+    @Suffix(".css")
+    Stream<File> stylesheets();
+
+    @Suffix({".jpg", ".png", ".gif"})
+    Stream<File> images();
+}
+----
+
+=== Repeatable `@Suffix` with `exclude`
+
+`@Suffix` is repeatable.  Setting `exclude = true` removes entries matching any of its values instead of keeping them.  All includes are OR'd together, all excludes are OR'd together, and an entry must match an include and not match an exclude.
+
+[source,java]
+----
+public interface Version extends Dir {
+    // All .jar files except sources and javadoc jars
+    @Suffix(".jar")
+    @Suffix(value = {"-sources.jar", "-javadoc.jar"}, exclude = true)
+    Stream<File> binaryJars();
+}
+----
+
 === `@Match` by regular expression
 
 For the common case of matching on file name, `@Match` saves you writing a filter class.  The value is a regular expression and the *entire* file name must match, as with `java.util.regex.Matcher.matches()`.
@@ -275,7 +340,7 @@ public interface Reports extends Dir {
 
 === Repeatable `@Match` with `exclude`
 
-`@Match` is repeatable.  Setting `exclude = true` removes entries matching the pattern instead of keeping them.  Includes are applied before excludes, so the two can be combined.
+`@Match` is repeatable.  Setting `exclude = true` removes entries matching the pattern instead of keeping them.  All includes are OR'd together, all excludes are OR'd together, and an entry must match an include and not match an exclude.
 
 [source,java]
 ----
@@ -287,7 +352,7 @@ public interface Assets extends Dir {
 }
 ----
 
-When `@Match` and `@Filter` are both present, `@Match` includes are applied first, then `@Match` excludes, then `@Filter`.  Each only sees the entries that passed the previous one.
+When several kinds of these annotations are present they are AND'd, applied in a fixed order: `@Prefix`, `@Suffix`, `@Match`, and finally `@Filter`.  Each only sees the entries that passed the previous one.
 
 === `@Walk` to recursively `Stream` all matches
 

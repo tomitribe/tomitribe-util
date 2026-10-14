@@ -32,6 +32,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -450,29 +451,71 @@ public interface Dir {
             return depth;
         }
 
+        /**
+         * Within each annotation kind all includes are OR'd together, all excludes
+         * are OR'd together, and the result is include AND NOT exclude. The kinds
+         * themselves are AND'd in order: @Prefix, @Suffix, @Match, @Filter.
+         */
         private Predicate<File> getFilter(final Method method) {
             Predicate<File> predicate = file -> true;
 
-            // 1. @Match includes
-            for (final Match match : method.getAnnotationsByType(Match.class)) {
-                if (match.exclude()) continue;
-                final Pattern pattern = Pattern.compile(match.value());
-                predicate = predicate.and(file -> pattern.matcher(file.getName()).matches());
+            // 1. @Prefix
+            final List<String> prefixIncludes = new ArrayList<>();
+            final List<String> prefixExcludes = new ArrayList<>();
+            for (final Prefix prefix : method.getAnnotationsByType(Prefix.class)) {
+                (prefix.exclude() ? prefixExcludes : prefixIncludes).addAll(Arrays.asList(prefix.value()));
             }
+            if (!prefixIncludes.isEmpty()) predicate = predicate.and(file -> startsWithAny(file.getName(), prefixIncludes));
+            if (!prefixExcludes.isEmpty()) predicate = predicate.and(file -> !startsWithAny(file.getName(), prefixExcludes));
 
-            // 2. @Match excludes
-            for (final Match match : method.getAnnotationsByType(Match.class)) {
-                if (!match.exclude()) continue;
-                final Pattern pattern = Pattern.compile(match.value());
-                predicate = predicate.and(file -> !pattern.matcher(file.getName()).matches());
+            // 2. @Suffix
+            final List<String> suffixIncludes = new ArrayList<>();
+            final List<String> suffixExcludes = new ArrayList<>();
+            for (final Suffix suffix : method.getAnnotationsByType(Suffix.class)) {
+                (suffix.exclude() ? suffixExcludes : suffixIncludes).addAll(Arrays.asList(suffix.value()));
             }
+            if (!suffixIncludes.isEmpty()) predicate = predicate.and(file -> endsWithAny(file.getName(), suffixIncludes));
+            if (!suffixExcludes.isEmpty()) predicate = predicate.and(file -> !endsWithAny(file.getName(), suffixExcludes));
 
-            // 3. @Filter
+            // 3. @Match
+            final List<Pattern> matchIncludes = new ArrayList<>();
+            final List<Pattern> matchExcludes = new ArrayList<>();
+            for (final Match match : method.getAnnotationsByType(Match.class)) {
+                (match.exclude() ? matchExcludes : matchIncludes).add(Pattern.compile(match.value()));
+            }
+            if (!matchIncludes.isEmpty()) predicate = predicate.and(file -> matchesAny(file.getName(), matchIncludes));
+            if (!matchExcludes.isEmpty()) predicate = predicate.and(file -> !matchesAny(file.getName(), matchExcludes));
+
+            // 4. @Filter
             for (final Filter filter : method.getAnnotationsByType(Filter.class)) {
                 predicate = predicate.and(asPredicate(filter));
             }
 
             return predicate;
+        }
+
+        private static boolean startsWithAny(final String name, final List<String> prefixes) {
+            if (name == null) return false;
+            for (final String prefix : prefixes) {
+                if (name.startsWith(prefix)) return true;
+            }
+            return false;
+        }
+
+        private static boolean endsWithAny(final String name, final List<String> suffixes) {
+            if (name == null) return false;
+            for (final String suffix : suffixes) {
+                if (name.endsWith(suffix)) return true;
+            }
+            return false;
+        }
+
+        private static boolean matchesAny(final String name, final List<Pattern> patterns) {
+            if (name == null) return false;
+            for (final Pattern pattern : patterns) {
+                if (pattern.matcher(name).matches()) return true;
+            }
+            return false;
         }
 
         private Predicate<File> asPredicate(final Filter filter) {

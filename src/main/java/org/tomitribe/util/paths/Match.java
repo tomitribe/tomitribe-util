@@ -47,10 +47,19 @@ import java.lang.annotation.Target;
  *
  * <h3>Evaluation order</h3>
  *
- * <p>When combined with {@link Filter @Filter}, annotations are applied in
- * order: {@code @Match} includes &rarr; {@code @Match} excludes &rarr;
- * {@code @Filter}. Each filter only sees entries that passed the previous ones.
+ * <p>Within one annotation kind, all includes are OR'd together, all
+ * excludes are OR'd together, and an entry passes if it matches an
+ * include and does not match an exclude. Repeating the annotation is
+ * therefore the same as listing more values in one annotation.
  *
+ * <p>Different kinds are AND'd, applied in order:
+ * {@link Prefix @Prefix} &rarr;
+ * {@link Suffix @Suffix} &rarr; {@code @Match}
+ * &rarr; {@link Filter @Filter}. Each kind only sees entries that
+ * passed the previous ones.
+ *
+ * @see Prefix
+ * @see Suffix
  * @see Filter
  */
 @Repeatable(Matches.class)
