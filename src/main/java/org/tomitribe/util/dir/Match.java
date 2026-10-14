@@ -30,20 +30,20 @@ import java.lang.annotation.Target;
  * When {@code exclude = true}, it <b>excludes</b> entries matching the pattern.
  * Includes are applied before excludes, so you can combine them:
  *
- * <pre>{@code
+ * <pre>
  * public interface Reports extends Dir {
- *     @Match("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
- *     Stream<File> dailyReports();
+ *     &#64;Match("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
+ *     Stream&lt;File&gt; dailyReports();
  *
- *     @Match(".*\\.(jpg|png)")
- *     Stream<File> images();
+ *     &#64;Match(".*\\.(jpg|png)")
+ *     Stream&lt;File&gt; images();
  *
  *     // All CSS files except reset.css
- *     @Match(".*\\.css")
- *     @Match(value = "reset\\.css", exclude = true)
- *     Stream<File> cssExceptReset();
+ *     &#64;Match(".*\\.css")
+ *     &#64;Match(value = "reset\\.css", exclude = true)
+ *     Stream&lt;File&gt; cssExceptReset();
  * }
- * }</pre>
+ * </pre>
  *
  * <h2>Evaluation order</h2>
  *

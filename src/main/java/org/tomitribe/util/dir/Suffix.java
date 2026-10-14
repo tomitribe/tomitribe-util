@@ -35,20 +35,20 @@ import java.lang.annotation.Target;
  * <b>excludes</b> entries matching any of its suffixes. Includes are
  * applied before excludes, so you can combine them:
  *
- * <pre>{@code
+ * <pre>
  * public interface Assets extends Dir {
- *     @Suffix(".css")
- *     Stream<File> stylesheets();
+ *     &#64;Suffix(".css")
+ *     Stream&lt;File&gt; stylesheets();
  *
- *     @Suffix({".jpg", ".png", ".gif"})
- *     Stream<File> images();
+ *     &#64;Suffix({".jpg", ".png", ".gif"})
+ *     Stream&lt;File&gt; images();
  *
  *     // All .jar files except sources and javadoc jars
- *     @Suffix(".jar")
- *     @Suffix(value = {"-sources.jar", "-javadoc.jar"}, exclude = true)
- *     Stream<File> binaryJars();
+ *     &#64;Suffix(".jar")
+ *     &#64;Suffix(value = {"-sources.jar", "-javadoc.jar"}, exclude = true)
+ *     Stream&lt;File&gt; binaryJars();
  * }
- * }</pre>
+ * </pre>
  *
  * <h2>Evaluation order</h2>
  *

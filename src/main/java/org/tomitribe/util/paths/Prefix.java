@@ -36,23 +36,23 @@ import java.lang.annotation.Target;
  * <b>excludes</b> entries matching any of its prefixes. Includes are
  * applied before excludes, so you can combine them:
  *
- * <pre>{@code
+ * <pre>
  * public interface Tomcat extends Dir {
  *     // Only version directories starting with "10."
  *     // Matches 10.1.18/, 10.1.19/, etc.
  *     // Skips 9.0.85/, 11.0.0/, etc.
- *     @Prefix("10.")
- *     Stream<Path> version10();
+ *     &#64;Prefix("10.")
+ *     Stream&lt;Path&gt; version10();
  *
- *     @Prefix({"10.", "11."})
- *     Stream<Path> modern();
+ *     &#64;Prefix({"10.", "11."})
+ *     Stream&lt;Path&gt; modern();
  *
  *     // All 10.x versions except milestones
- *     @Prefix("10.")
- *     @Prefix(value = "10.1.0-M", exclude = true)
- *     Stream<Path> version10Releases();
+ *     &#64;Prefix("10.")
+ *     &#64;Prefix(value = "10.1.0-M", exclude = true)
+ *     Stream&lt;Path&gt; version10Releases();
  * }
- * }</pre>
+ * </pre>
  *
  * <h2>Evaluation order</h2>
  *
