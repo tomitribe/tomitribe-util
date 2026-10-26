@@ -227,8 +227,25 @@ public interface Dir {
                 return returnFileWrapper(method, wrapper, action.apply(file));
             }
 
-            if (returnType.isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
-                return Dir.of(returnType, action.apply(new File(dir, (String) args[0])));
+            if (returnType.isInterface() && args != null && args.length == 1) {
+                final Object arg = args[0];
+                String value;
+
+                if (arg instanceof String) value = (String) arg;
+                else if (arg instanceof Byte) value = Byte.toString((Byte) arg);
+                else if (arg instanceof Short) value = Short.toString((Short) arg);
+                else if (arg instanceof Integer) value = Integer.toString((Integer) arg);
+                else if (arg instanceof Long) value = Long.toString((Long) arg);
+                else if (arg instanceof Float) value = Float.toString((Float) arg);
+                else if (arg instanceof Double) value = Double.toString((Double) arg);
+                else if (arg instanceof Boolean) value = Boolean.toString((Boolean) arg);
+                else if (arg instanceof Character) value = Character.toString((Character) arg);
+                else {
+                    value = arg.toString();
+                }
+
+                final File apply = action.apply(new File(dir, value));
+                return Dir.of(returnType, apply);
             }
 
             if (returnType.isInterface() && args == null) {
