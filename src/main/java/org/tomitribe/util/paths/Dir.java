@@ -192,6 +192,7 @@ public interface Dir {
                 if (method.getName().equals("equals")) return equals(proxy, args);
                 if (method.getName().equals("hashCode")) return hashCode();
             }
+
             if (method.getDeclaringClass().equals(Dir.class)) {
                 if (method.getName().equals("dir")) return dir(args);
                 if (method.getName().equals("get")) return dir;
@@ -205,54 +206,129 @@ public interface Dir {
                 throw new IllegalStateException("Unknown method " + method);
             }
 
-            final Path path = getFile(method);
-            final Function<Path, Path> action = action(method);
-
-            final Class<?> returnType = method.getReturnType();
+            final Invocation invocation = new Invocation(proxy, method, args);
+            final Class<?> returnType = invocation.returnType();
 
             if (returnType.isArray()) {
-                return returnArray(method);
+                return returnArray(invocation);
             }
 
-            if (Stream.class.equals(returnType) && args == null) {
-                return returnStream(method);
+            if (Stream.class.equals(returnType)) {
+                return returnStream(invocation);
             }
 
-            if (Path.class.equals(returnType) && args == null) {
-                return returnFile(method, action.apply(path));
+            if (Path.class.equals(returnType)) {
+                return returnFile(invocation);
             }
 
             final FileWrapper wrapper = new FileWrapper(returnType);
             if (wrapper.isWrapper()) {
-                return returnFileWrapper(method, wrapper, action.apply(path));
+                return returnFileWrapper(invocation, wrapper);
             }
 
-            if (returnType.isInterface() && args != null && args.length == 1) {
-                final Object arg = args[0];
-                String value;
-
-                if (arg instanceof String) value = (String) arg;
-                else if (arg instanceof Byte) value = Byte.toString((Byte) arg);
-                else if (arg instanceof Short) value = Short.toString((Short) arg);
-                else if (arg instanceof Integer) value = Integer.toString((Integer) arg);
-                else if (arg instanceof Long) value = Long.toString((Long) arg);
-                else if (arg instanceof Float) value = Float.toString((Float) arg);
-                else if (arg instanceof Double) value = Double.toString((Double) arg);
-                else if (arg instanceof Boolean) value = Boolean.toString((Boolean) arg);
-                else if (arg instanceof Character) value = Character.toString((Character) arg);
-                else {
-                    value = arg.toString();
-                }
-
-                final Path apply = action.apply(dir.resolve(value));
-                return Dir.of(returnType, apply);
-            }
-
-            if (returnType.isInterface() && args == null) {
-                return Dir.of(returnType, action.apply(path));
+            if (returnType.isInterface()) {
+                return returnDir(invocation);
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        /**
+         * One call on the proxy.  Branches of {@code invoke} ask this object
+         * what the call means rather than the dispatch deciding up front, so
+         * the meaning of an argument is settled by whoever consumes it.
+         */
+        class Invocation {
+            private final Object proxy;
+            private final Method method;
+            private final Object[] args;
+
+            Invocation(final Object proxy, final Method method, final Object[] args) {
+                this.proxy = proxy;
+                this.method = method;
+                this.args = args;
+            }
+
+            Method method() {
+                return method;
+            }
+
+            Class<?> returnType() {
+                return method.getReturnType();
+            }
+
+            int argCount() {
+                return args == null ? 0 : args.length;
+            }
+
+            /**
+             * A single argument is taken as a name that replaces the method name.
+             */
+            boolean hasName() {
+                return argCount() == 1;
+            }
+
+            String name() {
+                if (!hasName()) {
+                    throw new UnsupportedOperationException(method.toGenericString());
+                }
+                return asName(args[0]);
+            }
+
+            /**
+             * The Path this call refers to: the named child when a name was
+             * passed, otherwise the child named after the method.
+             */
+            Path target() {
+                if (hasName()) {
+                    return dir.resolve(name());
+                }
+                if (argCount() != 0) {
+                    throw new UnsupportedOperationException(method.toGenericString());
+                }
+                return getFile(method);
+            }
+
+            /**
+             * The directory a listing reads.  An unnamed listing reads the
+             * current directory, not a child named after the method.
+             */
+            Path listing() {
+                if (hasName()) {
+                    return target();
+                }
+                if (argCount() != 0) {
+                    throw new UnsupportedOperationException(method.toGenericString());
+                }
+                return dir;
+            }
+        }
+
+        private static String asName(final Object arg) {
+            if (arg == null) {
+                throw new IllegalArgumentException("Name argument must be a String, primitive, enum or object " +
+                        "that overrides toString().  Found null");
+            }
+
+            if (arg.getClass().isArray()) {
+                throw new IllegalArgumentException("Name argument must be a String, primitive, enum or object " +
+                        "that overrides toString().  Found array of " + arg.getClass().getComponentType().getName());
+            }
+
+            if (!overridesToString(arg.getClass())) {
+                throw new IllegalArgumentException("Name argument must be a String, primitive, enum or object " +
+                        "that overrides toString().  Found " + arg.getClass().getName() + " which does not override toString()");
+            }
+
+            return arg.toString();
+        }
+
+        private static boolean overridesToString(final Class<?> clazz) {
+            try {
+                return !Object.class.equals(clazz.getMethod("toString").getDeclaringClass());
+            } catch (final NoSuchMethodException e) {
+                return false;
+            }
         }
 
         private Path getFile(final Method method) {
@@ -292,13 +368,7 @@ public interface Dir {
             if (args.length != 1) {
                 throw new IllegalArgumentException("Expected String argument.  Found args length: " + args.length);
             }
-            if (args[0] == null) {
-                throw new IllegalArgumentException("Expected String argument.  Found null");
-            }
-            if (!String.class.equals(args[0].getClass())) {
-                throw new IllegalArgumentException("Expected String argument.  Found " + args[0].getClass());
-            }
-            return this.dir.resolve(args[0].toString());
+            return this.dir.resolve(asName(args[0]));
         }
 
         private static Object invokeDefault(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -325,32 +395,37 @@ public interface Dir {
             }
         }
 
-        private Object returnStream(final Method method) {
+        private Object returnStream(final Invocation invocation) {
+            final Method method = invocation.method();
+            final Path listing = invocation.listing();
             final Class returnType = (Class) Generics.getReturnType(method);
             final Predicate<Path> filter = getFilter(method);
 
             if (Path.class.equals(returnType)) {
-                return stream(dir, method)
+                return stream(listing, method)
                         .filter(filter);
             }
 
             final FileWrapper wrapper = new FileWrapper(returnType);
             if (wrapper.isWrapper()) {
-                return stream(dir, method)
+                return stream(listing, method)
                         .filter(filter)
                         .map(wrapper::wrap)
                         ;
             }
 
             if (returnType.isInterface()) {
-                return stream(dir, method)
+                return stream(listing, method)
                         .filter(filter)
                         .map(child -> Dir.of(returnType, child));
             }
             throw new UnsupportedOperationException(method.toGenericString());
         }
 
-        private Object returnFile(final Method method, final Path path) throws FileNotFoundException {
+        private Object returnFile(final Invocation invocation) throws FileNotFoundException {
+            final Method method = invocation.method();
+            final Path path = action(method).apply(invocation.target());
+
             // They want an exception if the file isn't found
             if (exceptions(method).contains(FileNotFoundException.class) && !Files.exists(path)) {
                 throw new FileNotFoundException(path.toAbsolutePath().toString());
@@ -359,7 +434,10 @@ public interface Dir {
             return path;
         }
 
-        private Object returnFileWrapper(final Method method, final FileWrapper wrapper, final Path path) throws FileNotFoundException {
+        private Object returnFileWrapper(final Invocation invocation, final FileWrapper wrapper) throws FileNotFoundException {
+            final Method method = invocation.method();
+            final Path path = action(method).apply(invocation.target());
+
             // They want an exception if the file isn't found
             if (exceptions(method).contains(FileNotFoundException.class) && !Files.exists(path)) {
                 throw new FileNotFoundException(path.toAbsolutePath().toString());
@@ -368,14 +446,23 @@ public interface Dir {
             return wrapper.wrap(path);
         }
 
-        private Object returnArray(final Method method) {
+        private Object returnDir(final Invocation invocation) {
+            final Method method = invocation.method();
+            final Path path = action(method).apply(invocation.target());
+
+            return Dir.of(invocation.returnType(), path);
+        }
+
+        private Object returnArray(final Invocation invocation) {
+            final Method method = invocation.method();
+            final Path listing = invocation.listing();
             final Predicate<Path> filter = getFilter(method);
 
             final Class<?> arrayType = method.getReturnType().getComponentType();
 
             if (Path.class.equals(arrayType)) {
 
-                return stream(dir, method)
+                return stream(listing, method)
                         .filter(filter)
                         .toArray(Path[]::new);
 
@@ -387,7 +474,7 @@ public interface Dir {
                 /*
                  * This array is of type Object, not what we need
                  */
-                final Object[] src = stream(dir, method)
+                final Object[] src = stream(listing, method)
                         .filter(filter)
                         .map(wrapper::wrap)
                         .toArray();
@@ -404,7 +491,7 @@ public interface Dir {
             if (arrayType.isInterface()) {
 
                 // will be an array of type Object[]
-                final Object[] src = stream(dir, method)
+                final Object[] src = stream(listing, method)
                         .filter(filter)
                         .map(child -> Dir.of(arrayType, child))
                         .toArray();

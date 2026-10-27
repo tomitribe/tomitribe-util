@@ -13,7 +13,6 @@
  */
 package org.tomitribe.util.paths;
 
-import lombok.Data;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;

@@ -14,7 +14,6 @@
 
 package org.tomitribe.util.dir;
 
-import lombok.Data;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
@@ -157,8 +156,8 @@ public class TypesTest {
     public void enumDir() throws Exception {
 
         final File dir = new Archive()
-                .add( "HOURS/foo.txt", "horas")
-                .add( "MINUTES/foo.txt", "minutos")
+                .add("HOURS/foo.txt", "horas")
+                .add("MINUTES/foo.txt", "minutos")
                 .toDir();
 
         final Types types = Dir.of(Types.class, dir);
@@ -171,8 +170,8 @@ public class TypesTest {
     public void objectToString() throws Exception {
 
         final File dir = new Archive()
-                .add( "orange/foo.txt", "naranja")
-                .add( "red/foo.txt", "rojo")
+                .add("orange/foo.txt", "naranja")
+                .add("red/foo.txt", "rojo")
                 .toDir();
 
         final Types types = Dir.of(Types.class, dir);
